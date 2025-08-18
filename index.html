@@ -609,7 +609,7 @@ function downloadWord(){
                 new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
                 new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
                 new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
+                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),)] }),
               ],
             }),
             createWordTableRow("Выявлено (всего), шт.", prev.totals.found, curr.totals.found, dlt.found),
