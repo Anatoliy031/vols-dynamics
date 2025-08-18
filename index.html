@@ -44,11 +44,11 @@
   .table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .table th,.table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
   .table th{color:#0f1a2c;font-weight:800;background:#eef3ff}
-  .table tr.total{background:#f0f5ff;font-weight:700}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{padding:6px 10px;border-radius:999px;background:#eef3ff;border:1px solid #d7e2ff;color:#173a8a;font-size:12px}
   .canvas-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
   .footer{font-size:13px;color:var(--muted);margin-top:8px}
+  .total-row td{font-weight:800;background:#f7fbff}
 </style>
 
 <!-- ======= БИБЛИОТЕКИ ======= -->
@@ -59,14 +59,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- PptxGenJS: PPTX -->
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-<!-- docx: для генерации Word документов -->
-<script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
-<!-- pdfmake: для генерации PDF документов -->
+<!-- pdfmake: PDF-выжимка + презентация PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
-<!-- jsPDF: для конвертации PPTX в PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- docx: Word-выжимка -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 </head>
 
 <body>
@@ -147,15 +144,11 @@
     </div>
 
     <!-- Кнопки выгрузок -->
-    <div class="card">
-      <div style="display:flex;gap:8px;justify-content:flex-start;margin-bottom:8px">
-        <button id="btnPptx">Скачать презентацию (.pptx)</button>
-        <button id="btnPptxPdf" class="secondary">Презентация в PDF</button>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-start">
-        <button id="btnWord">Скачать выжимку (.docx)</button>
-        <button id="btnPdf" class="secondary">Выжимка в PDF</button>
-      </div>
+    <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start">
+      <button id="btnPptx">Скачать презентацию (.pptx)</button>
+      <button id="btnPptPdf" class="secondary">Скачать презентацию (PDF)</button>
+      <button id="btnPdf" class="secondary">Скачать PDF-выжимку</button>
+      <button id="btnDocx">Скачать выжимку (.docx)</button>
     </div>
   </div>
 </div>
@@ -317,28 +310,12 @@ function rowDelta(prevV, currV){
   const sign = d==null? '' : d>0? '▲' : (d<0? '▼' : '');
   return `<span class="delta ${cls}">${prevV!=null?`было: ${fmt(prevV)} • Δ: ${fmt(d)} ${sign}`:'нет данных'}</span>`;
 }
-
-// Вычисление итоговых значений по стадиям для всех филиалов
-function computeTotalStages(branches){
-  const totals = {
-    to_agreement: 0,
-    in_branch: 0,
-    rosseti_cifra: 0,
-    operator_sign: 0,
-    filial_approve: 0,
-    demounted: 0
-  };
-  
-  Object.values(branches).forEach(branch => {
-    if(branch.to_agreement) totals.to_agreement += branch.to_agreement;
-    if(branch.in_branch) totals.in_branch += branch.in_branch;
-    if(branch.rosseti_cifra) totals.rosseti_cifra += branch.rosseti_cifra;
-    if(branch.operator_sign) totals.operator_sign += branch.operator_sign;
-    if(branch.filial_approve) totals.filial_approve += branch.filial_approve;
-    if(branch.demounted) totals.demounted += branch.demounted;
+function sumBranchTotals(rep){
+  let s = 0;
+  Object.values(rep.branches||{}).forEach(v=>{
+    if(v && typeof v.total === 'number') s += v.total;
   });
-  
-  return totals;
+  return s;
 }
 
 function render(){
@@ -362,9 +339,8 @@ function render(){
     </div>`;
   }).join('');
 
-  // Таблица стадий (текущий) с итогами
+  // Таблица стадий (текущий)
   const st = curr.stages;
-  const totalByStages = st.to_agreement + st.in_branch + st.rosseti_cifra + st.operator_sign + st.filial_approve + st.demounted;
   const rowsStages = [
     ['Будет включено в доп. соглашение', st.to_agreement],
     ['В работе у филиала', st.in_branch],
@@ -373,11 +349,11 @@ function render(){
     ['Договор на согласовании в филиале', st.filial_approve],
     ['Демонтировано (справочно)', st.demounted]
   ].filter(r=>r[1]!=null).map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td></tr>`).join('');
-  $('#tblStages').innerHTML = `<tr><th>Стадия</th><th>Количество (шт.)</th></tr>${rowsStages}<tr class="total"><td>ИТОГО по обществу</td><td>${fmt(totalByStages)}</td></tr>`;
+  $('#tblStages').innerHTML = `<tr><th>Стадия</th><th>Количество (шт.)</th></tr>${rowsStages}`;
 
   // График стадий (pie)
   renderPie('chartStages',
-    ['Будет включено','В работе у филиала','Оформление Росети Цифра','Подписание у оператора','Согласование в филиале','Демонтировано'],
+    ['Будет включено','В работе у филиала','Оформление Россети Цифра','Подписание у оператора','Согласование в филиале','Демонтировано'],
     [st.to_agreement, st.in_branch, st.rosseti_cifra, st.operator_sign, st.filial_approve, st.demounted]
   );
 
@@ -400,25 +376,17 @@ function render(){
   // Ростелеком по филиалам (bar) — текущий
   const rtLabels = Object.keys(curr.rtBranches);
   const rtVals = rtLabels.map(k=>curr.rtBranches[k]);
-  const rtTotal = rtVals.reduce((a,b) => a+b, 0);
   renderBar('chartRTBranches', rtLabels, rtVals, 'Ростелеком по филиалам (шт.)');
 
-  // Динамика по филиалам (таблица + bar) с итогами
+  // Динамика по филиалам (таблица + bar) + ИТОГО по обществу
   const rowsB = [];
   const labelsB=[], deltasB=[];
-  let prevTotal = 0, currTotal = 0, deltaTotal = 0;
-  
   BRANCHES.forEach(name=>{
     const p = prev.branches[name], c = curr.branches[name];
     if(!p && !c) return;
     const prevV = p? p.total : null;
     const currV = c? c.total : null;
     const d = delta(currV, prevV);
-    
-    if(prevV) prevTotal += prevV;
-    if(currV) currTotal += currV;
-    if(d) deltaTotal += d;
-    
     rowsB.push(`<tr>
       <td>${name}</td>
       <td>${fmt(prevV||0)}</td>
@@ -428,15 +396,19 @@ function render(){
     labelsB.push(name);
     deltasB.push(d||0);
   });
-  
-  // Добавляем строку итогов
-  rowsB.push(`<tr class="total">
-    <td>ИТОГО по обществу</td>
-    <td>${fmt(prevTotal)}</td>
-    <td>${fmt(currTotal)}</td>
-    <td>${deltaStr(deltaTotal)}</td>
-  </tr>`);
-  
+  // ИТОГО по обществу (сумма по филиалам)
+  const sumPrev = sumBranchTotals(prev);
+  const sumCurr = sumBranchTotals(curr);
+  const sumD = delta(sumCurr, sumPrev);
+  rowsB.push(`<tr class="total-row">
+      <td>ИТОГО по обществу</td>
+      <td>${fmt(sumPrev)}</td>
+      <td>${fmt(sumCurr)}</td>
+      <td>${deltaStr(sumD)}</td>
+    </tr>`);
+  labelsB.push('ИТОГО');
+  deltasB.push(sumD||0);
+
   $('#tblBranches').innerHTML = `<tr><th>Филиал</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ, шт.</th></tr>${rowsB.join('')}`;
   renderBar('chartBranches', labelsB, deltasB, 'Прирост по филиалам за неделю (шт.)');
 }
@@ -462,9 +434,10 @@ function renderBar(id, labels, data, title){
   });
 }
 
-/* ================== PPTX ================== */
+/* ================== PPTX / PDF / DOCX ================== */
 function canvasToDataUrl(id){ const c = $('#'+id); return c? c.toDataURL('image/png',1.0):null; }
 
+/* ---- PPTX ---- */
 function downloadPPTX(){
   const pptx = new PptxGenJS();
   const blue = '003DA5';
@@ -490,7 +463,6 @@ function downloadPPTX(){
     const s = pptx.addSlide();
     s.addText(`«В работе» — распределение по стадиям (шт., на ${curr.asOf||'—'})`, {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
     const st = curr.stages;
-    const totalByStages = st.to_agreement + st.in_branch + st.rosseti_cifra + st.operator_sign + st.filial_approve + st.demounted;
     const rows = [
       [{text:'Стадия',options:{bold:true}},{text:'Количество, шт.',options:{bold:true}}],
     ];
@@ -501,7 +473,6 @@ function downloadPPTX(){
     add('Договор на подписании у оператора', st.operator_sign);
     if(st.filial_approve!=null) add('Договор на согласовании в филиале', st.filial_approve);
     if(st.demounted!=null) add('Демонтировано (справочно)', st.demounted);
-    rows.push([{text:'ИТОГО по обществу',options:{bold:true}}, {text:fmt(totalByStages),options:{bold:true}}]);
     s.addTable(rows, {x:0.5,y:1.0,w:9.5, colW:[6.0,3.5], fontSize:18, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF', color:'0f1a2c'});
 
     const img = canvasToDataUrl('chartStages');
@@ -533,241 +504,121 @@ function downloadPPTX(){
     if(img) s.addImage({data:img, x:0.6, y:2.6, w:9.3});
   }
 
-  // slide 5 — Динамика по филиалам
+  // slide 5 — Динамика по филиалам + ИТОГО
   {
     const s = pptx.addSlide();
     s.addText('Динамика по филиалам (шт.)', {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
-    // таблица топ-10 по приросту с итогами
+
     const pairs = BRANCHES.map(n=>{
       const p = prev.branches[n], c = curr.branches[n];
       const pv=p?p.total:null, cv=c?c.total:null, d=delta(cv,pv);
       return {n, pv, cv, d};
-    }).filter(r=>r.pv!=null || r.cv!=null);
-    
-    // Считаем итоги
-    let prevTotal = 0, currTotal = 0, deltaTotal = 0;
-    pairs.forEach(r => {
-      if(r.pv) prevTotal += r.pv;
-      if(r.cv) currTotal += r.cv;
-      if(r.d) deltaTotal += r.d;
-    });
-    
-    const sortedPairs = pairs.sort((a,b)=> (b.d||0)-(a.d||0)).slice(0,10);
+    }).filter(r=>r.pv!=null || r.cv!=null).sort((a,b)=> (b.d||0)-(a.d||0)).slice(0,10);
     const rows = [[{text:'Филиал',options:{bold:true}},{text:prev.asOf||'—',options:{bold:true}},{text:curr.asOf||'—',options:{bold:true}},{text:'Δ',options:{bold:true}}]];
-    sortedPairs.forEach(r=>rows.push([r.n, fmt(r.pv||0), fmt(r.cv||0), deltaStr(r.d)]));
-    rows.push([{text:'ИТОГО по обществу',options:{bold:true}}, {text:fmt(prevTotal),options:{bold:true}}, {text:fmt(currTotal),options:{bold:true}}, {text:deltaStr(deltaTotal),options:{bold:true}}]);
+    pairs.forEach(r=>rows.push([r.n, fmt(r.pv||0), fmt(r.cv||0), deltaStr(r.d)]));
+    // ИТОГО по обществу
+    const sumPrev = sumBranchTotals(prev), sumCurr = sumBranchTotals(curr), sumD = delta(sumCurr,sumPrev);
+    rows.push(['ИТОГО по обществу', fmt(sumPrev), fmt(sumCurr), deltaStr(sumD)]);
+
     s.addTable(rows, {x:0.5,y:1.1,w:9.5, colW:[4.6,1.6,1.6,1.6], fontSize:16, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF'});
 
     const img = canvasToDataUrl('chartBranches');
-    if(img) s.addImage({data:img, x:0.6, y:3.6, w:9.3});
+    if(img) s.addImage({data:img, x:0.6, y:3.4, w:9.3});
   }
 
   pptx.writeFile({ fileName:`ВОЛС_динамика_${(curr.asOf||'').replaceAll('.','-')}.pptx` });
 }
 
-/* ================== WORD (.docx) ================== */
-function downloadWord(){
-  const { Document, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, BorderStyle } = docx;
-  
-  // Вычисляем итоги
-  const st = curr.stages;
-  const totalByStages = st.to_agreement + st.in_branch + st.rosseti_cifra + st.operator_sign + st.filial_approve + st.demounted;
-  
-  let prevBranchTotal = 0, currBranchTotal = 0, deltaBranchTotal = 0;
-  BRANCHES.forEach(name => {
-    const p = prev.branches[name], c = curr.branches[name];
-    if(p && p.total) prevBranchTotal += p.total;
-    if(c && c.total) currBranchTotal += c.total;
-  });
-  deltaBranchTotal = currBranchTotal - prevBranchTotal;
+/* ---- Презентация в PDF (pdfMake) ---- */
+function downloadPPTXPDF(){
+  const imgStages = canvasToDataUrl('chartStages');
+  const imgRT = canvasToDataUrl('chartRTBranches');
+  const imgBranches = canvasToDataUrl('chartBranches');
 
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        // Заголовок
-        new Paragraph({
-          text: "ВОЛС — динамика недели",
-          heading: HeadingLevel.HEADING_1,
-          alignment: AlignmentType.CENTER,
-        }),
-        new Paragraph({
-          text: `Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`,
-          alignment: AlignmentType.CENTER,
-        }),
-        new Paragraph({ text: "" }), // пустая строка
+  const sumPrev = sumBranchTotals(prev), sumCurr = sumBranchTotals(curr), sumD = delta(sumCurr,sumPrev);
 
-        // 1. Общая информация
-        new Paragraph({
-          text: "1. Общая информация (шт.) — нарастающим итогом",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),)] }),
-              ],
-            }),
-            createWordTableRow("Выявлено (всего), шт.", prev.totals.found, curr.totals.found, dlt.found),
-            createWordTableRow("В работе всего, шт.", prev.totals.inWork, curr.totals.inWork, dlt.inWork),
-            createWordTableRow("Узаконено, шт.", prev.totals.legalized, curr.totals.legalized, dlt.legalized),
-            createWordTableRow("Демонтировано, шт.", prev.totals.removed, curr.totals.removed, dlt.removed),
-            createWordTableRow("ПАО «Ростелеком» (в «в работе»), шт.", prev.totals.rtlInWork, curr.totals.rtlInWork, dlt.rtlInWork),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+  const docDef = {
+    pageMargins:[26,26,26,26],
+    content:[
+      {text:'ВОЛС — динамика недели (презентация)', style:'h1'},
+      {text:`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, style:'muted'},
 
-        // 2. Стадии
-        new Paragraph({
-          text: "2. «В работе» — распределение по стадиям (шт., текущий отчёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Стадия", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Количество, шт.", bold: true })] }),
-              ],
-            }),
-            ...(st.to_agreement ? [createWordTableRow2("Будет включено в доп. соглашение", st.to_agreement)] : []),
-            ...(st.in_branch ? [createWordTableRow2("В работе у филиала", st.in_branch)] : []),
-            ...(st.rosseti_cifra ? [createWordTableRow2("Договор на оформлении Россети Цифра", st.rosseti_cifra)] : []),
-            ...(st.operator_sign ? [createWordTableRow2("Договор на подписании у оператора", st.operator_sign)] : []),
-            ...(st.filial_approve ? [createWordTableRow2("Договор на согласовании в филиале", st.filial_approve)] : []),
-            ...(st.demounted ? [createWordTableRow2("Демонтировано (справочно)", st.demounted)] : []),
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "ИТОГО по обществу", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(totalByStages), bold: true })] }),
-              ],
-            }),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+      {text:'Слайд 1. Общая информация (шт.) — нарастающим итогом', style:'h2'},
+      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+        ['Выявлено (всего), шт.', fmt(prev.totals.found), fmt(curr.totals.found), deltaStr(dlt.found)],
+        ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
+        ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
+        ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
+        ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
+      ]),
 
-        // 3. Приказ 425
-        new Paragraph({
-          text: "3. Выявление по приказу №425 (шт., отдельный учёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            createWordTableRow("Всего по приказу №425, шт.", prev.prikaz425_total, curr.prikaz425_total, dlt.prikaz),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+      {text:`Слайд 2. «В работе» — распределение по стадиям (на ${curr.asOf||'—'})`, style:'h2'},
+      imgStages ? {image: imgStages, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
+      table2(['Стадия','Количество, шт.'], stagesRows(curr.stages)),
 
-        // 4. Ростелеком
-        new Paragraph({
-          text: "4. ПАО «Ростелеком» (шт., отдельный учёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            createWordTableRow("Всего по ПАО «Ростелеком», шт.", prev.rostelecom_total, curr.rostelecom_total, dlt.rt),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+      {text:'Слайд 3. Приказ №425 (шт.)', style:'h2'},
+      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+        ['Всего по приказу №425, шт.', fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)]
+      ]),
 
-        // 5. Динамика по филиалам
-        new Paragraph({
-          text: "5. Динамика по филиалам (шт.)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Филиал", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            ...BRANCHES.map(name => {
-              const p = prev.branches[name], c = curr.branches[name];
-              if(!p && !c) return null;
-              const prevV = p? p.total : null;
-              const currV = c? c.total : null;
-              const d = delta(currV, prevV);
-              return createWordTableRow(name, prevV, currV, d);
-            }).filter(Boolean),
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "ИТОГО по обществу", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(prevBranchTotal), bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(currBranchTotal), bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: deltaStr(deltaBranchTotal), bold: true })] }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    }],
-  });
+      {text:'Слайд 4. ПАО «Ростелеком» (шт.)', style:'h2'},
+      imgRT ? {image: imgRT, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
+      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+        ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
+      ]),
 
-  // Функции для создания строк таблиц
-  function createWordTableRow(label, prevVal, currVal, deltaVal) {
-    return new TableRow({
-      children: [
-        new TableCell({ children: [new Paragraph({ text: label })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(prevVal) })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(currVal) })] }),
-        new TableCell({ children: [new Paragraph({ text: deltaStr(deltaVal) })] }),
-      ],
-    });
+      {text:'Слайд 5. Динамика по филиалам (шт.)', style:'h2'},
+      imgBranches ? {image: imgBranches, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
+      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+        ...branchRows(),
+        ['ИТОГО по обществу', fmt(sumPrev), fmt(sumCurr), deltaStr(sumD)]
+      ]),
+    ],
+    styles:{
+      h1:{fontSize:18,bold:true,color:'#003DA5',margin:[0,0,0,6]},
+      h2:{fontSize:14,bold:true,color:'#1B4FB3',margin:[0,10,0,6]},
+      muted:{fontSize:10, color:'#6b7280', margin:[0,0,0,8]}
+    },
+    defaultStyle:{fontSize:11}
+  };
+  pdfMake.createPdf(docDef).download(`ВОЛС_презентация_${(curr.asOf||'').replaceAll('.','-')}.pdf`);
+
+  function table4(head, rows){
+    return {
+      table:{ headerRows:1, widths:['*','auto','auto','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
+      layout:'lightHorizontalLines', margin:[0,4,0,8]
+    };
   }
-
-  function createWordTableRow2(label, val) {
-    return new TableRow({
-      children: [
-        new TableCell({ children: [new Paragraph({ text: label })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(val) })] }),
-      ],
-    });
+  function table2(head, rows){
+    return {
+      table:{ headerRows:1, widths:['*','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
+      layout:'lightHorizontalLines', margin:[0,4,0,8]
+    };
   }
-
-  // Генерация и скачивание
-  docx.Packer.toBlob(doc).then(blob => {
-    saveAs(blob, `ВОЛС_динамика_${(curr.asOf||'').replaceAll('.','-')}.docx`);
-  });
+  function stagesRows(st){
+    const out=[];
+    const push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
+    push('Будет включено в доп. соглашение', st.to_agreement);
+    push('В работе у филиала', st.in_branch);
+    push('Договор на оформлении Россети Цифра', st.rosseti_cifra);
+    push('Договор на подписании у оператора', st.operator_sign);
+    if(st.filial_approve!=null) push('Договор на согласовании в филиале', st.filial_approve);
+    if(st.demounted!=null) push('Демонтировано (справочно)', st.demounted);
+    return out;
+  }
+  function branchRows(){
+    const rows=[];
+    BRANCHES.forEach(n=>{
+      const p=prev.branches[n], c=curr.branches[n];
+      if(!p && !c) return;
+      rows.push([n, fmt(p?p.total:0), fmt(c?c.total:0), deltaStr(delta(c?c.total:null, p?p.total:null))]);
+    });
+    return rows;
+  }
 }
 
-/* ================== PDF выжимка ================== */
+/* ---- PDF-выжимка (как было) ---- */
 function downloadPDF(){
-  // Вычисляем итоги
-  const st = curr.stages;
-  const totalByStages = st.to_agreement + st.in_branch + st.rosseti_cifra + st.operator_sign + st.filial_approve + st.demounted;
-  
-  let prevBranchTotal = 0, currBranchTotal = 0, deltaBranchTotal = 0;
-  BRANCHES.forEach(name => {
-    const p = prev.branches[name], c = curr.branches[name];
-    if(p && p.total) prevBranchTotal += p.total;
-    if(c && c.total) currBranchTotal += c.total;
-  });
-  deltaBranchTotal = currBranchTotal - prevBranchTotal;
-  
   const docDef = {
     pageMargins:[26,26,26,26],
     content:[
@@ -786,7 +637,7 @@ function downloadPDF(){
         ]),
 
       {text:'2) «В работе» — распределение по стадиям (шт., текущий)', style:'h2'},
-      table2(['Стадия','Количество, шт.'], [...stagesRows(curr.stages), [{text:'ИТОГО по обществу', bold:true}, {text:fmt(totalByStages), bold:true}]]),
+      table2(['Стадия','Количество, шт.'], stagesRows(curr.stages)),
 
       {text:'3) Отдельно — приказ №425 (шт.)', style:'h2'},
       table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
@@ -798,8 +649,12 @@ function downloadPDF(){
         ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
       ]),
 
-      {text:'5) Динамика по филиалам (шт.)', style:'h2'},
-      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [...branchRows(), [{text:'ИТОГО по обществу', bold:true}, {text:fmt(prevBranchTotal), bold:true}, {text:fmt(currBranchTotal), bold:true}, {text:deltaStr(deltaBranchTotal), bold:true}]])
+      {text:'Динамика по филиалам (шт.)', style:'h2'},
+      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+        ...branchRows(),
+        // Итог по обществу добавляем и в выжимку
+        ['ИТОГО по обществу', fmt(sumBranchTotals(prev)), fmt(sumBranchTotals(curr)), deltaStr(delta(sumBranchTotals(curr), sumBranchTotals(prev)))]
+      ])
     ],
     styles:{
       h1:{fontSize:18,bold:true,color:'#003DA5',margin:[0,0,0,6]},
@@ -844,293 +699,100 @@ function downloadPDF(){
   }
 }
 
-/* ================== Презентация в PDF ================== */
-function downloadPptxAsPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('landscape', 'mm', 'a4');
-  const pageWidth = 297;
-  const pageHeight = 210;
-  const margin = 20;
-  const blue = [0, 61, 165]; // RGB для #003DA5
-  
-  // Функция для добавления заголовка слайда
-  function addSlideTitle(title, y = 20) {
-    doc.setFontSize(20);
-    doc.setTextColor(...blue);
-    doc.text(title, pageWidth/2, y, { align: 'center' });
-  }
-  
-  // Функция для добавления подзаголовка
-  function addSubtitle(text, y) {
-    doc.setFontSize(12);
-    doc.setTextColor(128, 128, 128);
-    doc.text(text, pageWidth/2, y, { align: 'center' });
-  }
-  
-  // Слайд 1 - Общая информация
-  addSlideTitle('ВОЛС — динамика недели');
-  addSubtitle(`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, 30);
-  
-  doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
-  
-  const tableData1 = [
-    ['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'],
-    ['Выявлено (всего), шт.', fmt(prev.totals.found), fmt(curr.totals.found), deltaStr(dlt.found)],
-    ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
-    ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
-    ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
-    ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
-  ];
-  
-  doc.autoTable({
-    head: [tableData1[0]],
-    body: tableData1.slice(1),
-    startY: 45,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: 3 },
-    headStyles: { fillColor: blue, textColor: 255 }
-  });
-  
-  // Слайд 2 - Стадии
-  doc.addPage();
-  addSlideTitle(`«В работе» — распределение по стадиям (на ${curr.asOf||'—'})`);
-  
-  const st = curr.stages;
-  const totalByStages = st.to_agreement + st.in_branch + st.rosseti_cifra + st.operator_sign + st.filial_approve + st.demounted;
-  const tableData2 = [['Стадия', 'Количество, шт.']];
-  
-  if(st.to_agreement) tableData2.push(['Будет включено в доп. соглашение', fmt(st.to_agreement)]);
-  if(st.in_branch) tableData2.push(['В работе у филиала', fmt(st.in_branch)]);
-  if(st.rosseti_cifra) tableData2.push(['Договор на оформлении Россети Цифра', fmt(st.rosseti_cifra)]);
-  if(st.operator_sign) tableData2.push(['Договор на подписании у оператора', fmt(st.operator_sign)]);
-  if(st.filial_approve) tableData2.push(['Договор на согласовании в филиале', fmt(st.filial_approve)]);
-  if(st.demounted) tableData2.push(['Демонтировано (справочно)', fmt(st.demounted)]);
-  tableData2.push(['ИТОГО по обществу', fmt(totalByStages)]);
-  
-  doc.autoTable({
-    head: [tableData2[0]],
-    body: tableData2.slice(1, -1),
-    foot: [tableData2[tableData2.length - 1]],
-    startY: 35,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: 3 },
-    headStyles: { fillColor: blue, textColor: 255 },
-    footStyles: { fillColor: [240, 245, 255], textColor: 0, fontStyle: 'bold' }
-  });
-  
-  // Слайд 3 - Приказ 425
-  doc.addPage();
-  addSlideTitle('Выявление по приказу №425 (шт.)');
-  
-  const tableData3 = [
-    ['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'],
-    ['Всего по приказу №425, шт.', fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)]
-  ];
-  
-  doc.autoTable({
-    head: [tableData3[0]],
-    body: tableData3.slice(1),
-    startY: 35,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: 3 },
-    headStyles: { fillColor: blue, textColor: 255 }
-  });
-  
-  // Слайд 4 - Ростелеком
-  doc.addPage();
-  addSlideTitle('ПАО «Ростелеком» — отдельный учёт (шт.)');
-  
-  const tableData4 = [
-    ['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'],
-    ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
-  ];
-  
-  doc.autoTable({
-    head: [tableData4[0]],
-    body: tableData4.slice(1),
-    startY: 35,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: 3 },
-    headStyles: { fillColor: blue, textColor: 255 }
-  });
-  
-  // Слайд 5 - Динамика по филиалам
-  doc.addPage();
-  addSlideTitle('Динамика по филиалам (шт.)');
-  
-  let prevBranchTotal = 0, currBranchTotal = 0, deltaBranchTotal = 0;
-  const tableData5 = [['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ']];
-  
-  BRANCHES.forEach(name => {
-    const p = prev.branches[name], c = curr.branches[name];
-    if(!p && !c) return;
-    const prevV = p? p.total : 0;
-    const currV = c? c.total : 0;
-    const d = delta(currV, prevV);
-    prevBranchTotal += prevV;
-    currBranchTotal += currV;
-    tableData5.push([name, fmt(prevV), fmt(currV), deltaStr(d)]);
-  });
-  deltaBranchTotal = currBranchTotal - prevBranchTotal;
-  tableData5.push(['ИТОГО по обществу', fmt(prevBranchTotal), fmt(currBranchTotal), deltaStr(deltaBranchTotal)]);
-  
-  doc.autoTable({
-    head: [tableData5[0]],
-    body: tableData5.slice(1, -1),
-    foot: [tableData5[tableData5.length - 1]],
-    startY: 35,
-    margin: { left: margin, right: margin },
-    styles: { fontSize: 9, cellPadding: 2 },
-    headStyles: { fillColor: blue, textColor: 255 },
-    footStyles: { fillColor: [240, 245, 255], textColor: 0, fontStyle: 'bold' }
-  });
-  
-  // Сохранение
-  doc.save(`ВОЛС_презентация_${(curr.asOf||'').replaceAll('.','-')}.pdf`);
-})] }),
-              ],
-            }),
-            createWordTableRow("Выявлено (всего), шт.", prev.totals.found, curr.totals.found, dlt.found),
-            createWordTableRow("В работе всего, шт.", prev.totals.inWork, curr.totals.inWork, dlt.inWork),
-            createWordTableRow("Узаконено, шт.", prev.totals.legalized, curr.totals.legalized, dlt.legalized),
-            createWordTableRow("Демонтировано, шт.", prev.totals.removed, curr.totals.removed, dlt.removed),
-            createWordTableRow("ПАО «Ростелеком» (в «в работе»), шт.", prev.totals.rtlInWork, curr.totals.rtlInWork, dlt.rtlInWork),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+/* ---- DOCX-выжимка ---- */
+function downloadDOCX(){
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, AlignmentType
+  } = window.docx;
 
-        // 2. Стадии
-        new Paragraph({
-          text: "2. «В работе» — распределение по стадиям (шт., текущий отчёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Стадия", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Количество, шт.", bold: true })] }),
-              ],
-            }),
-            ...(st.to_agreement ? [createWordTableRow2("Будет включено в доп. соглашение", st.to_agreement)] : []),
-            ...(st.in_branch ? [createWordTableRow2("В работе у филиала", st.in_branch)] : []),
-            ...(st.rosseti_cifra ? [createWordTableRow2("Договор на оформлении Россети Цифра", st.rosseti_cifra)] : []),
-            ...(st.operator_sign ? [createWordTableRow2("Договор на подписании у оператора", st.operator_sign)] : []),
-            ...(st.filial_approve ? [createWordTableRow2("Договор на согласовании в филиале", st.filial_approve)] : []),
-            ...(st.demounted ? [createWordTableRow2("Демонтировано (справочно)", st.demounted)] : []),
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "ИТОГО по обществу", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(totalByStages), bold: true })] }),
-              ],
-            }),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+  const doc = new Document({
+    sections:[{
+      properties:{},
+      children:[
+        new Paragraph({text:'ВОЛС — динамика недели', heading:HeadingLevel.HEADING_1}),
+        new Paragraph({text:`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, spacing:{after:200}}),
 
-        // 3. Приказ 425
-        new Paragraph({
-          text: "3. Выявление по приказу №425 (шт., отдельный учёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            createWordTableRow("Всего по приказу №425, шт.", prev.prikaz425_total, curr.prikaz425_total, dlt.prikaz),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+        new Paragraph({text:'1) Общая информация (шт.) — нарастающим итогом', heading:HeadingLevel.HEADING_2}),
+        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+          ['Выявлено (всего), шт.', fmt(prev.totals.found), fmt(curr.totals.found), deltaStr(dlt.found)],
+          ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
+          ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
+          ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
+          ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
+        ]),
 
-        // 4. Ростелеком
-        new Paragraph({
-          text: "4. ПАО «Ростелеком» (шт., отдельный учёт)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            createWordTableRow("Всего по ПАО «Ростелеком», шт.", prev.rostelecom_total, curr.rostelecom_total, dlt.rt),
-          ],
-        }),
-        new Paragraph({ text: "" }),
+        new Paragraph({text:'2) «В работе» — распределение по стадиям (шт., текущий)', heading:HeadingLevel.HEADING_2}),
+        makeTable2(['Стадия','Количество, шт.'], stagesRowsDOCX(curr.stages)),
 
-        // 5. Динамика по филиалам
-        new Paragraph({
-          text: "5. Динамика по филиалам (шт.)",
-          heading: HeadingLevel.HEADING_2,
-        }),
-        new Table({
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Филиал", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: prev.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: curr.asOf||'—', bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: "Δ", bold: true })] }),
-              ],
-            }),
-            ...BRANCHES.map(name => {
-              const p = prev.branches[name], c = curr.branches[name];
-              if(!p && !c) return null;
-              const prevV = p? p.total : null;
-              const currV = c? c.total : null;
-              const d = delta(currV, prevV);
-              return createWordTableRow(name, prevV, currV, d);
-            }).filter(Boolean),
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "ИТОГО по обществу", bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(prevBranchTotal), bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: fmt(currBranchTotal), bold: true })] }),
-                new TableCell({ children: [new Paragraph({ text: deltaStr(deltaBranchTotal), bold: true })] }),
-              ],
-            }),
-          ],
-        }),
-      ],
-    }],
+        new Paragraph({text:'3) Отдельно — приказ №425 (шт.)', heading:HeadingLevel.HEADING_2}),
+        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+          ['Всего по приказу №425, шт.', fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)]
+        ]),
+
+        new Paragraph({text:'4) Отдельно — ПАО «Ростелеком» (шт.)', heading:HeadingLevel.HEADING_2}),
+        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+          ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
+        ]),
+
+        new Paragraph({text:'Динамика по филиалам (шт.)', heading:HeadingLevel.HEADING_2}),
+        makeTable4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
+          ...branchRowsDOCX(),
+          ['ИТОГО по обществу', fmt(sumBranchTotals(prev)), fmt(sumBranchTotals(curr)), deltaStr(delta(sumBranchTotals(curr), sumBranchTotals(prev)))]
+        ]),
+      ]
+    }]
   });
 
-  // Функции для создания строк таблиц
-  function createWordTableRow(label, prevVal, currVal, deltaVal) {
-    return new TableRow({
-      children: [
-        new TableCell({ children: [new Paragraph({ text: label })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(prevVal) })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(currVal) })] }),
-        new TableCell({ children: [new Paragraph({ text: deltaStr(deltaVal) })] }),
-      ],
+  Packer.toBlob(doc).then(blob=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ВОЛС_выжимка_${(curr.asOf||'').replaceAll('.','-')}.docx`;
+    a.click();
+  });
+
+  // helpers: DOCX tables
+  function cell(text, bold=false){
+    return new TableCell({
+      width:{size: 1, type: WidthType.AUTO},
+      children:[new Paragraph({children:[new TextRun({text, bold})]})]
     });
   }
-
-  function createWordTableRow2(label, val) {
-    return new TableRow({
-      children: [
-        new TableCell({ children: [new Paragraph({ text: label })] }),
-        new TableCell({ children: [new Paragraph({ text: fmt(val) })] }),
-      ],
+  function makeTable4(head, rows){
+    const headRow = new TableRow({children: head.map(h=>cell(h,true))});
+    const bodyRows = rows.map(r=> new TableRow({children:r.map(c=>cell(String(c)))}));
+    return new Table({
+      width:{size:100, type:WidthType.PERCENTAGE},
+      rows:[headRow, ...bodyRows]
     });
   }
-
-  // Генерация и скачивание
-  docx.Packer.toBlob(doc).then(blob => {
-    saveAs(blob, `ВОЛС_динамика_${(curr.asOf||'').replaceAll('.','-')}.docx`);
-  });
+  function makeTable2(head, rows){
+    const headRow = new TableRow({children: head.map(h=>cell(h,true))});
+    const bodyRows = rows.map(r=> new TableRow({children:r.map(c=>cell(String(c)))}));
+    return new Table({
+      width:{size:100, type:WidthType.PERCENTAGE},
+      rows:[headRow, ...bodyRows]
+    });
+  }
+  function stagesRowsDOCX(st){
+    const out=[];
+    const push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
+    push('Будет включено в доп. соглашение', st.to_agreement);
+    push('В работе у филиала', st.in_branch);
+    push('Договор на оформлении Россети Цифра', st.rosseti_cifra);
+    push('Договор на подписании у оператора', st.operator_sign);
+    if(st.filial_approve!=null) push('Договор на согласовании в филиале', st.filial_approve);
+    if(st.demounted!=null) push('Демонтировано (справочно)', st.demounted);
+    return out;
+  }
+  function branchRowsDOCX(){
+    const rows=[];
+    BRANCHES.forEach(n=>{
+      const p=prev.branches[n], c=curr.branches[n];
+      if(!p && !c) return;
+      rows.push([n, fmt(p?p.total:0), fmt(c?c.total:0), deltaStr(delta(c?c.total:null, p?p.total:null))]);
+    });
+    return rows;
+  }
 }
 
 /* ================== СВЯЗКА UI ================== */
@@ -1152,10 +814,10 @@ $('#btnParse').addEventListener('click', async ()=>{
     $('#results').style.display='block';
     render();
     // кнопки выгрузок
-    $('#btnPptx').onclick = downloadPPTX;
-    $('#btnPptxPdf').onclick = downloadPptxAsPDF;
-    $('#btnWord').onclick  = downloadWord;
-    $('#btnPdf').onclick = downloadPDF;
+    $('#btnPptx').onclick  = downloadPPTX;
+    $('#btnPptPdf').onclick= downloadPPTXPDF;
+    $('#btnPdf').onclick   = downloadPDF;
+    $('#btnDocx').onclick  = downloadDOCX;
   }catch(e){
     console.error(e);
     alert('Не удалось разобрать PDF. Убедитесь, что загружены «те» отчёты.');
