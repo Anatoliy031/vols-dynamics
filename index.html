@@ -5,53 +5,78 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ВОЛС — динамика недели (из 2 PDF)</title>
 
+<!-- ======= СТИЛЬ под «Россети» ======= -->
 <style>
-  :root{
-    --blue:#003DA5; --blue-2:#1B4FB3; --gray:#4D4D4F;
-    --bg:#fff; --panel:#f6f8fc; --text:#151A22; --muted:#6b7280;
-    --ok:#169C4A; --warn:#F59E0B; --bad:#D92D20; --line:#DDE3F0;
-  }
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-  .wrap{max-width:1060px;margin:0 auto;padding:20px 16px 40px;}
-  header{display:flex;align-items:center;gap:14px;margin:0 0 12px;border-bottom:2px solid var(--blue);padding-bottom:10px}
-  header img{height:34px}
-  header h1{font-size:20px;margin:0;font-weight:800;color:var(--blue)}
-  .card{background:var(--panel);border-radius:14px;padding:16px 16px 12px;border:1px solid var(--line);margin-bottom:16px}
-  h2{font-size:18px;margin:0 0 8px;color:var(--blue-2)}
-  label{display:block;margin-bottom:8px;color:var(--gray);font-weight:600}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .col{flex:1 1 320px}
-  input[type=file]{width:100%;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff;color:#0f172a}
-  button{appearance:none;border:0;border-radius:12px;padding:12px 16px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}
-  button.secondary{background:#e8eefc;color:#143d90;border:1px solid #c8d6ff}
-  button:disabled{opacity:.6;cursor:not-allowed}
-  .kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px}
-  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
-  .kpi b{display:block;font-size:13px;color:#223}
-  .kpi span{display:block;font-size:22px;margin-top:4px;font-weight:800}
-  .delta{font-size:12px;margin-top:2px}
-  .delta.up{color:var(--ok)} .delta.down{color:var(--bad)} .delta.na{color:var(--muted)}
-  .muted{color:var(--muted)}
-  .table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-  .table th,.table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
-  .table th{color:#0f1a2c;font-weight:800;background:#eef3ff}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{padding:6px 10px;border-radius:999px;background:#eef3ff;border:1px solid #d7e2ff;color:#173a8a;font-size:12px}
-  .canvas-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
-  .footer{font-size:13px;color:var(--muted);margin-top:8px}
-  .total-row td{font-weight:800;background:#f7fbff}
+:root{
+  --blue:#003DA5; /* Россети синий */
+  --blue-2:#1B4FB3;
+  --gray:#4D4D4F;
+  --bg:#fff;
+  --panel:#f6f8fc;
+  --text:#151A22;
+  --muted:#6b7280;
+  --ok:#169C4A;
+  --warn:#F59E0B;
+  --bad:#D92D20;
+  --line:#DDE3F0;
+}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+.wrap{max-width:1060px;margin:0 auto;padding:20px 16px 40px;}
+header{display:flex;align-items:center;gap:14px;margin:0 0 12px;border-bottom:2px solid var(--blue);padding-bottom:10px}
+header img{height:34px}
+header h1{font-size:20px;margin:0;font-weight:800;color:var(--blue)}
+.card{background:var(--panel);border-radius:14px;padding:16px 16px 12px;border:1px solid var(--line);margin-bottom:16px}
+h2{font-size:18px;margin:0 0 8px;color:var(--blue-2)}
+label{display:block;margin-bottom:8px;color:var(--gray);font-weight:600}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1 1 320px}
+input[type=file]{width:100%;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff;color:#0f172a}
+button{appearance:none;border:0;border-radius:12px;padding:12px 16px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}
+button.secondary{background:#e8eefc;color:#143d90;border:1px solid #c8d6ff}
+button:disabled{opacity:.6;cursor:not-allowed}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:13px;color:#223}
+.kpi span{display:block;font-size:22px;margin-top:4px;font-weight:800}
+.delta{font-size:12px;margin-top:2px}
+.delta.up{color:var(--ok)}
+.delta.down{color:var(--bad)}
+.delta.na{color:var(--muted)}
+.muted{color:var(--muted)}
+.table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.table th,.table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+.table th{color:#0f1a2c;font-weight:800;background:#eef3ff}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 10px;border-radius:999px;background:#eef3ff;border:1px solid #d7e2ff;color:#173a8a;font-size:12px}
+.canvas-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.footer{font-size:13px;color:var(--muted);margin-top:8px}
+.print-slide{page-break-after:always; background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px}
+.print-h1{font-size:22px; font-weight:800; color:var(--blue); margin:0 0 6px}
+.print-h2{font-size:16px; font-weight:800; color:var(--blue-2); margin:10px 0 6px}
 </style>
 
-<!-- libs -->
+<!-- ======= БИБЛИОТЕКИ ======= -->
+<!-- PDF.js: парсинг PDF локально в браузере -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
+
+<!-- Chart.js: графики -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- PptxGenJS: PPTX -->
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+<!-- pdfmake: PDF-выжимка -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
-</head>
 
+<!-- html2pdf.js: PDF из HTML (для презентации в PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- docx: генерация .docx (выжимка) -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+
+</head>
 <body>
 <div class="wrap">
   <header>
@@ -59,6 +84,7 @@
     <h1>ВОЛС — динамика за неделю (из 2 PDF-отчётов)</h1>
   </header>
 
+  <!-- Загрузка файлов -->
   <div class="card">
     <div class="row">
       <div class="col">
@@ -77,13 +103,16 @@
     <div class="footer">Файлы обрабатываются только в вашем браузере. Ничего не загружается на сервер.</div>
   </div>
 
+  <!-- Результаты -->
   <div id="results" style="display:none">
+    <!-- Слайд 1 -->
     <div class="card">
       <h2>1) Общая информация (шт.) — нарастающим итогом</h2>
       <div id="dateRange" class="muted" style="margin-bottom:8px"></div>
       <div class="kpi-grid" id="kpiGrid"></div>
     </div>
 
+    <!-- Слайд 2 -->
     <div class="card">
       <h2>2) «В работе» — распределение по стадиям (шт., текущий отчёт)</h2>
       <div class="chips">
@@ -100,11 +129,13 @@
       </div>
     </div>
 
+    <!-- Слайд 3 -->
     <div class="card">
       <h2>3) Выявление по приказу №425 (шт., отдельный учёт)</h2>
       <table class="table" id="tblPrikaz"></table>
     </div>
 
+    <!-- Слайд 4 -->
     <div class="card">
       <h2>4) ПАО «Ростелеком» (шт., отдельный учёт)</h2>
       <table class="table" id="tblRT"></table>
@@ -113,6 +144,7 @@
       </div>
     </div>
 
+    <!-- Динамика по филиалам -->
     <div class="card">
       <h2>Динамика по филиалам ЭС (шт.)</h2>
       <table class="table" id="tblBranches"></table>
@@ -121,13 +153,38 @@
       </div>
     </div>
 
+    <!-- Кнопки выгрузок -->
     <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start">
       <button id="btnPptx">Скачать презентацию (.pptx)</button>
-      <button id="btnPptPdf" class="secondary">Скачать презентацию (PDF)</button>
       <button id="btnPdf" class="secondary">Скачать PDF-выжимку</button>
-      <button id="btnDocx">Скачать выжимку (.docx)</button>
+      <button id="btnPptxPdf" class="secondary">Скачать презентацию (PDF)</button>
+      <button id="btnDocx" class="secondary">Скачать выжимку (.docx)</button>
     </div>
   </div>
+
+  <!-- Невидимая область для PDF-презентации -->
+  <div id="printArea" style="display:none">
+    <div class="print-slide">
+      <div class="print-h1">ВОЛС — динамика недели</div>
+      <div class="muted" id="p_dateRange"></div>
+      <div class="print-h2">1) Общая информация (шт.)</div>
+      <div id="p_kpi"></div>
+    </div>
+    <div class="print-slide">
+      <div class="print-h2">2) «В работе» — распределение по стадиям</div>
+      <div id="p_stages"></div>
+    </div>
+    <div class="print-slide">
+      <div class="print-h2">3) Приказ №425 и 4) ПАО «Ростелеком»</div>
+      <div id="p_prikaz"></div>
+      <div id="p_rt"></div>
+    </div>
+    <div class="print-slide">
+      <div class="print-h2">Динамика по филиалам (шт.) — с итогом по Обществу</div>
+      <div id="p_branches"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -136,23 +193,14 @@ const $ = s => document.querySelector(s);
 const fmt = n => n==null? '—' : n.toLocaleString('ru-RU');
 const normNum = s => s ? parseInt(String(s).replace(/[^\d]/g,''),10) : null;
 const delta = (a,b)=> (a==null || b==null)? null : (a-b);
-const deltaStr = d => d==null? '—' : (d>0? `+${fmt(d)}`: fmt(d));
+const deltaStr = d => d==null? '—' : (d>0? ('+'+fmt(d)) : fmt(d));
+
+/* ВАЖНО: полный перечень филиалов, включая Усть-Лабинские и Юго-Западные */
 const BRANCHES = [
   "Сочинские ЭС","Тимашевские ЭС","Тихорецкие ЭС","Усть-Лабинские ЭС",
   "Юго-Западные ЭС","Адыгейские ЭС","Армавирские ЭС","Краснодарские ЭС",
   "Лабинские ЭС","Ленинградские ЭС","Славянские ЭС"
 ];
-
-// Нормализация текста для устойчивого парсинга филиалов
-function normalizeText(s){
-  return s
-    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, '-') // все виды дефисов -> '-'
-    .replace(/электрическ[иея]+\s+сети/gi, 'ЭС')                // «электрические сети» -> «ЭС»
-    .replace(/юго\s*-\s*западные/gi, 'Юго-Западные')            // вариации пробелов вокруг дефиса
-    .replace(/усть\s*-\s*лабинские/gi, 'Усть-Лабинские')
-    .replace(/\s+/g,' ')                                        // лишние пробелы
-    .trim();
-}
 
 function sectionBetween(text, startRe, endRe){
   const s = text.search(startRe);
@@ -161,6 +209,7 @@ function sectionBetween(text, startRe, endRe){
   const e = rest.search(endRe);
   return e<0 ? rest : rest.slice(0,e);
 }
+
 async function pdfToText(file){
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data: buf}).promise;
@@ -175,61 +224,68 @@ async function pdfToText(file){
 
 /* ================== ПАРСИНГ PDF ================== */
 function parseReport(text){
-  // разрезы
-  let sec1 = sectionBetween(text, /Информация о бездоговорном подвесе ВОЛС в АО/i, /Информация о бездоговорном подвесе ВОЛС в филиалах/i) || text;
-  let sec2 = sectionBetween(text, /Информация о бездоговорном подвесе ВОЛС в филиалах/i, /Выявление бездоговорного подвеса ВОЛС.*приказ/i) || '';
+  const sec1 = sectionBetween(text, /Информация о бездоговорном подвесе ВОЛС в АО/i, /Информация о бездоговорном подвесе ВОЛС в филиалах/i) || text;
+  const sec2 = sectionBetween(text, /Информация о бездоговорном подвесе ВОЛС в филиалах/i, /Выявление бездоговорного подвеса ВОЛС.*приказ/i) || '';
   const sec3 = sectionBetween(text, /Выявление бездоговорного подвеса ВОЛС.*приказ/i, /Информация о бездоговорном размещении ПАО/i) || '';
-  let sec4 = sectionBetween(text, /Информация о бездоговорном размещении ПАО/i, /$\n?/i) || '';
-
-  // нормализация проблемных мест для филиалов
-  sec2 = normalizeText(sec2);
-  sec4 = normalizeText(sec4);
+  const sec4 = sectionBetween(text, /Информация о бездоговорном размещении ПАО/i, /$\n?/i) || '';
 
   // дата
   const mDate = sec1.match(/по состоянию на\s+(\d{2}\.\d{2}\.\d{4})/i);
   const asOf = mDate ? mDate[1] : '';
 
-  // totals (из текста отчёта; «выявлено» далее будет пересчитано по правилу)
-  const found_raw = normNum((sec1.match(/выявлено[^0-9]+(\d[\d\s]+)\s*шт.*опор/i)||[])[1]);
+  // totals (слайд 1) — важные поля
   const legalized = normNum((sec1.match(/узаконено[^0-9]+(\d[\d\s]+)/i)||[])[1]);
-  const removed = normNum((sec1.match(/за\s*2025\s*год\s*демонтировано[^0-9]+(\d[\d\s]+)/i)||[])[1]);
+  const removed   = normNum((sec1.match(/за\s*2025\s*год\s*демонтировано[^0-9]+(\d[\d\s]+)/i)||[])[1]);
+
   let inWork=null, rtlInWork=null;
   const mWork = sec1.match(/в\s*работе[^,]*всего[^0-9]+(\d[\d\s]+)[^П]*ПАО\s*«?Ростелеком»?\s+(\d[\d\s]+)/i);
-  if(mWork){ inWork = normNum(mWork[1]); rtlInWork = normNum(mWork[2]); }
+  if(mWork){
+    inWork = normNum(mWork[1]);
+    rtlInWork = normNum(mWork[2]);
+  }
 
-  // стадии (суммарно)
-  function sumAll(re, t){ let s=0,m; const R=new RegExp(re,'gi'); while((m=R.exec(t))){ s += normNum(m[1])||0; } return s||null; }
+  // стадии (слайд 2) — суммарно (по всем филиалам в блоке филиалов)
+  function sumAll(re, t){
+    let s=0,m;
+    const R=new RegExp(re,'gi');
+    while((m=R.exec(t))){
+      s += normNum(m[1])||0;
+    }
+    return s||null;
+  }
   const stages = {
     to_agreement: sumAll(/будет включено[^0-9]+(\d[\d\s]+)/, sec2),
     in_branch:    sumAll(/в работе у филиала\s+(\d[\d\s]+)/, sec2),
     rosseti_cifra:sumAll(/договор на оформлении россети цифра\s+(\d[\d\s]+)/, sec2),
     operator_sign:sumAll(/договор на подписании у оператора\s+(\d[\d\s]+)/, sec2),
     filial_approve: sumAll(/договор на согласовании в филиале\s+(\d[\d\s]+)/, sec2),
-    demounted:    sumAll(/демонтировано\s+(\д[\d\s]+)/, sec2)
+    demounted:    sumAll(/демонтировано\s+(\d[\d\s]+)/, sec2)
   };
 
-  // приказ 425 (итог)
+  // приказ 425 (слайд 3) — общий итог
   const prikaz_total = normNum((sec3.match(/общий итог[^0-9]+(\d[\d\s]+)/i)||[])[1]);
 
-  // Ростелеком (итог)
+  // Ростелеком (слайд 4) — общий итог
   const rt_total = normNum((sec4.match(/общий итог[^0-9]+(\d[\d\s]+)/i)||[])[1]);
 
-  // разрез филиалов
+  // разрез филиалов (динамика)
   const branches = parseBranches(sec2);
+  // Ростелеком по филиалам
   const rtBranches = parseRTBranches(sec4);
 
   return {
     asOf,
-    totals: {found_raw, legalized, removed, inWork, rtlInWork},
+    totals: { /* found игнорируем из текста — считаем отдельно по разнице inWork */
+      legalized, removed, inWork, rtlInWork
+    },
     stages,
     prikaz425_total: prikaz_total,
     rostelecom_total: rt_total,
-    branches,
-    rtBranches
+    branches,   // {Филиал: {total: N, ...stages}}
+    rtBranches  // {Филиал: total}
   };
 }
 
-// помощники парсинга филиалов
 function sliceForBranch(text, name, nextNames){
   const i = text.indexOf(name);
   if(i<0) return null;
@@ -246,7 +302,8 @@ function firstNumberAfterName(chunk, name){
   return m? normNum(m[1]) : null;
 }
 function pickNum(chunk, re){
-  const m = chunk.match(re); return m? normNum(m[1]) : null;
+  const m = chunk.match(re);
+  return m? normNum(m[1]) : null;
 }
 function parseBranches(sec2){
   if(!sec2) return {};
@@ -287,32 +344,40 @@ let charts = {};
 
 function computeDeltas(curr, prev){
   return {
-    // Δ «в работе» нужен и сам по себе, и как «Выявлено (расчётное)»
-    inWork: delta(curr.totals.inWork, prev.totals.inWork),
-    rtlInWork: delta(curr.totals.rtlInWork, prev.totals.rtlInWork),
-    legalized: delta(curr.totals.legalized, prev.totals.legalized),
-    removed: delta(curr.totals.removed, prev.totals.removed),
-    prikaz: delta(curr.prikaz425_total, prev.prikaz425_total),
-    rt: delta(curr.rostelecom_total, prev.rostelecom_total)
+    // found НЕ считаем как разницу found; вместо этого — отдельный KPI «выявлено за период» = inWork(curr) - inWork(prev)
+    legalized:  delta(curr.totals.legalized,  prev.totals.legalized),
+    removed:    delta(curr.totals.removed,    prev.totals.removed),
+    inWork:     delta(curr.totals.inWork,     prev.totals.inWork),
+    rtlInWork:  delta(curr.totals.rtlInWork,  prev.totals.rtlInWork),
+    prikaz:     delta(curr.prikaz425_total,    prev.prikaz425_total),
+    rt:         delta(curr.rostelecom_total,   prev.rostelecom_total)
   };
 }
-function sumBranchTotals(rep){
-  let s = 0;
-  Object.values(rep.branches||{}).forEach(v=>{
-    if(v && typeof v.total === 'number') s += v.total;
+
+function sumBranchTotals(map){
+  let s=0;
+  BRANCHES.forEach(n=>{
+    const b = map[n];
+    if(b && b.total!=null) s += b.total;
   });
-  return s || 0;
+  return s;
+}
+
+function rowDelta(prevV, currV){
+  const d = delta(currV, prevV);
+  const cls = d==null? 'na' : d>0? 'up' : 'down';
+  const sign = d==null? '' : d>0? '▲' : (d<0? '▼' : '');
+  const prevTxt = (prevV!=null)? `было: ${fmt(prevV)} • Δ: ${fmt(d)} ${sign}` : 'нет данных';
+  return `<span class="delta ${cls}">${prevTxt}</span>`;
 }
 
 function render(){
   $('#dateRange').textContent = `Сравнение: ${prev.asOf || '—'} → ${curr.asOf || '—'}`;
 
-  // Расчётное «Выявлено» = Δ «В работе всего»
-  const foundCalculated = dlt.inWork;
-
-  // KPI: показываем расчётное «Выявлено», а строку «В работе всего» — отдельно
+  // KPI (шт.)
+  const revealedByDelta = delta(curr.totals.inWork, prev.totals.inWork); // ВЫЯВЛЕНО ЗА ПЕРИОД
   const kpis = [
-    {name:'Выявлено (расчётное), шт.', curr:foundCalculated, prev:null, d:null},
+    {name:'Выявлено за период, шт. (Δ «В работе всего»)', curr:revealedByDelta, prev:null, d:null},
     {name:'В работе всего, шт.', curr:curr.totals.inWork, prev:prev.totals.inWork, d:dlt.inWork},
     {name:'Узаконено, шт.', curr:curr.totals.legalized, prev:prev.totals.legalized, d:dlt.legalized},
     {name:'Демонтировано, шт.', curr:curr.totals.removed, prev:prev.totals.removed, d:dlt.removed},
@@ -321,13 +386,12 @@ function render(){
   $('#kpiGrid').innerHTML = kpis.map(k=>{
     const cls = k.d==null? 'na' : (k.d>0?'up':'down');
     const sign = k.d==null? '' : (k.d>0?'▲':'▼');
-    const deltaHtml = (k.prev!=null && k.d!=null)
-      ? `было: ${fmt(k.prev)} • Δ: ${fmt(k.d)} ${sign}`
-      : 'расчёт по двум отчётам';
+    const deltaHtml = (k.prev==null && k.d==null) ? '<div class="delta na">за период</div>' :
+      `<div class="delta ${cls}">${k.prev!=null?`было: ${fmt(k.prev)} • Δ: ${fmt(k.d)} ${sign}`:'нет данных'}</div>`;
     return `<div class="kpi">
       <b>${k.name}</b>
       <span>${fmt(k.curr)}</span>
-      <div class="delta ${cls}">${deltaHtml}</div>
+      ${deltaHtml}
     </div>`;
   }).join('');
 
@@ -343,77 +407,88 @@ function render(){
   ].filter(r=>r[1]!=null).map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td></tr>`).join('');
   $('#tblStages').innerHTML = `<tr><th>Стадия</th><th>Количество (шт.)</th></tr>${rowsStages}`;
 
-  // Диаграмма стадий
+  // График стадий (pie)
   renderPie('chartStages',
     ['Будет включено','В работе у филиала','Оформление Росети Цифра','Подписание у оператора','Согласование в филиале','Демонтировано'],
     [st.to_agreement, st.in_branch, st.rosseti_cifra, st.operator_sign, st.filial_approve, st.demounted]
   );
 
   // Приказ 425
-  $('#tblPrikaz').innerHTML = `
-    <tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
-    <tr><td>Всего по приказу №425, шт.</td>
-        <td>${fmt(prev.prikaz425_total)}</td>
-        <td>${fmt(curr.prikaz425_total)}</td>
-        <td>${deltaStr(dlt.prikaz)}</td></tr>`;
+  $('#tblPrikaz').innerHTML =
+    `<tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
+     <tr><td>Всего по приказу №425, шт.</td>
+     <td>${fmt(prev.prikaz425_total)}</td>
+     <td>${fmt(curr.prikaz425_total)}</td>
+     <td>${deltaStr(dlt.prikaz)}</td></tr>`;
 
   // Ростелеком
-  $('#tblRT').innerHTML = `
-    <tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
-    <tr><td>Всего по ПАО «Ростелеком», шт.</td>
-        <td>${fmt(prev.rostelecom_total)}</td>
-        <td>${fmt(curr.rostelecom_total)}</td>
-        <td>${deltaStr(dlt.rt)}</td></tr>`;
+  $('#tblRT').innerHTML =
+    `<tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
+     <tr><td>Всего по ПАО «Ростелеком», шт.</td>
+     <td>${fmt(prev.rostelecom_total)}</td>
+     <td>${fmt(curr.rostelecom_total)}</td>
+     <td>${deltaStr(dlt.rt)}</td></tr>`;
 
   // Ростелеком по филиалам (bar) — текущий
   const rtLabels = Object.keys(curr.rtBranches);
   const rtVals = rtLabels.map(k=>curr.rtBranches[k]);
   renderBar('chartRTBranches', rtLabels, rtVals, 'Ростелеком по филиалам (шт.)');
 
-  // Динамика по филиалам + ИТОГО
+  // Динамика по филиалам (таблица + bar) + ИТОГО по Обществу
   const rowsB = [];
   const labelsB=[], deltasB=[];
   BRANCHES.forEach(name=>{
     const p = prev.branches[name], c = curr.branches[name];
     if(!p && !c) return;
-    const prevV = p? p.total : 0;
-    const currV = c? c.total : 0;
-    const d = currV - prevV;
+    const prevV = p? p.total : null;
+    const currV = c? c.total : null;
+    const d = delta(currV, prevV);
     rowsB.push(`<tr>
       <td>${name}</td>
-      <td>${fmt(prevV)}</td>
-      <td>${fmt(currV)}</td>
+      <td>${fmt(prevV||0)}</td>
+      <td>${fmt(currV||0)}</td>
       <td>${deltaStr(d)}</td>
     </tr>`);
     labelsB.push(name);
-    deltasB.push(d);
+    deltasB.push(d||0);
   });
-  const sumPrev = sumBranchTotals(prev);
-  const sumCurr = sumBranchTotals(curr);
-  const sumD = sumCurr - sumPrev;
-  rowsB.push(`<tr class="total-row">
-      <td>ИТОГО по обществу</td>
-      <td>${fmt(sumPrev)}</td>
-      <td>${fmt(sumCurr)}</td>
-      <td>${deltaStr(sumD)}</td>
-    </tr>`);
-  labelsB.push('ИТОГО');
-  deltasB.push(sumD);
 
-  $('#tblBranches').innerHTML = `<tr><th>Филиал</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ, шт.</th></tr>${rowsB.join('')}`;
-  renderBar('chartBranches', labelsB, deltasB, 'Прирост по филиалам за неделю (шт.)');
+  // ИТОГО по Обществу
+  const prevSum = sumBranchTotals(prev.branches);
+  const currSum = sumBranchTotals(curr.branches);
+  const dSum = delta(currSum, prevSum);
+  rowsB.push(`<tr style="font-weight:800;background:#f4f7ff">
+    <td>ИТОГО по Обществу</td>
+    <td>${fmt(prevSum)}</td>
+    <td>${fmt(currSum)}</td>
+    <td>${deltaStr(dSum)}</td>
+  </tr>`);
+
+  $('#tblBranches').innerHTML =
+    `<tr><th>Филиал</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ, шт.</th></tr>${rowsB.join('')}`;
+
+  renderBar('chartBranches', labelsB, deltasB, 'Прирост по филиалам за период (шт.)');
+
+  // Подготовка печатной версии презентации (PDF)
+  fillPrintArea(kpis, rowsStages, prev, curr, dlt, rowsB.join(''));
 }
 
 /* ================== Chart.js ================== */
-let charts={};
-function killChart(id){ if(charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function killChart(id){
+  if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
 function renderPie(id, labels, data){
+  const ds = [];
   const labs=[], vals=[];
-  labels.forEach((l,i)=>{ if(data[i]!=null && data[i]>0){ labs.push(l); vals.push(data[i]); } });
+  labels.forEach((l,i)=>{
+    if(data[i]!=null && data[i]>0){
+      labs.push(l); vals.push(data[i]);
+    }
+  });
   killChart(id);
   charts[id] = new Chart($('#'+id), {
     type:'pie',
-    data:{ labels:labs, datasets:[{ data:vals, backgroundColor:['#003DA5','#1B4FB3','#4D4D4F','#6B7280','#93C5FD','#60A5FA'] }]},
+    data:{ labels:labs, datasets:[{ data:vals }]},
     options:{ plugins:{ legend:{position:'right'} } }
   });
 }
@@ -421,37 +496,45 @@ function renderBar(id, labels, data, title){
   killChart(id);
   charts[id] = new Chart($('#'+id), {
     type:'bar',
-    data:{ labels, datasets:[{ label:title, data, backgroundColor:'#003DA5' }]},
+    data:{ labels, datasets:[{ label:title, data }]},
     options:{ plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true } } }
   });
 }
 
-/* ================== ВЫГРУЗКИ ================== */
-function canvasToDataUrl(id){ const c = $('#'+id); return c? c.toDataURL('image/png',1.0):null; }
+/* ================== PPTX / PDF / DOCX ================== */
+function canvasToDataUrl(id){
+  const c = $('#'+id);
+  return c? c.toDataURL('image/png',1.0):null;
+}
 
-/* PPTX */
 function downloadPPTX(){
   const pptx = new PptxGenJS();
   const blue = '003DA5';
-  const foundCalculated = dlt.inWork;
 
-  // Slide 1
+  // slide 1 — Общая
   {
     const s = pptx.addSlide();
     s.addText('ВОЛС — динамика недели', {x:0.5,y:0.3,w:10,h:0.5,fontSize:26,bold:true,color:blue});
     s.addText(`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, {x:0.5,y:0.9,w:10,h:0.3,fontSize:14,color:'666'});
+
+    const revealedByDelta = (curr.totals.inWork!=null && prev.totals.inWork!=null)
+      ? (curr.totals.inWork - prev.totals.inWork) : null;
+
     const rows = [
-      [{text:'Показатель', options:{bold:true}},{text:prev.asOf||'—',options:{bold:true}},{text:curr.asOf||'—',options:{bold:true}},{text:'Δ',options:{bold:true}}],
-      ['Выявлено (расчётное), шт.', '—', '—', foundCalculated!=null? String(foundCalculated):'—'],
-      ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
+      [{text:'Показатель', options:{bold:true}},
+       {text: prev.asOf||'—', options:{bold:true}},
+       {text: curr.asOf||'—', options:{bold:true}},
+       {text:'Δ', options:{bold:true}}],
+      ['Выявлено за период (Δ «В работе всего»), шт.', '—', fmt(revealedByDelta), '—'],
+      ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
       ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
       ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
       ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)],
     ];
-    s.addTable(rows, {x:0.5,y:1.1,w:9.6, colW:[4.8,1.6,1.6,1.6], fontSize:16, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF', color:'0f1a2c'});
+    s.addTable(rows, {x:0.5,y:1.3,w:9.5, colW:[5.3,1.4,1.4,1.4], fontSize:16, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF', color:'0f1a2c'});
   }
 
-  // Slide 2 — Стадии
+  // slide 2 — Стадии
   {
     const s = pptx.addSlide();
     s.addText(`«В работе» — распределение по стадиям (шт., на ${curr.asOf||'—'})`, {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
@@ -466,11 +549,11 @@ function downloadPPTX(){
     add('Договор на подписании у оператора', st.operator_sign);
     if(st.filial_approve!=null) add('Договор на согласовании в филиале', st.filial_approve);
     if(st.demounted!=null) add('Демонтировано (справочно)', st.demounted);
-    s.addTable(rows, {x:0.5,y:1.0,w:9.5, colW:[6.0,3.5], fontSize:18, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF'});
+    s.addTable(rows, {x:0.5,y:1.0,w:9.5, colW:[6.0,3.5], fontSize:18, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF', color:'0f1a2c'});
     const img = canvasToDataUrl('chartStages'); if(img) s.addImage({data:img, x:0.6, y:3.2, w:9.3});
   }
 
-  // Slide 3 — Приказ 425
+  // slide 3 — Приказ 425
   {
     const s = pptx.addSlide();
     s.addText('Выявление по приказу №425 (шт., отдельный учёт)', {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
@@ -481,7 +564,7 @@ function downloadPPTX(){
     s.addTable(rows, {x:0.5,y:1.1,w:9.5, colW:[5.0,1.5,1.5,1.5], fontSize:18, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF'});
   }
 
-  // Slide 4 — Ростелеком
+  // slide 4 — Ростелеком
   {
     const s = pptx.addSlide();
     s.addText('ПАО «Ростелеком» — отдельный учёт (шт.)', {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
@@ -493,21 +576,24 @@ function downloadPPTX(){
     const img = canvasToDataUrl('chartRTBranches'); if(img) s.addImage({data:img, x:0.6, y:2.6, w:9.3});
   }
 
-  // Slide 5 — Динамика по филиалам + ИТОГО
+  // slide 5 — Динамика по филиалам (топ-10)
   {
     const s = pptx.addSlide();
     s.addText('Динамика по филиалам (шт.)', {x:0.5,y:0.3,w:10,h:0.5,fontSize:24,bold:true,color:blue});
+    const pairs = BRANCHES.map(n=>{
+      const p = prev.branches[n], c = curr.branches[n];
+      const pv=p?p.total:null, cv=c?c.total:null, d=delta(cv,pv);
+      return {n, pv, cv, d};
+    }).filter(r=>r.pv!=null || r.cv!=null).sort((a,b)=> (b.d||0)-(a.d||0)).slice(0,10);
+
     const rows = [[{text:'Филиал',options:{bold:true}},{text:prev.asOf||'—',options:{bold:true}},{text:curr.asOf||'—',options:{bold:true}},{text:'Δ',options:{bold:true}}]];
-    const pairs = [];
-    BRANCHES.forEach(n=>{
-      const p=prev.branches[n], c=curr.branches[n];
-      if(!p && !c) return;
-      const pv=p?p.total:0, cv=c?c.total:0, d=cv-pv;
-      rows.push([n, fmt(pv), fmt(cv), (d>0?`+${fmt(d)}`:fmt(d))]);
-      pairs.push({n,d});
-    });
-    const sumPrev=sumBranchTotals(prev), sumCurr=sumBranchTotals(curr), sumD=sumCurr-sumPrev;
-    rows.push(['ИТОГО по обществу', fmt(sumPrev), fmt(sumCurr), (sumD>0?`+${fmt(sumD)}`:fmt(sumD))]);
+    pairs.forEach(r=>rows.push([r.n, fmt(r.pv||0), fmt(r.cv||0), deltaStr(r.d)]));
+
+    // добавим ИТОГО по Обществу
+    const prevSum = sumBranchTotals(prev.branches);
+    const currSum = sumBranchTotals(curr.branches);
+    rows.push(['ИТОГО по Обществу', fmt(prevSum), fmt(currSum), deltaStr(delta(currSum, prevSum))]);
+
     s.addTable(rows, {x:0.5,y:1.1,w:9.5, colW:[4.6,1.6,1.6,1.6], fontSize:16, border:{pt:1,color:'bfc9dd'}, fill:'FFFFFF'});
     const img = canvasToDataUrl('chartBranches'); if(img) s.addImage({data:img, x:0.6, y:3.4, w:9.3});
   }
@@ -515,91 +601,10 @@ function downloadPPTX(){
   pptx.writeFile({ fileName:`ВОЛС_динамика_${(curr.asOf||'').replaceAll('.','-')}.pptx` });
 }
 
-/* Презентация PDF */
-function downloadPPTXPDF(){
-  const imgStages = canvasToDataUrl('chartStages');
-  const imgRT = canvasToDataUrl('chartRTBranches');
-  const imgBranches = canvasToDataUrl('chartBranches');
-  const sumPrev = sumBranchTotals(prev), sumCurr = sumBranchTotals(curr), sumD = sumCurr - sumPrev;
-  const foundCalculated = dlt.inWork;
-
-  const docDef = {
-    pageMargins:[26,26,26,26],
-    content:[
-      {text:'ВОЛС — динамика недели (презентация)', style:'h1'},
-      {text:`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, style:'muted'},
-
-      {text:'Слайд 1. Общая информация (шт.) — нарастающим итогом', style:'h2'},
-      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ['Выявлено (расчётное), шт.', '—','—', foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
-        ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
-        ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
-        ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
-        ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
-      ]),
-
-      {text:`Слайд 2. «В работе» — распределение по стадиям (на ${curr.asOf||'—'})`, style:'h2'},
-      imgStages ? {image: imgStages, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
-      table2(['Стадия','Количество, шт.'], stagesRows(curr.stages)),
-
-      {text:'Слайд 3. Приказ №425 (шт.)', style:'h2'},
-      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ['Всего по приказу №425, шт.', fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)]
-      ]),
-
-      {text:'Слайд 4. ПАО «Ростелеком» (шт.)', style:'h2'},
-      imgRT ? {image: imgRT, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
-      table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
-      ]),
-
-      {text:'Слайд 5. Динамика по филиалам (шт.)', style:'h2'},
-      imgBranches ? {image: imgBranches, width: 520, margin:[0,4,0,8]} : {text:'—', style:'muted'},
-      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ...branchRows(),
-        ['ИТОГО по обществу', fmt(sumPrev), fmt(sumCurr), (sumD>0?`+${fmt(sumD)}`:fmt(sumD))]
-      ]),
-    ],
-    styles:{ h1:{fontSize:18,bold:true,color:'#003DA5',margin:[0,0,0,6]},
-             h2:{fontSize:14,bold:true,color:'#1B4FB3',margin:[0,10,0,6]},
-             muted:{fontSize:10, color:'#6b7280', margin:[0,0,0,8]} },
-    defaultStyle:{fontSize:11}
-  };
-  pdfMake.createPdf(docDef).download(`ВОЛС_презентация_${(curr.asOf||'').replaceAll('.','-')}.pdf`);
-
-  function table4(head, rows){
-    return { table:{ headerRows:1, widths:['*','auto','auto','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
-             layout:'lightHorizontalLines', margin:[0,4,0,8] };
-  }
-  function table2(head, rows){
-    return { table:{ headerRows:1, widths:['*','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
-             layout:'lightHorizontalLines', margin:[0,4,0,8] };
-  }
-  function stagesRows(st){
-    const out=[], push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
-    push('Будет включено в доп. соглашение', st.to_agreement);
-    push('В работе у филиала', st.in_branch);
-    push('Договор на оформлении Россети Цифра', st.rosseti_cifra);
-    push('Договор на подписании у оператора', st.operator_sign);
-    if(st.filial_approve!=null) push('Договор на согласовании в филиале', st.filial_approve);
-    if(st.demounted!=null) push('Демонтировано (справочно)', st.demounted);
-    return out;
-  }
-  function branchRows(){
-    const rows=[];
-    BRANCHES.forEach(n=>{
-      const p=prev.branches[n], c=curr.branches[n];
-      if(!p && !c) return;
-      const pv=p?p.total:0, cv=c?c.total:0, d=cv-pv;
-      rows.push([n, fmt(pv), fmt(cv), (d>0?`+${fmt(d)}`:fmt(d))]);
-    });
-    return rows;
-  }
-}
-
-/* PDF-выжимка */
 function downloadPDF(){
-  const foundCalculated = dlt.inWork;
+  const revealedByDelta = (curr.totals.inWork!=null && prev.totals.inWork!=null)
+    ? (curr.totals.inWork - prev.totals.inWork) : null;
+
   const docDef = {
     pageMargins:[26,26,26,26],
     content:[
@@ -608,8 +613,8 @@ function downloadPDF(){
 
       {text:'1) Общая информация (шт.) — нарастающим итогом', style:'h2'},
       table4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ['Выявлено (расчётное), шт.', '—','—', foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
-        ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
+        ['Выявлено за период (Δ «В работе всего»), шт.', '—', fmt(revealedByDelta), '—'],
+        ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
         ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
         ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
         ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
@@ -629,10 +634,7 @@ function downloadPDF(){
       ]),
 
       {text:'Динамика по филиалам (шт.)', style:'h2'},
-      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-        ...branchRows(),
-        ['ИТОГО по обществу', fmt(sumBranchTotals(prev)), fmt(sumBranchTotals(curr)), (sumBranchTotals(curr)-sumBranchTotals(prev)>0?`+${fmt(sumBranchTotals(curr)-sumBranchTotals(prev))}`:fmt(sumBranchTotals(curr)-sumBranchTotals(prev)))]
-      ])
+      table4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], branchRows(true))
     ],
     styles:{ h1:{fontSize:18,bold:true,color:'#003DA5',margin:[0,0,0,6]},
              h2:{fontSize:14,bold:true,color:'#1B4FB3',margin:[0,10,0,6]},
@@ -642,15 +644,13 @@ function downloadPDF(){
   pdfMake.createPdf(docDef).download(`ВОЛС_динамика_${(curr.asOf||'').replaceAll('.','-')}.pdf`);
 
   function table4(head, rows){
-    return { table:{ headerRows:1, widths:['*','auto','auto','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
-             layout:'lightHorizontalLines', margin:[0,4,0,8] };
+    return { table:{ headerRows:1, widths:['*','auto','auto','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] }, layout:'lightHorizontalLines', margin:[0,4,0,8] };
   }
   function table2(head, rows){
-    return { table:{ headerRows:1, widths:['*','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] },
-             layout:'lightHorizontalLines', margin:[0,4,0,8] };
+    return { table:{ headerRows:1, widths:['*','auto'], body:[ head.map(h=>({text:h,bold:true})), ...rows ] }, layout:'lightHorizontalLines', margin:[0,4,0,8] };
   }
   function stagesRows(st){
-    const out=[], push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
+    const out=[]; const push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
     push('Будет включено в доп. соглашение', st.to_agreement);
     push('В работе у филиала', st.in_branch);
     push('Договор на оформлении Россети Цифра', st.rosseti_cifra);
@@ -659,130 +659,191 @@ function downloadPDF(){
     if(st.demounted!=null) push('Демонтировано (справочно)', st.demounted);
     return out;
   }
-  function branchRows(){
+  function branchRows(withTotal){
     const rows=[];
     BRANCHES.forEach(n=>{
       const p=prev.branches[n], c=curr.branches[n];
       if(!p && !c) return;
-      const pv=p?p.total:0, cv=c?c.total:0, d=cv-pv;
-      rows.push([n, fmt(pv), fmt(cv), (d>0?`+${fmt(d)}`:fmt(d))]);
+      rows.push([n, fmt(p?p.total:0), fmt(c?c.total:0), deltaStr(delta(c?c.total:null, p?p.total:null))]);
     });
+    if(withTotal){
+      const ps = sumBranchTotals(prev.branches), cs = sumBranchTotals(curr.branches);
+      rows.push(['ИТОГО по Обществу', fmt(ps), fmt(cs), deltaStr(delta(cs, ps))]);
+    }
     return rows;
   }
 }
 
-/* DOCX-выжимка */
-function downloadDOCX(){
-  const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType } = window.docx;
-  const foundCalculated = dlt.inWork;
+// Презентация (PDF) из HTML (html2pdf)
+function downloadPptxPDF(){
+  // переносим ключевой контент в printArea и конвертируем
+  const opt = {
+    margin:       10,
+    filename:     `ВОЛС_презентация_${(curr.asOf||'').replaceAll('.','-')}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS:true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().from(document.getElementById('printArea')).set(opt).save();
+}
+
+// DOCX-выжимка
+async function downloadDOCX(){
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel } = docx;
 
   const doc = new Document({
-    sections:[{
-      properties:{},
-      children:[
-        new Paragraph({text:'ВОЛС — динамика недели', heading:HeadingLevel.HEADING_1}),
-        new Paragraph({text:`Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, spacing:{after:200}}),
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({ text: "ВОЛС — выжимка (неделя)", heading: HeadingLevel.HEADING_1 }),
+        new Paragraph({ text: `Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`, spacing:{ after:200 } }),
 
-        new Paragraph({text:'1) Общая информация (шт.) — нарастающим итогом', heading:HeadingLevel.HEADING_2}),
-        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-          ['Выявлено (расчётное), шт.', '—','—', foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
-          ['В работе всего, шт.', fmt(prev.totals.inWork), fmt(curr.totals.inWork), foundCalculated!=null? (foundCalculated>0?`+${fmt(foundCalculated)}`:fmt(foundCalculated)):'—'],
-          ['Узаконено, шт.', fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
-          ['Демонтировано, шт.', fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
-          ['ПАО «Ростелеком» (в «в работе»), шт.', fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)]
+        // Таблица 1
+        new Paragraph({ text: "1) Общая информация (шт.)", heading: HeadingLevel.HEADING_2 }),
+        makeTable([
+          ["Показатель", prev.asOf||'—', curr.asOf||'—', "Δ"],
+          ["Выявлено за период (Δ «В работе всего»), шт.", "—", fmt(curr.totals.inWork - prev.totals.inWork), "—"],
+          ["В работе всего, шт.", fmt(prev.totals.inWork), fmt(curr.totals.inWork), deltaStr(dlt.inWork)],
+          ["Узаконено, шт.", fmt(prev.totals.legalized), fmt(curr.totals.legalized), deltaStr(dlt.legalized)],
+          ["Демонтировано, шт.", fmt(prev.totals.removed), fmt(curr.totals.removed), deltaStr(dlt.removed)],
+          ["ПАО «Ростелеком» (в «в работе»), шт.", fmt(prev.totals.rtlInWork), fmt(curr.totals.rtlInWork), deltaStr(dlt.rtlInWork)],
         ]),
 
-        new Paragraph({text:'2) «В работе» — распределение по стадиям (шт., текущий)', heading:HeadingLevel.HEADING_2}),
-        makeTable2(['Стадия','Количество, шт.'], stagesRowsDOCX(curr.stages)),
+        // Таблица 2
+        new Paragraph({ text: "2) «В работе» — распределение по стадиям (шт., текущий)", heading: HeadingLevel.HEADING_2 }),
+        makeTable(
+          [["Стадия","Количество, шт."].concat([])],
+          true,
+          [
+            ["Будет включено в доп. соглашение", fmt(curr.stages.to_agreement)],
+            ["В работе у филиала", fmt(curr.stages.in_branch)],
+            ["Договор на оформлении Россети Цифра", fmt(curr.stages.rosseti_cifra)],
+            ["Договор на подписании у оператора", fmt(curr.stages.operator_sign)],
+            ["Договор на согласовании в филиале", fmt(curr.stages.filial_approve)],
+            ["Демонтировано (справочно)", fmt(curr.stages.demounted)]
+          ].filter(r=>r[1]!=='—')
+        ),
 
-        new Paragraph({text:'3) Отдельно — приказ №425 (шт.)', heading:HeadingLevel.HEADING_2}),
-        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-          ['Всего по приказу №425, шт.', fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)]
+        // Таблица 3
+        new Paragraph({ text: "3) Отдельно — приказ №425 (шт.)", heading: HeadingLevel.HEADING_2 }),
+        makeTable([
+          ["Показатель", prev.asOf||'—', curr.asOf||'—', "Δ"],
+          ["Всего по приказу №425, шт.", fmt(prev.prikaz425_total), fmt(curr.prikaz425_total), deltaStr(dlt.prikaz)],
         ]),
 
-        new Paragraph({text:'4) Отдельно — ПАО «Ростелеком» (шт.)', heading:HeadingLevel.HEADING_2}),
-        makeTable4(['Показатель', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-          ['Всего по ПАО «Ростелеком», шт.', fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)]
+        // Таблица 4
+        new Paragraph({ text: "4) Отдельно — ПАО «Ростелеком» (шт.)", heading: HeadingLevel.HEADING_2 }),
+        makeTable([
+          ["Показатель", prev.asOf||'—', curr.asOf||'—', "Δ"],
+          ["Всего по ПАО «Ростелеком», шт.", fmt(prev.rostelecom_total), fmt(curr.rostelecom_total), deltaStr(dlt.rt)],
         ]),
 
-        new Paragraph({text:'Динамика по филиалам (шт.)', heading:HeadingLevel.HEADING_2}),
-        makeTable4(['Филиал', prev.asOf||'—', curr.asOf||'—', 'Δ'], [
-          ...branchRowsDOCX(),
-          ['ИТОГО по обществу', fmt(sumBranchTotals(prev)), fmt(sumBranchTotals(curr)), (sumBranchTotals(curr)-sumBranchTotals(prev)>0?`+${fmt(sumBranchTotals(curr)-sumBranchTotals(prev))}`:fmt(sumBranchTotals(curr)-sumBranchTotals(prev)))]
-        ]),
+        // Таблица 5 — филиалы
+        new Paragraph({ text: "Динамика по филиалам (шт.)", heading: HeadingLevel.HEADING_2 }),
+        makeTable(branchRowsForDocx())
       ]
     }]
   });
 
-  Packer.toBlob(doc).then(blob=>{
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `ВОЛС_выжимка_${(curr.asOf||'').replaceAll('.','-')}.docx`;
-    a.click();
-  });
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ВОЛС_выжимка_${(curr.asOf||'').replaceAll('.','-')}.docx`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 
-  function cell(text, bold=false){
-    return new TableCell({ width:{size: 1, type: WidthType.AUTO}, children:[new Paragraph({children:[new TextRun({text:String(text), bold})]})] });
+  function makeTable(rows, headOnly=false, bodyRows=[]){
+    const allRows = headOnly ? [rows[0], ...bodyRows] : rows;
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: allRows.map((r,i)=> new TableRow({
+        children: r.map(cell => new TableCell({
+          children: [ new Paragraph({ text: String(cell), alignment: AlignmentType.LEFT }) ],
+        }))
+      }))
+    });
   }
-  function makeTable4(head, rows){
-    const headRow = new TableRow({children: head.map(h=>cell(h,true))});
-    const bodyRows = rows.map(r=> new TableRow({children:r.map(c=>cell(c))}));
-    return new Table({ width:{size:100, type:WidthType.PERCENTAGE}, rows:[headRow, ...bodyRows] });
-  }
-  function makeTable2(head, rows){
-    const headRow = new TableRow({children: head.map(h=>cell(h,true))});
-    const bodyRows = rows.map(r=> new TableRow({children:r.map(c=>cell(c))}));
-    return new Table({ width:{size:100, type:WidthType.PERCENTAGE}, rows:[headRow, ...bodyRows] });
-  }
-  function stagesRowsDOCX(st){
-    const out=[], push=(n,v)=>{ if(v!=null) out.push([n, fmt(v)]); };
-    push('Будет включено в доп. соглашение', st.to_agreement);
-    push('В работе у филиала', st.in_branch);
-    push('Договор на оформлении Россети Цифра', st.rossetи_cifra);
-    push('Договор на подписании у оператора', st.operator_sign);
-    if(st.filial_approve!=null) push('Договор на согласовании в филиале', st.filial_approve);
-    if(st.demounted!=null) push('Демонтировано (справочно)', st.demounted);
-    return out;
-  }
-  function branchRowsDOCX(){
-    const rows=[];
+  function branchRowsForDocx(){
+    const rows = [["Филиал", prev.asOf||'—', curr.asOf||'—', "Δ"]];
     BRANCHES.forEach(n=>{
       const p=prev.branches[n], c=curr.branches[n];
       if(!p && !c) return;
-      const pv=p?p.total:0, cv=c?c.total:0, d=cv-pv;
-      rows.push([n, fmt(pv), fmt(cv), (d>0?`+${fmt(d)}`:fmt(d))]);
+      const pv=p?p.total:0, cv=c?c.total:0;
+      rows.push([n, fmt(pv), fmt(cv), deltaStr(delta(cv, pv))]);
     });
+    const ps = sumBranchTotals(prev.branches), cs = sumBranchTotals(curr.branches);
+    rows.push(["ИТОГО по Обществу", fmt(ps), fmt(cs), deltaStr(delta(cs, ps))]);
     return rows;
   }
+}
+
+// Заполнение печатной области
+function fillPrintArea(kpis, rowsStagesHtml, prev, curr, dlt, branchesHtml){
+  $('#p_dateRange').textContent = `Сравнение: ${prev.asOf||'—'} → ${curr.asOf||'—'}`;
+
+  const kpiList = `<ul>${kpis.map(k=>`<li><b>${k.name}:</b> ${fmt(k.curr)}</li>`).join('')}</ul>`;
+  $('#p_kpi').innerHTML = kpiList;
+
+  $('#p_stages').innerHTML = `<table class="table"><tr><th>Стадия</th><th>Количество, шт.</th></tr>${rowsStagesHtml}</table>`;
+
+  $('#p_prikaz').innerHTML = `<table class="table">
+    <tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
+    <tr><td>Всего по приказу №425, шт.</td><td>${fmt(prev.prikaz425_total)}</td><td>${fmt(curr.prikaz425_total)}</td><td>${deltaStr(dlt.prikaz)}</td></tr>
+  </table>`;
+
+  $('#p_rt').innerHTML = `<table class="table">
+    <tr><th>Показатель</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ</th></tr>
+    <tr><td>Всего по ПАО «Ростелеком», шт.</td><td>${fmt(prev.rostelecom_total)}</td><td>${fmt(curr.rostelecom_total)}</td><td>${deltaStr(dlt.rt)}</td></tr>
+  </table>`;
+
+  $('#p_branches').innerHTML = `<table class="table">
+    <tr><th>Филиал</th><th>${prev.asOf||'—'}</th><th>${curr.asOf||'—'}</th><th>Δ, шт.</th></tr>
+    ${branchesHtml}
+  </table>`;
 }
 
 /* ================== СВЯЗКА UI ================== */
 $('#btnReset').addEventListener('click', ()=>{
   $('#currFile').value=''; $('#prevFile').value='';
-  $('#results').style.display='none';
-  curr=prev=dlt=null;
+  $('#results').style.display='none'; curr=prev=dlt=null;
 });
 $('#btnParse').addEventListener('click', async ()=>{
   const fCurr = $('#currFile').files[0];
   const fPrev = $('#prevFile').files[0];
   if(!fCurr || !fPrev){ alert('Загрузите текущий и предыдущий отчёты (2 PDF).'); return; }
   try{
-    $('#btnParse').disabled=true; $('#btnParse').textContent='Обработка…';
+    $('#btnParse').disabled=true;
+    $('#btnParse').textContent='Обработка…';
     const [tCurr, tPrev] = await Promise.all([pdfToText(fCurr), pdfToText(fPrev)]);
-    curr = parseReport(tCurr);
-    prev = parseReport(tPrev);
+
+    // Определяем «кто текущий/кто предыдущий» по дате внутри PDF (на случай, если пользователь перепутает местами)
+    const parsedCurr = parseReport(tCurr);
+    const parsedPrev = parseReport(tPrev);
+    let newer = parsedCurr, older = parsedPrev;
+    // если дата распознана и порядок обратный — меняем
+    const dA = parsedCurr.asOf?.split('.').reverse().join('-');
+    const dB = parsedPrev.asOf?.split('.').reverse().join('-');
+    if(dA && dB && dA < dB){ newer = parsedPrev; older = parsedCurr; }
+
+    curr = newer;
+    prev = older;
     dlt = computeDeltas(curr, prev);
+
     $('#results').style.display='block';
     render();
-    $('#btnPptx').onclick  = downloadPPTX;
-    $('#btnPptPdf').onclick= downloadPPTXPDF;
-    $('#btnPdf').onclick   = downloadPDF;
-    $('#btnDocx').onclick  = downloadDOCX;
+
+    // кнопки выгрузок
+    $('#btnPptx').onclick = downloadPPTX;
+    $('#btnPdf').onclick  = downloadPDF;
+    $('#btnPptxPdf').onclick = downloadPptxPDF;
+    $('#btnDocx').onclick = downloadDOCX;
+
   }catch(e){
     console.error(e);
     alert('Не удалось разобрать PDF. Убедитесь, что загружены «те» отчёты.');
   }finally{
-    $('#btnParse').disabled=false; $('#btnParse').textContent='Сгенерировать динамику';
+    $('#btnParse').disabled=false;
+    $('#btnParse').textContent='Сгенерировать динамику';
   }
 });
 </script>
