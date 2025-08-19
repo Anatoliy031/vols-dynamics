@@ -149,13 +149,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-/* ===== Утилиты ===== */
+/* ===== Константы и утилиты ===== */
 const BRANCHES = [
   "Сочинские ЭС","Тимашевские ЭС","Тихорецкие ЭС","Усть-Лабинские ЭС","Юго-Западные ЭС",
   "Адыгейские ЭС","Армавирские ЭС","Краснодарские ЭС","Лабинские ЭС","Ленинградские ЭС","Славянские ЭС"
 ];
 
-// точные паттерны для названий, чтобы различать «Усть-Лабинские» и «Лабинские»
+// паттерны без флага g (чтобы .test не сбрасывал lastIndex)
 const BRANCH_PATTERNS = [
   {name:"Сочинские ЭС",      re:/Сочинские\s+ЭС/i},
   {name:"Тимашевские ЭС",    re:/Тимашевские\s+ЭС/i},
@@ -171,15 +171,15 @@ const BRANCH_PATTERNS = [
 ];
 
 const STATUS_PATTERNS = [
-  {key:"work",       title:"В работе у филиала",         re:/В\s*работе\s*у\s*филиала\s+(\d[\d\s]*)/giu},
-  {key:"dismantled", title:"Демонтировано",              re:/Демонтировано\s+(\d[\d\s]*)/giu},
-  {key:"rc_digit",   title:"Договор на оформлении Россети Цифра", re:/Договор\s*на\s*оформлении\s*Россети\s*Цифра\s+(\d[\d\s]*)/giu},
-  {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора\s+(\d[\d\s]*)/giu},
-  {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале\s+(\d[\d\s]*)/giu},
-  {key:"incl_next",  title:"Будет включено в следующее доп. соглашение", re:/Будет\s*включено[\s\S]{0,120}?подписания\s+(\d[\d\s]*)/giu},
+  {key:"work",       title:"В работе у филиала",         re:/В\s*работе\s*у\s*филиала\s+(\d[\d\s]*)/iu},
+  {key:"dismantled", title:"Демонтировано",              re:/Демонтировано\s+(\d[\d\s]*)/iu},
+  {key:"rc_digit",   title:"Договор на оформлении Россети Цифра", re:/Договор\s*на\s*оформлении\s*Россети\s*Цифра\s+(\d[\d\s]*)/iu},
+  {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора\s+(\d[\d\s]*)/iu},
+  {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале\s+(\d[\d\s]*)/iu},
+  {key:"incl_next",  title:"Будет включено в следующее доп. соглашение", re:/Будет\s*включено[\s\S]{0,120}?подписания\s+(\d[\d\s]*)/iu},
 ];
 
-const NUM_RE = /\b\d{1,3}(?:\s?\d{3})*\b/g; // ловит 1380 и 1 380
+const NUM_RE = /\b\d{1,}(?:\s?\d{3})*\b/g; // ловит 141, 1 208, 33787
 const numberize = s => Number(String(s||"").replace(/[^\d]/g,"")) || 0;
 const fmt = n => n.toLocaleString("ru-RU");
 const hyphenClass = /[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g;
@@ -228,7 +228,7 @@ function parseTotalsFromPage(page1){
   };
 }
 
-// сумма по стадиям на странице (по всем филиалам)
+/* ===== Сумма стадий (по всей странице) ===== */
 function sumStages(pageText){
   const txt = pageText;
   const res = {};
@@ -241,25 +241,27 @@ function sumStages(pageText){
   return res;
 }
 
-// ищем число «Всего опор, шт.» ПО СТРОКЕ с названием филиала
-function parseBranchPage(pageText){
+/* ===== Стр. 2 — строгий парсер таблицы ===== */
+function parseBranchPageStrict(pageText){
   const text = normalize(pageText);
-  const lines = text.split("\n");
-  const res = new Map();
+  const TABLE_START_RE = /(Филиал.*Всего\s*опор)|(Всего\s*опор.*Филиал)/i;
 
+  const start = text.search(TABLE_START_RE);
+  const tbl = start >= 0 ? text.slice(start) : text;
+  const lines = tbl.split("\n").map(s=>s.trim()).filter(Boolean);
+
+  const res = new Map();
   for(let i=0;i<lines.length;i++){
     const line = lines[i];
 
-    // какие филиалы упомянуты в этой строке
-    const matched = BRANCH_PATTERNS
-      .filter(bp => new RegExp(bp.re.source, bp.re.flags).test(line))
+    const found = BRANCH_PATTERNS
+      .filter(bp => bp.re.test(line))
       .map(bp => bp.name);
 
-    if(matched.length===0) continue;
+    if(found.length===0) continue;
 
-    // берём самое длинное совпадение, чтобы предпочесть «Усть-Лабинские ЭС»
-    matched.sort((a,b)=>b.length-a.length);
-    const name = matched[0];
+    found.sort((a,b)=>b.length-a.length);
+    const name = found[0];
 
     let nums = line.match(NUM_RE);
     if(!nums || nums.length===0){
@@ -271,15 +273,39 @@ function parseBranchPage(pageText){
     if(!res.has(name) || !res.get(name).total) res.set(name, { total, statuses:{} });
   }
 
-  // гарантируем все 11 филиалов
+  for(const b of BRANCHES){ if(!res.has(b)) res.set(b, { total:0, statuses:{} }); }
+  const overall = [...res.values()].reduce((s,r)=>s+(r.total||0),0);
+  return { branches: res, overall, stages: {} };
+}
+
+/* ===== Стр. 3–4 — гибкий парсер (по строкам) ===== */
+function parseBranchPageLoose(pageText){
+  const text = normalize(pageText);
+  const lines = text.split("\n");
+  const res = new Map();
+
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    const found = BRANCH_PATTERNS.filter(bp => bp.re.test(line)).map(bp=>bp.name);
+    if(found.length===0) continue;
+
+    found.sort((a,b)=>b.length-a.length);
+    const name = found[0];
+
+    let nums = line.match(NUM_RE);
+    if(!nums || nums.length===0){
+      const next = lines[i+1] || "";
+      nums = (line + " " + next).match(NUM_RE);
+    }
+    const total = nums && nums.length ? numberize(nums[nums.length-1]) : 0;
+
+    if(!res.has(name) || !res.get(name).total) res.set(name, { total, statuses:{} });
+  }
+
   for(const b of BRANCHES){ if(!res.has(b)) res.set(b, { total:0, statuses:{} }); }
 
-  // общий итог
   const overall = [...res.values()].reduce((s,r)=>s+(r.total||0),0);
-
-  // агрегаты стадий
   const stages = sumStages(text);
-
   return { branches: res, overall, stages };
 }
 
@@ -287,9 +313,9 @@ function parseReportByPages(pages){
   return {
     date: extractDateFromPages(pages),
     p1: { totals: parseTotalsFromPage(pages[0] || "") },
-    p2: parseBranchPage(pages[1] || ""),
-    p3: parseBranchPage(pages[2] || ""),
-    p4: parseBranchPage(pages[3] || ""),
+    p2: parseBranchPageStrict(pages[1] || ""), // <= строгий парсер таблицы
+    p3: parseBranchPageLoose(pages[2] || ""),
+    p4: parseBranchPageLoose(pages[3] || ""),
   };
 }
 
@@ -314,17 +340,16 @@ function computeDynamics(curr, prev){
     return {b,p,c,d:c-p};
   });
 
-  // Стадии: суммарные по странице (по всем филиалам)
-  const stagesS2 = Object.keys(curr.p2.stages).map(key=>{
-    const title = (STATUS_PATTERNS.find(s=>s.key===key)||{}).title || key;
-    const p = prev.p2.stages[key]||0, c = curr.p2.stages[key]||0;
-    return {stage:title,key,p,c,d:c-p};
-  });
-  const stagesS4 = Object.keys(curr.p4.stages).map(key=>{
-    const title = (STATUS_PATTERNS.find(s=>s.key===key)||{}).title || key;
-    const p = prev.p4.stages[key]||0, c = curr.p4.stages[key]||0;
-    return {stage:title,key,p,c,d:c-p};
-  });
+  const s2_prev = curr.p2.stages ? (prev.p2.stages||{}) : {};
+  const s2_curr = curr.p2.stages || {};
+  const s4_prev = prev.p4.stages || {};
+  const s4_curr = curr.p4.stages || {};
+
+  const stageTitles = key => (STATUS_PATTERNS.find(s=>s.key===key)||{}).title || key;
+  const keys = Array.from(new Set([...Object.keys(s2_prev),...Object.keys(s2_curr),...Object.keys(s4_prev),...Object.keys(s4_curr)]));
+
+  const stagesS2 = keys.map(k=>({stage:stageTitles(k),key:k,p:s2_prev[k]||0,c:s2_curr[k]||0,d:(s2_curr[k]||0)-(s2_prev[k]||0)}));
+  const stagesS4 = keys.map(k=>({stage:stageTitles(k),key:k,p:s4_prev[k]||0,c:s4_curr[k]||0,d:(s4_curr[k]||0)-(s4_prev[k]||0)}));
 
   return {...dyn, branchRows, rtkRows, stagesS2, stagesS4};
 }
@@ -396,7 +421,7 @@ function renderStagesTables(dyn){
   fill("#tblStagesS4", dyn.stagesS4);
 }
 
-/* ===== Короткие выводы ===== */
+/* ===== Инсайты ===== */
 function buildInsights(dyn){
   const topPos = [...dyn.branchRows].sort((a,b)=>b.d-a.d).slice(0,3);
   const topNeg = [...dyn.branchRows].sort((a,b)=>a.d-b.d).slice(0,3);
