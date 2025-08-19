@@ -23,7 +23,7 @@
   .pill{display:inline-flex;align-items:center;gap:10px;border:1px dashed var(--border);background:#fff;border-radius:12px;padding:12px}
   input[type=file]{border:none}
   button.primary{background:var(--rs-blue);color:#fff;border:none;border-radius:12px;padding:12px 14px;font-weight:700;letter-spacing:.2px;cursor:pointer}
-  button.secondary{background:#fff;color:var(--rs-blue);border:1px solid var(--rs-blue);border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
+  button.secondary{background:#fff;color:#0033A0;border:1px solid #0033A0;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
   h2{margin:4px 0 10px 0;font-size:20px}
   .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);background:#f8fafc;color:#334155}
   .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
@@ -36,10 +36,11 @@
   table{width:100%;border-collapse:collapse}
   th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums}
   th:first-child,td:first-child{text-align:left}
+  tfoot td{font-weight:800}
   .exports{display:flex;flex-wrap:wrap;gap:10px}
   .hr{height:1px;background:var(--border);margin:12px 0}
   #presentationPrint,#summaryPrint{background:#fff;padding:20px}
-  .logoTitle{font-weight:800;color:var(--rs-blue);font-size:22px;margin-bottom:6px}
+  .logoTitle{font-weight:800;color:#0033A0;font-size:22px;margin-bottom:6px}
   .note{font-size:12px;color:#5f6b7a}
 </style>
 </head>
@@ -50,8 +51,8 @@
   <section class="card">
     <h2>Загрузка отчётов (PDF)</h2>
     <div class="inputs">
-      <label class="pill">Предыдущая неделя (PDF)<input id="filePrev" type="file" accept="application/pdf" /></label>
-      <label class="pill">Текущая неделя (PDF)<input id="fileCurr" type="file" accept="application/pdf" /></label>
+      <label class="pill">Предыдущая неделя (PDF)<input id="filePrev" type="file" accept="application/pdf"></label>
+      <label class="pill">Текущая неделя (PDF)<input id="fileCurr" type="file" accept="application/pdf"></label>
       <button id="btnParse" class="primary">Проанализировать</button>
     </div>
     <div class="hr"></div>
@@ -87,6 +88,7 @@
       <table id="tblBranches">
         <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
+        <tfoot><tr><td>Итого</td><td id="sumPrev">0</td><td id="sumCurr">0</td><td id="sumDelta">0</td></tr></tfoot>
       </table>
     </div>
   </section>
@@ -128,6 +130,8 @@
   <div id="presRTKDelta"></div>
   <div class="hr"></div>
   <div id="presStages"></div>
+  <div class="hr"></div>
+  <div id="presInsights"></div>
 </div>
 
 <div id="summaryPrint" style="display:none">
@@ -151,12 +155,15 @@ const BRANCHES = [
   "Адыгейские ЭС","Армавирские ЭС","Краснодарские ЭС","Лабинские ЭС","Ленинградские ЭС","Славянские ЭС"
 ];
 
+// Алиасы с учётом переносов/дефисов (главные проблемные — выделены)
 const BRANCH_PATTERNS = [
   {name:"Сочинские ЭС",      re:/Сочинские\s+ЭС/gi},
   {name:"Тимашевские ЭС",    re:/Тимашевские\s+ЭС/gi},
   {name:"Тихорецкие ЭС",     re:/Тихорецкие\s+ЭС/gi},
-  {name:"Усть-Лабинские ЭС", re:/Усть[\s\-–—-]?[\n\s]*Лабинские\s+ЭС/gi},   // - = U+2011 NB hyphen
-  {name:"Юго-Западные ЭС",   re:/Юго[\s\-–—-]?[\n\s]*Западные\s+ЭС/gi},
+  // ▼ ключевые фиксы
+  {name:"Усть-Лабинские ЭС", re:/Усть[\s\u00A0\u202F\-–—-]*[\n\s]*Лабинские\s+ЭС/gi},
+  {name:"Юго-Западные ЭС",   re:/Юго[\s\u00A0\u202F\-–—-]*[\n\s]*Западные\s+ЭС/gi},
+  // ▲
   {name:"Адыгейские ЭС",     re:/Адыгейские\s+ЭС/gi},
   {name:"Армавирские ЭС",    re:/Армавирские\s+ЭС/gi},
   {name:"Краснодарские ЭС",  re:/Краснодарские\s+ЭС/gi},
@@ -180,9 +187,9 @@ const hyphenClass = /[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g;
 
 function normalize(txt){
   return String(txt||"")
-    .replace(/\u00A0/g," ")   // NBSP -> space
-    .replace(/\u202F/g," ")   // NNBSP -> space
-    .replace(/\u00AD/g,"")    // soft hyphen -> remove
+    .replace(/\u00A0/g," ")   // NBSP
+    .replace(/\u202F/g," ")   // NNBSP
+    .replace(/\u00AD/g,"")    // soft hyphen
     .replace(hyphenClass,"-") // unify dashes
     .replace(/[ \t]+/g," ")
     .replace(/\n{2,}/g,"\n");
@@ -210,6 +217,7 @@ function extractDateFromPages(pages){
   }
   return "—";
 }
+
 function parseTotalsFromPage(page1){
   const find = (re)=>{ const m = page1.match(re); return numberize(m&&m[1]); }
   return {
@@ -221,54 +229,47 @@ function parseTotalsFromPage(page1){
   };
 }
 
-// Стр. 2/3/4: по каждому филиалу — «Всего опор, шт.» и стадии.
-// Учитываем «число до названия» (look-back), переносы и максимум в строке.
+// — окно ±200 символов вокруг названия + fallback по строке
+function getTotalNear(text, idx){
+  const start = Math.max(0, idx - 200);
+  const end   = Math.min(text.length, idx + 200);
+  const win = text.slice(start, end);
+  // сначала «Всего опор»
+  const mLab = win.match(/Всего\s*опор[^0-9]*([\d\s]+)/iu);
+  if(mLab) return numberize(mLab[1]);
+  // иначе максимум числа в окне
+  const nums = [...win.matchAll(/\b\d{1,3}(?:\s\d{3})*\b/g)].map(m=>numberize(m[0]));
+  if(nums.length) return Math.max(...nums);
+  // резерв — возьмём строку с ближайшим переводом строки
+  const lineStart = text.lastIndexOf("\n", idx-1)+1;
+  const lineEnd = text.indexOf("\n", idx);
+  const line = text.slice(lineStart, lineEnd>0?lineEnd:text.length);
+  const numsLine = [...line.matchAll(/\b\d{1,3}(?:\s\d{3})*\b/g)].map(m=>numberize(m[0]));
+  return numsLine.length ? Math.max(...numsLine) : 0;
+}
+
 function parseBranchPage(pageText){
   const text = normalize(pageText);
-  const positions = [];
+  const hits = [];
   for(const bp of BRANCH_PATTERNS){
     const re = new RegExp(bp.re.source, "g");
-    let m; while((m = re.exec(text))){ positions.push({name:bp.name, i:m.index}); }
+    let m; while((m = re.exec(text))){ hits.push({name:bp.name, i:m.index}); }
   }
-  positions.sort((a,b)=>a.i-b.i);
+  hits.sort((a,b)=>a.i-b.i);
+
   const res = new Map();
-  let lastEnd = 0;
-
-  for(let k=0;k<positions.length;k++){
-    const {name,i} = positions[k];
-    const start = Math.max(i - 60, lastEnd);           // look-back на случай «число перед именем»
-    const end   = (k+1<positions.length?positions[k+1].i:text.length);
-    lastEnd = end;
-    const slice = text.slice(start, end);
-
-    // 1) попытка по ярлыку
-    let total = 0;
-    const mLab = slice.match(/Всего\s*опор[^0-9]*([\d\s]+)/iu);
-    if(mLab) total = numberize(mLab[1]);
-
-    // 2) иначе — берём МАКСИМУМ числа в строке (это «Всего»)
-    if(!total){
-      const nums = [...slice.matchAll(/\b\d{1,3}(?:\s\d{3})*\b/g)].map(m=>numberize(m[0]));
-      if(nums.length) total = Math.max(...nums);
-    }
-
-    // стадии в срезе
-    const statuses = {};
-    for(const sp of STATUS_PATTERNS){
-      const m = slice.match(new RegExp(sp.re.source+"[^\\d]*([\\d\\s]+)","iu"));
-      if(m) statuses[sp.key] = numberize(m[1]);
-    }
-
-    const prev = res.get(name);
-    if(!prev || !prev.total) res.set(name, { total, statuses });
+  for(const h of hits){
+    const total = getTotalNear(text, h.i);
+    const statuses = {}; // стадии по филиалу можно дополнить при необходимости
+    if(!res.has(h.name) || !res.get(h.name).total) res.set(h.name, { total, statuses });
   }
-
-  const sumMatch = text.match(/Общий итог[^0-9]*([\d\s]+)/iu);
-  const overall = sumMatch ? numberize(sumMatch[1]) :
-      Array.from(res.values()).reduce((s,r)=>s+(r.total||0),0);
-
-  // добиваем отсутствующие филиалы нулями, чтобы всегда были все 11
+  // гарантируем все 11 филиалов
   for(const b of BRANCHES){ if(!res.has(b)) res.set(b, { total:0, statuses:{} }); }
+
+  // общий итог (если нет в тексте — посчитаем)
+  let overall = 0;
+  const m = text.match(/Общий итог[^0-9]*([\d\s]+)/iu);
+  if(m) overall = numberize(m[1]); else overall = [...res.values()].reduce((s,r)=>s+(r.total||0),0);
   return { branches: res, overall };
 }
 
@@ -312,6 +313,7 @@ function computeDynamics(curr, prev){
     return {b,p,c,d:c-p};
   });
 
+  // Стадии
   const s2_prev = aggregateStatuses(prev.p2), s2_curr = aggregateStatuses(curr.p2);
   const s4_prev = aggregateStatuses(prev.p4), s4_curr = aggregateStatuses(curr.p4);
   const stagesS2 = STATUS_PATTERNS.map(sp=>({stage:sp.title,key:sp.key,p:s2_prev[sp.key]||0,c:s2_curr[sp.key]||0,d:(s2_curr[sp.key]||0)-(s2_prev[sp.key]||0)}));
@@ -322,31 +324,40 @@ function computeDynamics(curr, prev){
 
 /* ===== Рендер ===== */
 let chartBranches, chartRTKDelta;
+
 function renderKpis(curr, prev, dyn){
   const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
   const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+  const effRatio = dyn.found_week>0 ? (eff/dyn.found_week*100) : 0;
   const items = [
     {title:"В работе всего, шт.", curr:curr.p1.totals.in_work_total, delta:dyn.in_work_total},
     {title:"Выявлено за неделю, шт.", curr:dyn.found_week, delta:dyn.found_week},
     {title:"Закрыто за неделю (узак.+демонт.), шт.", curr:eff, delta:eff},
+    {title:"Коэф. эффективности недели, %", curr:effRatio.toFixed(1), delta:0},
     {title:"ПАО «Ростелеком» в работе, шт. (доля, %)", curr:`${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`, delta:dyn.rtk_in_work},
-    {title:"Узаконено (нарастающим), шт.", curr:curr.p1.totals.legalized, delta:dyn.legalized},
   ];
   document.getElementById("kpis").innerHTML = items.map(it=>{
     const d = typeof it.delta==="number"?it.delta:0, cls = d>0?"up":(d<0?"down":"muted"), sign = d>0?"+":"";
     return `<div class="kpi"><div class="title">${it.title}</div><div class="value">${typeof it.curr==="number"?fmt(it.curr):it.curr}</div><div class="delta ${cls}">${sign}${fmt(d)} неделя к неделе</div></div>`;
   }).join("");
 }
+
 function renderBranchesTable(dyn){
   const tbody = document.querySelector("#tblBranches tbody");
   tbody.innerHTML = "";
   const rows = [...dyn.branchRows].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+  let sP=0,sC=0,sD=0;
   for(const r of rows){
     const cls = r.d>0?"up":(r.d<0?"down":"muted");
+    sP+=r.p; sC+=r.c; sD+=r.d;
     tbody.insertAdjacentHTML("beforeend", `<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${cls}">${r.d>0?"+":""}${fmt(r.d)}</td></tr>`);
   }
+  document.getElementById("sumPrev").textContent = fmt(sP);
+  document.getElementById("sumCurr").textContent = fmt(sC);
+  document.getElementById("sumDelta").textContent = (sD>0?"+":"")+fmt(sD);
   return rows;
 }
+
 function renderCharts(curr, prev, dyn){
   const labels = BRANCHES;
   const prevS2 = labels.map(b=>prev.p2.branches.get(b)?.total||0);
@@ -366,6 +377,7 @@ function renderCharts(curr, prev, dyn){
     options:{responsive:true,plugins:{legend:{position:"top"}},scales:{y:{beginAtZero:true}}}
   });
 }
+
 function renderStagesTables(dyn){
   const fill = (id, rows)=>{
     document.querySelector(id+" tbody").innerHTML = rows.map(r=>{
@@ -375,6 +387,23 @@ function renderStagesTables(dyn){
   };
   fill("#tblStagesS2", dyn.stagesS2);
   fill("#tblStagesS4", dyn.stagesS4);
+}
+
+/* ===== Инсайты (короткий текст «как для рука») ===== */
+function buildInsights(dyn){
+  const topPos = [...dyn.branchRows].sort((a,b)=>b.d-a.d).slice(0,3);
+  const topNeg = [...dyn.branchRows].sort((a,b)=>a.d-b.d).slice(0,3);
+  const rtkPos = [...dyn.rtkRows].sort((a,b)=>b.d-a.d).slice(0,3);
+  const rtkNeg = [...dyn.rtkRows].sort((a,b)=>a.d-b.d).slice(0,3);
+  const s2Top = [...dyn.stagesS2].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
+  const s4Top = [...dyn.stagesS4].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
+  return `
+    <div><b>ТОП-3 рост (стр. 2):</b> ${topPos.map(r=>`${r.b} (+${fmt(r.d)})`).join("; ")}</div>
+    <div><b>ТОП-3 снижение (стр. 2):</b> ${topNeg.map(r=>`${r.b} (${fmt(r.d)})`).join("; ")}</div>
+    <div><b>РТК — рост:</b> ${rtkPos.map(r=>`${r.b} (+${fmt(r.d)})`).join("; ")}; <b>снижение:</b> ${rtkNeg.map(r=>`${r.b} (${fmt(r.d)})`).join("; ")}</div>
+    <div><b>Стадии (стр. 2):</b> ${s2Top.map(s=>`${s.stage} (${s.d>0?'+':''}${fmt(s.d)})`).join("; ")}</div>
+    <div><b>Стадии РТК (стр. 4):</b> ${s4Top.map(s=>`${s.stage} (${s.d>0?'+':''}${fmt(s.d)})`).join("; ")}</div>
+  `;
 }
 
 /* ===== Экспорт ===== */
@@ -392,8 +421,7 @@ function buildPresentationHTML(curr, prev, dyn, rows){
     box("В работе всего, шт.", curr.p1.totals.in_work_total, dyn.in_work_total) +
     box("Выявлено за неделю, шт.", dyn.found_week, dyn.found_week) +
     box("Закрыто за неделю (узак.+демонт.), шт.", eff, eff) +
-    box("ПАО «Ростелеком» в работе, шт. (доля, %)", `${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`, dyn.rtk_in_work) +
-    box("Узаконено (нарастающим), шт.", curr.p1.totals.legalized, dyn.legalized);
+    box("ПАО «Ростелеком» в работе, шт. (доля, %)", `${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`, dyn.rtk_in_work);
 
   document.getElementById("presTable").innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:12px">
@@ -411,6 +439,12 @@ function buildPresentationHTML(curr, prev, dyn, rows){
           <td style="padding:6px 4px;text-align:right;color:${r.d>0?'#0a7a2d':(r.d<0?'#b00020':'#5f6b7a')}">${r.d>0?'+':''}${fmt(r.d)}</td>
         </tr>`).join("")}
       </tbody>
+      <tfoot>
+        <tr><td style="padding:6px 4px;font-weight:800">Итого</td>
+        <td style="padding:6px 4px;text-align:right;font-weight:800">${document.getElementById("sumPrev").textContent}</td>
+        <td style="padding:6px 4px;text-align:right;font-weight:800">${document.getElementById("sumCurr").textContent}</td>
+        <td style="padding:6px 4px;text-align:right;font-weight:800">${document.getElementById("sumDelta").textContent}</td></tr>
+      </tfoot>
     </table>`;
 
   const rtkTop = [...dyn.rtkRows].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,7);
@@ -434,13 +468,17 @@ function buildPresentationHTML(curr, prev, dyn, rows){
   document.getElementById("presStages").innerHTML =
     stageTbl("Стр. 2 — Стадии (прирост)", dyn.stagesS2) +
     stageTbl("Стр. 4 — Стадии РТК (прирост)", dyn.stagesS4);
+
+  document.getElementById("presInsights").innerHTML = buildInsights(dyn);
 }
+
 async function exportPresPDF(){
   const el = document.getElementById("presentationPrint");
   el.style.display = "block";
   await html2pdf().from(el).set({margin:10,filename:"Презентация_ВОЛС.pdf",image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4'}}).save();
   el.style.display = "none";
 }
+
 async function exportPresPPTX(curr, prev, dyn, rows){
   try{
     const pptx = new PptxGenJS();
@@ -448,8 +486,8 @@ async function exportPresPPTX(curr, prev, dyn, rows){
     s1.addText("АО «Россети Кубань»",{x:0.5,y:0.4,fontSize:18,bold:true,color:"0033A0"});
     s1.addText("ВОЛС: еженедельная динамика",{x:0.5,y:1,fontSize:28,bold:true});
     s1.addText(`Пред.: ${prev.date} · Тек.: ${curr.date}`,{x:0.5,y:1.6,fontSize:12,color:"666"});
-    const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
-    const rtkShare = curr.p1.totals.in_work_total? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+    const eff=(curr.p1.totals.legalized+curr.p1.totals.dismantled_ytd)-(prev.p1.totals.legalized+prev.p1.totals.dismantled_ytd);
+    const rtkShare=curr.p1.totals.in_work_total?(curr.p1.totals.rtk_in_work/curr.p1.totals.in_work_total*100):0;
     const k=(t,val,delta,y)=>{s1.addText(t,{x:0.5,y, fontSize:12,color:"666"});
       s1.addText(typeof val==="number"?fmt(val):val,{x:0.5,y:y+0.25,fontSize:18,bold:true});
       s1.addText(`${delta>0?'+':''}${fmt(delta)} н/н`,{x:3.6,y:y+0.25,fontSize:12,color:delta>0?'228B22':(delta<0?'B00020':'666')});};
@@ -457,12 +495,13 @@ async function exportPresPPTX(curr, prev, dyn, rows){
     k("Выявлено за неделю, шт.",dyn.found_week,dyn.found_week,2.9);
     k("Закрыто (узак.+демонт.), шт.",eff,eff,3.6);
     k("ПАО «Ростелеком» в работе, шт. (доля, %)",`${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`,dyn.rtk_in_work,4.3);
-    k("Узаконено (нар.)",curr.p1.totals.legalized,dyn.legalized,5.0);
 
     const s2 = pptx.addSlide();
     s2.addText("Стр. 2 — Филиалы: Δ «Всего опор, шт.»",{x:0.5,y:0.4,fontSize:18,bold:true,color:"0033A0"});
     s2.addTable([[{text:"Филиал",options:{bold:true}},{text:"Пред.",options:{bold:true}},{text:"Тек.",options:{bold:true}},{text:"Δ",options:{bold:true}}],
-      ...rows.map(r=>[r.b,fmt(r.p),fmt(r.c),(r.d>0?'+':'')+fmt(r.d)])],{x:0.5,y:1.0,w:9.0,border:{pt:1,color:"DDDDDD"},fill:"FFFFFF"});
+      ...rows.map(r=>[r.b,fmt(r.p),fmt(r.c),(r.d>0?'+':'')+fmt(r.d)]),
+      ["Итого",document.getElementById("sumPrev").textContent,document.getElementById("sumCurr").textContent,document.getElementById("sumDelta").textContent]
+    ],{x:0.5,y:1.0,w:9.0,border:{pt:1,color:"DDDDDD"},fill:"FFFFFF"});
 
     const s3 = pptx.addSlide();
     s3.addText("Стр. 4 — ПАО «Ростелеком»: ТОП-7 прирост/снижение",{x:0.5,y:0.4,fontSize:18,bold:true,color:"0033A0"});
@@ -483,6 +522,7 @@ async function exportPresPPTX(curr, prev, dyn, rows){
     document.getElementById("exportStatus").textContent="PPTX сформирован.";
   }catch(e){ console.error(e); alert("Ошибка формирования PPTX. Подробности в консоли."); }
 }
+
 async function exportBriefDOCX(curr, prev, dyn, rows){
   try{
     const d = window.docx;
@@ -496,17 +536,18 @@ async function exportBriefDOCX(curr, prev, dyn, rows){
     const doc=new Document({sections:[{children:[
       h("Краткая выжимка (неделя к неделе)"),
       new Paragraph({children:[new TextRun({text:`Пред.: ${prev.date} · Тек.: ${curr.date}`,size:20,color:"666"})],spacing:{after:200}}),
+
       h("Стр. 1 — Общая информация (нарастающим)"),
       p(`В работе всего: ${fmt(curr.p1.totals.in_work_total)} (${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)})`),
       p(`Выявлено за неделю: ${fmt(dyn.found_week)} (расчёт от «в работе всего»)`),
       p(`Закрыто за неделю (узак.+демонт.): ${fmt(eff)}`),
       p(`ПАО «Ростелеком» в работе: ${fmt(curr.p1.totals.rtk_in_work)} (${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)}), доля: ${rtkShare.toFixed(1)}%`),
-      p(`Узаконено (нарастающим): ${fmt(curr.p1.totals.legalized)} (${dyn.legalized>0?'+':''}${fmt(dyn.legalized)})`),
 
       h("Стр. 2 — Филиалы: динамика «Всего опор, шт.»"),
       new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[
         tr(["Филиал","Пред.","Тек.","Δ"],true),
-        ...rows.map(r=>tr([r.b,fmt(r.p),fmt(r.c),(r.d>0?'+':'')+fmt(r.d)]))
+        ...rows.map(r=>tr([r.b,fmt(r.p),fmt(r.c),(r.d>0?'+':'')+fmt(r.d)])),
+        tr(["Итого",document.getElementById("sumPrev").textContent,document.getElementById("sumCurr").textContent,document.getElementById("sumDelta").textContent],true)
       ]}),
 
       h("Стр. 3 — Приказ №425: «Всего опор, шт.» (текущая)"),
@@ -536,6 +577,7 @@ async function exportBriefDOCX(curr, prev, dyn, rows){
     document.getElementById("exportStatus").textContent="DOCX сформирован.";
   }catch(e){ console.error(e); alert("Ошибка формирования DOCX. Подробности в консоли."); }
 }
+
 async function exportBriefPDF(){
   const el = document.getElementById("summaryPrint");
   el.style.display = "block";
@@ -545,16 +587,18 @@ async function exportBriefPDF(){
 
 /* ===== Взаимодействие ===== */
 let DATA=null;
+
 document.getElementById("btnParse").addEventListener("click", async ()=>{
   const fPrev = document.getElementById("filePrev").files[0];
   const fCurr = document.getElementById("fileCurr").files[0];
   if(!fPrev || !fCurr){ alert("Загрузите оба PDF: предыдущий и текущий."); return; }
+
   try{
     const [pPrev, pCurr] = await Promise.all([pdfToPages(fPrev), pdfToPages(fCurr)]);
     const prev = parseReportByPages(pPrev);
     const curr = parseReportByPages(pCurr);
     const dyn  = computeDynamics(curr, prev);
-    DATA = {prev,curr,dyn};
+    DATA = {prev, curr, dyn};
 
     document.getElementById("dates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
     renderKpis(curr, prev, dyn);
@@ -564,31 +608,39 @@ document.getElementById("btnParse").addEventListener("click", async ()=>{
 
     buildPresentationHTML(curr, prev, dyn, rows);
 
+    // Выжимка — по блокам
     const blocks = document.getElementById("briefBlocks");
     document.getElementById("briefDates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
-    const top5=[...dyn.branchRows].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,5);
-    const rtkTop=[...dyn.rtkRows].sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,5);
+    const topPos=[...dyn.branchRows].sort((a,b)=>b.d-a.d).slice(0,3);
+    const topNeg=[...dyn.branchRows].sort((a,b)=>a.d-b.d).slice(0,3);
+    const rtkPos=[...dyn.rtkRows].sort((a,b)=>b.d-a.d).slice(0,3);
+    const rtkNeg=[...dyn.rtkRows].sort((a,b)=>a.d-b.d).slice(0,3);
     const eff=(curr.p1.totals.legalized+curr.p1.totals.dismantled_ytd)-(prev.p1.totals.legalized+prev.p1.totals.dismantled_ytd);
-    const rtkShare=curr.p1.totals.in_work_total?(curr.p1.totals.rtk_in_work/curr.p1.totals.in_work_total*100):0;
+    const effRatio = dyn.found_week>0 ? (eff/dyn.found_week*100) : 0;
+
     blocks.innerHTML = `
-      <h3>Стр. 1 — Общая (нар.)</h3>
+      <h3>Стр. 1 — Общая (нарастающим)</h3>
       <div>• В работе всего: <b>${fmt(curr.p1.totals.in_work_total)}</b> (${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)} н/н)</div>
       <div>• Выявлено за неделю: <b>${fmt(dyn.found_week)}</b> (расчёт от «в работе всего»)</div>
-      <div>• Закрыто за неделю (узак.+демонт.): <b>${fmt(eff)}</b></div>
-      <div>• ПАО «Ростелеком» в работе: <b>${fmt(curr.p1.totals.rtk_in_work)}</b> (${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)}), доля: <b>${rtkShare.toFixed(1)}%</b></div>
-      <div>• Узаконено (нар.): <b>${fmt(curr.p1.totals.legalized)}</b> (${dyn.legalized>0?'+':''}${fmt(dyn.legalized)})</div>
+      <div>• Закрыто за неделю (узак.+демонт.): <b>${fmt(eff)}</b>; коэффициент эффективности: <b>${effRatio.toFixed(1)}%</b></div>
+      <div>• ПАО «Ростелеком» в работе: <b>${fmt(curr.p1.totals.rtk_in_work)}</b> (${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)})</div>
       <hr/>
       <h3>Стр. 2 — Филиалы: Δ «Всего опор, шт.»</h3>
-      <div><b>ТОП-5 изменений:</b><br/>${top5.map(r=>`• ${r.b}: ${fmt(r.p)} → <b>${fmt(r.c)}</b> (${r.d>0?'+':''}${fmt(r.d)})`).join("<br/>")}</div>
+      <div><b>ТОП-3 рост:</b> ${topPos.map(r=>`${r.b} (+${fmt(r.d)})`).join("; ")}</div>
+      <div><b>ТОП-3 снижение:</b> ${topNeg.map(r=>`${r.b} (${fmt(r.d)})`).join("; ")}</div>
+      <div style="margin-top:6px"><b>Итого:</b> Пред. ${document.getElementById("sumPrev").textContent}; Тек. ${document.getElementById("sumCurr").textContent}; Δ ${document.getElementById("sumDelta").textContent}</div>
       <hr/>
       <h3>Стр. 3 — Приказ №425 (срез текущей недели)</h3>
       <div>${BRANCHES.map(b=>`${b}: <b>${fmt(curr.p3.branches.get(b)?.total||0)}</b>`).join("<br/>")}</div>
       <hr/>
       <h3>Стр. 4 — ПАО «Ростелеком»: Δ и стадии</h3>
-      <div><b>ТОП-5 изменений РТК:</b><br/>${rtkTop.map(r=>`• ${r.b}: ${fmt(r.p)} → <b>${fmt(r.c)}</b> (${r.d>0?'+':''}${fmt(r.d)})`).join("<br/>")}</div>
+      <div><b>ТОП-3 рост:</b> ${rtkPos.map(r=>`${r.b} (+${fmt(r.d)})`).join("; ")}; <b>ТОП-3 снижение:</b> ${rtkNeg.map(r=>`${r.b} (${fmt(r.d)})`).join("; ")}</div>
       <div style="margin-top:6px"><b>Стадии (прирост):</b><br/>${dyn.stagesS4.map(s=>`• ${s.stage}: ${fmt(s.p)} → <b>${fmt(s.c)}</b> (${s.d>0?'+':''}${fmt(s.d)})`).join("<br/>")}</div>
     `;
-  }catch(e){ console.error(e); alert("Ошибка разбора PDF. Подробности в консоли."); }
+  }catch(e){
+    console.error(e);
+    alert("Ошибка разбора PDF. Подробности в консоли.");
+  }
 });
 
 document.getElementById("exportPresPDF").addEventListener("click", async ()=>{
@@ -598,14 +650,16 @@ document.getElementById("exportPresPDF").addEventListener("click", async ()=>{
 document.getElementById("exportPresPPTX").addEventListener("click", async ()=>{
   if(!DATA){ alert("Сначала проанализируйте отчёты."); return; }
   const rows = Array.from(document.querySelectorAll("#tblBranches tbody tr")).map(tr=>{
-    const t=tr.querySelectorAll("td"); return {b:t[0].textContent,p:numberize(t[1].textContent),c:numberize(t[2].textContent),d:numberize(t[3].textContent)};
+    const t=tr.querySelectorAll("td");
+    return { b:t[0].textContent, p:numberize(t[1].textContent), c:numberize(t[2].textContent), d:numberize(t[3].textContent) };
   });
   await exportPresPPTX(DATA.curr, DATA.prev, DATA.dyn, rows);
 });
 document.getElementById("exportBriefDOCX").addEventListener("click", async ()=>{
   if(!DATA){ alert("Сначала проанализируйте отчёты."); return; }
   const rows = Array.from(document.querySelectorAll("#tblBranches tbody tr")).map(tr=>{
-    const t=tr.querySelectorAll("td"); return {b:t[0].textContent,p:numberize(t[1].textContent),c:numberize(t[2].textContent),d:numberize(t[3].textContent)};
+    const t=tr.querySelectorAll("td");
+    return { b:t[0].textContent, p:numberize(t[1].textContent), c:numberize(t[2].textContent), d:numberize(t[3].textContent) };
   });
   await exportBriefDOCX(DATA.curr, DATA.prev, DATA.dyn, rows);
 });
