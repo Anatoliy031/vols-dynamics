@@ -149,46 +149,47 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-/* ===== Константы и утилиты ===== */
+/* ===== Утилиты ===== */
 const BRANCHES = [
   "Сочинские ЭС","Тимашевские ЭС","Тихорецкие ЭС","Усть-Лабинские ЭС","Юго-Западные ЭС",
   "Адыгейские ЭС","Армавирские ЭС","Краснодарские ЭС","Лабинские ЭС","Ленинградские ЭС","Славянские ЭС"
 ];
 
-// Алиасы с учётом переносов/дефисов (главные проблемные — выделены)
+// точные паттерны для названий, чтобы различать «Усть-Лабинские» и «Лабинские»
 const BRANCH_PATTERNS = [
-  {name:"Сочинские ЭС",      re:/Сочинские\s+ЭС/gi},
-  {name:"Тимашевские ЭС",    re:/Тимашевские\s+ЭС/gi},
-  {name:"Тихорецкие ЭС",     re:/Тихорецкие\s+ЭС/gi},
-  {name:"Усть-Лабинские ЭС", re:/Усть[\s\u00A0\u202F\-–—-]*[\n\s]*Лабинские\s+ЭС/gi},
-  {name:"Юго-Западные ЭС",   re:/Юго[\s\u00A0\u202F\-–—-]*[\n\s]*Западные\s+ЭС/gi},
-  {name:"Адыгейские ЭС",     re:/Адыгейские\s+ЭС/gi},
-  {name:"Армавирские ЭС",    re:/Армавирские\s+ЭС/gi},
-  {name:"Краснодарские ЭС",  re:/Краснодарские\s+ЭС/gi},
-  {name:"Лабинские ЭС",      re:/Лабинские\s+ЭС/gi},
-  {name:"Ленинградские ЭС",  re:/Ленинградские\s+ЭС/gi},
-  {name:"Славянские ЭС",     re:/Славянские\s+ЭС/gi},
+  {name:"Сочинские ЭС",      re:/Сочинские\s+ЭС/i},
+  {name:"Тимашевские ЭС",    re:/Тимашевские\s+ЭС/i},
+  {name:"Тихорецкие ЭС",     re:/Тихорецкие\s+ЭС/i},
+  {name:"Усть-Лабинские ЭС", re:/Усть[\s\u00A0\u202F\-–—-]*[\n\s]*Лабинские\s+ЭС/i},
+  {name:"Юго-Западные ЭС",   re:/Юго[\s\u00A0\u202F\-–—-]*[\n\s]*Западные\s+ЭС/i},
+  {name:"Адыгейские ЭС",     re:/Адыгейские\s+ЭС/i},
+  {name:"Армавирские ЭС",    re:/Армавирские\s+ЭС/i},
+  {name:"Краснодарские ЭС",  re:/Краснодарские\s+ЭС/i},
+  {name:"Лабинские ЭС",      re:/Лабинские\s+ЭС/i},
+  {name:"Ленинградские ЭС",  re:/Ленинградские\s+ЭС/i},
+  {name:"Славянские ЭС",     re:/Славянские\s+ЭС/i},
 ];
 
 const STATUS_PATTERNS = [
-  {key:"work",       title:"В работе у филиала",         re:/В работе у филиала/iu},
-  {key:"dismantled", title:"Демонтировано",              re:/Демонтировано/iu},
-  {key:"rc_digit",   title:"Договор на оформлении Россети Цифра", re:/Договор на оформлении\s+Россети\s+Цифра/iu},
-  {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор на подписании у оператора/iu},
-  {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор на согласовании в филиале/iu},
-  {key:"incl_next",  title:"Будет включено в следующее доп. соглашение", re:/Будет включено.*доп.*соглашение/iu},
+  {key:"work",       title:"В работе у филиала",         re:/В\s*работе\s*у\s*филиала\s+(\d[\d\s]*)/giu},
+  {key:"dismantled", title:"Демонтировано",              re:/Демонтировано\s+(\d[\d\s]*)/giu},
+  {key:"rc_digit",   title:"Договор на оформлении Россети Цифра", re:/Договор\s*на\s*оформлении\s*Россети\s*Цифра\s+(\d[\d\s]*)/giu},
+  {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора\s+(\d[\d\s]*)/giu},
+  {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале\s+(\d[\d\s]*)/giu},
+  {key:"incl_next",  title:"Будет включено в следующее доп. соглашение", re:/Будет\s*включено[\s\S]{0,120}?подписания\s+(\d[\d\s]*)/giu},
 ];
 
+const NUM_RE = /\b\d{1,3}(?:\s?\d{3})*\b/g; // ловит 1380 и 1 380
 const numberize = s => Number(String(s||"").replace(/[^\d]/g,"")) || 0;
 const fmt = n => n.toLocaleString("ru-RU");
 const hyphenClass = /[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g;
 
 function normalize(txt){
   return String(txt||"")
-    .replace(/\u00A0/g," ")   // NBSP
-    .replace(/\u202F/g," ")   // NNBSP
-    .replace(/\u00AD/g,"")    // soft hyphen
-    .replace(hyphenClass,"-") // unify dashes
+    .replace(/\u00A0/g," ")
+    .replace(/\u202F/g," ")
+    .replace(/\u00AD/g,"")
+    .replace(hyphenClass,"-")
     .replace(/[ \t]+/g," ")
     .replace(/\n{2,}/g,"\n");
 }
@@ -227,48 +228,59 @@ function parseTotalsFromPage(page1){
   };
 }
 
-/* === КЛЮЧЕВОЙ ФИКС: берём значение в той же строке === */
-// «Всего опор, шт.» по филиалу = ПОСЛЕДНЕЕ число в строке с названием.
-// Если в строке чисел нет — добавляем следующую строку (на случай разрыва таблицы).
-function getTotalForBranchLine(text, idx){
-  const lineStart = text.lastIndexOf("\n", idx) + 1;
-  let lineEnd = text.indexOf("\n", idx);
-  if (lineEnd < 0) lineEnd = text.length;
-
-  let line = text.slice(lineStart, lineEnd);
-  if (!/\d/.test(line)) {
-    const nextEnd = text.indexOf("\n", lineEnd + 1);
-    const nextLine = text.slice(lineEnd + 1, nextEnd > 0 ? nextEnd : text.length);
-    line = (line + " " + nextLine).trim();
+// сумма по стадиям на странице (по всем филиалам)
+function sumStages(pageText){
+  const txt = pageText;
+  const res = {};
+  for(const sp of STATUS_PATTERNS){
+    let sum = 0; let m;
+    const re = new RegExp(sp.re.source, sp.re.flags);
+    while((m = re.exec(txt))){ sum += numberize(m[1]); }
+    res[sp.key] = sum;
   }
-
-  const nums = [...line.matchAll(/\b\d{1,3}(?:\s\d{3})*\b/g)].map(m => numberize(m[0]));
-  return nums.length ? nums[nums.length - 1] : 0;
+  return res;
 }
 
+// ищем число «Всего опор, шт.» ПО СТРОКЕ с названием филиала
 function parseBranchPage(pageText){
   const text = normalize(pageText);
-  const hits = [];
-  for(const bp of BRANCH_PATTERNS){
-    const re = new RegExp(bp.re.source, "g");
-    let m; while((m = re.exec(text))){ hits.push({name:bp.name, i:m.index}); }
-  }
-  hits.sort((a,b)=>a.i-b.i);
-
+  const lines = text.split("\n");
   const res = new Map();
-  for(const h of hits){
-    const total = getTotalForBranchLine(text, h.i); // <= берём число из строки с филиалом
-    const statuses = {};
-    if(!res.has(h.name) || !res.get(h.name).total) res.set(h.name, { total, statuses });
+
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+
+    // какие филиалы упомянуты в этой строке
+    const matched = BRANCH_PATTERNS
+      .filter(bp => new RegExp(bp.re.source, bp.re.flags).test(line))
+      .map(bp => bp.name);
+
+    if(matched.length===0) continue;
+
+    // берём самое длинное совпадение, чтобы предпочесть «Усть-Лабинские ЭС»
+    matched.sort((a,b)=>b.length-a.length);
+    const name = matched[0];
+
+    let nums = line.match(NUM_RE);
+    if(!nums || nums.length===0){
+      const next = lines[i+1] || "";
+      nums = (line + " " + next).match(NUM_RE);
+    }
+    const total = nums && nums.length ? numberize(nums[nums.length-1]) : 0;
+
+    if(!res.has(name) || !res.get(name).total) res.set(name, { total, statuses:{} });
   }
+
   // гарантируем все 11 филиалов
   for(const b of BRANCHES){ if(!res.has(b)) res.set(b, { total:0, statuses:{} }); }
 
-  // общий итог (или считаем сами)
-  const sumMatch = text.match(/Общий итог[^0-9]*([\d\s]+)/iu);
-  const overall = sumMatch ? numberize(sumMatch[1])
-                           : [...res.values()].reduce((s,r)=>s+(r.total||0),0);
-  return { branches: res, overall };
+  // общий итог
+  const overall = [...res.values()].reduce((s,r)=>s+(r.total||0),0);
+
+  // агрегаты стадий
+  const stages = sumStages(text);
+
+  return { branches: res, overall, stages };
 }
 
 function parseReportByPages(pages){
@@ -279,15 +291,6 @@ function parseReportByPages(pages){
     p3: parseBranchPage(pages[2] || ""),
     p4: parseBranchPage(pages[3] || ""),
   };
-}
-
-function aggregateStatuses(section){
-  const agg = {};
-  for(const sp of STATUS_PATTERNS){ agg[sp.key]=0; }
-  for(const r of section.branches.values()){
-    for(const [k,v] of Object.entries(r.statuses||{})){ agg[k]=(agg[k]||0)+(v||0); }
-  }
-  return agg;
 }
 
 function computeDynamics(curr, prev){
@@ -311,11 +314,17 @@ function computeDynamics(curr, prev){
     return {b,p,c,d:c-p};
   });
 
-  // Стадии
-  const s2_prev = aggregateStatuses(prev.p2), s2_curr = aggregateStatuses(curr.p2);
-  const s4_prev = aggregateStatuses(prev.p4), s4_curr = aggregateStatuses(curr.p4);
-  const stagesS2 = STATUS_PATTERNS.map(sp=>({stage:sp.title,key:sp.key,p:s2_prev[sp.key]||0,c:s2_curr[sp.key]||0,d:(s2_curr[sp.key]||0)-(s2_prev[sp.key]||0)}));
-  const stagesS4 = STATUS_PATTERNS.map(sp=>({stage:sp.title,key:sp.key,p:s4_prev[sp.key]||0,c:s4_curr[sp.key]||0,d:(s4_curr[sp.key]||0)-(s4_prev[sp.key]||0)}));
+  // Стадии: суммарные по странице (по всем филиалам)
+  const stagesS2 = Object.keys(curr.p2.stages).map(key=>{
+    const title = (STATUS_PATTERNS.find(s=>s.key===key)||{}).title || key;
+    const p = prev.p2.stages[key]||0, c = curr.p2.stages[key]||0;
+    return {stage:title,key,p,c,d:c-p};
+  });
+  const stagesS4 = Object.keys(curr.p4.stages).map(key=>{
+    const title = (STATUS_PATTERNS.find(s=>s.key===key)||{}).title || key;
+    const p = prev.p4.stages[key]||0, c = curr.p4.stages[key]||0;
+    return {stage:title,key,p,c,d:c-p};
+  });
 
   return {...dyn, branchRows, rtkRows, stagesS2, stagesS4};
 }
@@ -387,7 +396,7 @@ function renderStagesTables(dyn){
   fill("#tblStagesS4", dyn.stagesS4);
 }
 
-/* ===== Инсайты (короткий текст «для рука») ===== */
+/* ===== Короткие выводы ===== */
 function buildInsights(dyn){
   const topPos = [...dyn.branchRows].sort((a,b)=>b.d-a.d).slice(0,3);
   const topNeg = [...dyn.branchRows].sort((a,b)=>a.d-b.d).slice(0,3);
@@ -603,7 +612,6 @@ document.getElementById("btnParse").addEventListener("click", async ()=>{
     const rows = renderBranchesTable(dyn);
     renderCharts(curr, prev, dyn);
     renderStagesTables(dyn);
-
     buildPresentationHTML(curr, prev, dyn, rows);
 
     // Выжимка — по блокам
