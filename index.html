@@ -3,389 +3,240 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Аналитика бездоговорного подвеса ВОЛС — Россети Кубань</title>
-
-  <!-- Шрифты -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
-
-  <!-- Стили (корпоративный синий) -->
+  <title>vols-dynamics — презентация</title>
   <style>
-    :root{
-      --rs-blue:#0033A0; /* Россети */
-      --rs-blue-2:#0A47C6;
-      --rs-bg:#F5F7FB;
-      --rs-text:#101828;
-      --rs-muted:#667085;
-      --rs-accent:#00AEEF;
-      --ok:#12B76A; --warn:#F79009; --bad:#D92D20;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--rs-bg); color:var(--rs-text); line-height:1.4;
-    }
-    header{
-      position:sticky; top:0; z-index:10;
-      background:white; border-bottom:1px solid #E5E7EB;
-    }
-    .container{max-width:1100px; margin:0 auto; padding:20px}
-    h1{margin:0; font-size:22px; color:var(--rs-blue); letter-spacing:.2px}
-    .grid{display:grid; gap:16px}
-    .grid-2{grid-template-columns:1fr 1fr}
-    .card{
-      background:white; border:1px solid #E5E7EB; border-radius:12px; padding:16px;
-      box-shadow:0 1px 2px rgba(16,24,40,.04)
-    }
-    label{font-size:14px; color:#334155; display:block; margin-bottom:8px}
-    input[type="file"], select, input[type="number"]{
-      width:100%; padding:10px 12px; border:1px solid #CBD5E1; border-radius:10px; background:#fff; font:inherit
-    }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      padding:12px 16px; border-radius:12px; border:1px solid transparent; font-weight:700; cursor:pointer;
-      background:var(--rs-blue); color:#fff;
-    }
-    .btn.secondary{background:#fff; color:var(--rs-blue); border-color:var(--rs-blue)}
-    .row{display:flex; gap:12px; flex-wrap:wrap}
-    .muted{color:var(--rs-muted); font-size:13px}
-    .badge{display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; background:#EEF2FF; color:var(--rs-blue-2)}
-    .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size:12px; white-space:pre-wrap; max-height:180px; overflow:auto; background:#0A0F1A; color:#E3E8F4; border-radius:10px; padding:12px}
-    footer{border-top:1px solid #E5E7EB; margin-top:24px; padding-top:16px; color:#64748B; font-size:12px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#f7f7fb;color:#111}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    h1{margin:0 0 6px;font-size:20px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;flex:1;min-width:280px}
+    label{display:block;font-size:14px;margin-bottom:8px;color:#334155}
+    input[type="file"]{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px}
+    button{padding:12px 16px;border-radius:12px;border:1px solid transparent;background:#0033a0;color:#fff;font-weight:700;cursor:pointer}
+    button.secondary{background:#fff;color:#0033a0;border-color:#0033a0}
+    .muted{color:#64748b;font-size:12px}
+    pre{background:#0b1220;color:#e6edf6;padding:12px;border-radius:10px;max-height:220px;overflow:auto;font-size:12px}
   </style>
 
-  <!-- Либы: XLSX (SheetJS), PPTXGenJS, FileSaver (на всякий) -->
+  <!-- Библиотеки -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.11.1/dist/pptxgen.bundle.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <h1>Аналитика бездоговорного подвеса ВОЛС — Россети Кубань</h1>
-      <div class="muted">Загрузите <b>текущий</b> и <b>предыдущий</b> отчёты → Сформируйте презентацию</div>
-    </div>
-  </header>
+  <div class="wrap">
+    <h1>vols-dynamics — генератор презентации</h1>
+    <div class="muted">Загрузи <b>текущий</b> и <b>предыдущий</b> отчёты → нажми «Сформировать PPTX».</div>
 
-  <main class="container">
-    <div class="grid grid-2">
+    <div class="row">
       <div class="card">
-        <label for="fileCurr">Текущий отчёт (.xlsx / .csv)</label>
-        <input id="fileCurr" type="file" accept=".xlsx,.xls,.csv" />
-        <div class="row">
-          <span class="badge">Автодетект колонок: «Филиал», «Статус», «Количество»</span>
-        </div>
+        <label for="curr">Текущий отчёт (.xlsx/.xls/.csv)</label>
+        <input id="curr" type="file" accept=".xlsx,.xls,.csv" />
       </div>
-
       <div class="card">
-        <label for="filePrev">Предыдущий отчёт (.xlsx / .csv)</label>
-        <input id="filePrev" type="file" accept=".xlsx,.xls,.csv" />
-        <div class="row">
-          <span class="badge">Если «Количество» нет — считаем записи поштучно</span>
-        </div>
+        <label for="prev">Предыдущий отчёт (.xlsx/.xls/.csv)</label>
+        <input id="prev" type="file" accept=".xlsx,.xls,.csv" />
       </div>
     </div>
 
-    <div class="grid" style="margin-top:16px">
-      <div class="card">
-        <div class="row" style="align-items:flex-end">
-          <div style="flex:1; min-width:220px">
-            <label for="maxPerSlide">Филиалов на слайд (автопагинация)</label>
-            <input id="maxPerSlide" type="number" min="4" max="15" step="1" value="8" />
-          </div>
-          <div style="flex:2; min-width:280px">
-            <button id="btnGenPptx" class="btn" title="Сформировать PPTX">
-              📊 Сформировать презентацию (PPTX)
-            </button>
-            <button id="btnTest" class="btn secondary" title="Тест без файлов">🧪 Тестовые данные</button>
-          </div>
-        </div>
+    <div class="row">
+      <div class="card" style="flex:0 0 auto">
+        <button id="go">📊 Сформировать PPTX</button>
+        <button id="demo" class="secondary">🧪 Тест без файлов</button>
       </div>
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between; align-items:center">
-          <div><b>Лог</b></div>
-          <div class="muted">Здесь диагностика парсинга и сборки</div>
-        </div>
-        <div id="log" class="log"></div>
+      <div class="card" style="flex:1 1 520px">
+        <div class="muted" style="margin-bottom:6px">Лог</div>
+        <pre id="log"></pre>
       </div>
     </div>
-
-    <footer>
-      Сделано под отчёты ВОЛС. Ключевой фикс: «Динамика статусов по филиалам» — автопагинация + горизонтальные столбцы.
-    </footer>
-  </main>
+  </div>
 
   <script>
-    // ========== Утилиты ==========
-    const $ = sel => document.querySelector(sel);
-    const log = (...args) => {
-      const s = args.map(a => typeof a === 'object' ? JSON.stringify(a,null,2) : String(a)).join(' ');
-      const el = $('#log'); el.textContent += s + '\n'; el.scrollTop = el.scrollHeight;
-      console.log(...args);
-    };
+    // ---------- Утилиты ----------
+    const $ = s => document.querySelector(s);
+    const log = (...a) => { $('#log').textContent += a.map(x => typeof x==='object'?JSON.stringify(x,null,2):String(x)).join(' ') + '\n'; };
 
-    function readFileAsArrayBuffer(file){
-      return new Promise((resolve,reject)=>{
+    function readAsArrayBuffer(file){
+      return new Promise((res,rej)=>{
         const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = reject;
+        r.onload = () => res(r.result);
+        r.onerror = rej;
         r.readAsArrayBuffer(file);
       });
     }
 
-    function parseWorkbookToRows(bufOrFileName, arrayBuffer){
-      try{
-        // CSV напрямую
-        if (typeof bufOrFileName === 'string' && bufOrFileName.toLowerCase().endsWith('.csv')) {
-          const text = new TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer));
-          const lines = text.split(/\r?\n/).filter(Boolean);
-          const headers = lines.shift().split(',').map(h => h.trim());
-          return lines.map(line=>{
-            const cells = line.split(',');
-            const row = {};
-            headers.forEach((h,i)=> row[h] = (cells[i] ?? '').trim());
-            return row;
-          });
-        }
-
-        // XLSX/Excel
-        const wb = XLSX.read(arrayBuffer, {type:'array'});
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, {defval:null, raw:true});
-        return rows;
-      }catch(e){
-        log('Ошибка чтения файла:', e.message);
-        return [];
+    function parseTable(fileName, arrayBuffer){
+      // CSV
+      const lower = (fileName||'').toLowerCase();
+      if (lower.endsWith('.csv')){
+        const text = new TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer));
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        if (!lines.length) return [];
+        const headers = lines.shift().split(',').map(h=>h.trim());
+        return lines.map(line=>{
+          const cells = line.split(','); const row = {};
+          headers.forEach((h,i)=> row[h]= (cells[i]??'').trim());
+          return row;
+        });
       }
+      // XLSX
+      const wb = XLSX.read(arrayBuffer, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      return XLSX.utils.sheet_to_json(sheet, {defval:null, raw:true});
     }
 
-    // Автодетект колонок: ищем по русским ключевым словам
-    function autodetectColumns(rows){
+    function autodetectCols(rows){
       if (!rows.length) return {branch:null,status:null,count:null};
-
-      const headers = Object.keys(rows[0] || {}).map(String);
+      const keys = Object.keys(rows[0]||{});
       const norm = s => (s||'').toString().trim().toLowerCase();
 
-      const byScore = (name)=> {
-        const n = norm(name);
-        let score = 0;
-        if (n.includes('филиал')) score += 5;
-        if (n.includes('подраздел')) score += 1;
-        if (n === 'филиал') score += 3;
-        return score;
-      };
-      const byStatus = (name)=> {
-        const n = norm(name);
-        let score = 0;
-        if (n.includes('статус')) score += 5;
-        if (n.includes('состояние')) score += 2;
-        return score;
-      };
-      const byCount = (name)=> {
-        const n = norm(name);
-        let score = 0;
-        if (n.includes('колич')) score += 5;
-        if (n.includes('шт')) score += 2;
-        if (n.includes('всего')) score += 1;
-        return score;
-      };
-
-      const pick = (scorer) => headers
-        .map(h=>({h,score:scorer(h)}))
-        .sort((a,b)=>b.score - a.score)[0]?.h || null;
-
-      const branch = pick(byScore);
-      const status = pick(byStatus);
-      const count  = pick(byCount);
-
-      return {branch, status, count};
+      const score = (name, pats) => pats.reduce((acc,p)=>acc+(norm(name).includes(p)?1:0),0);
+      let branch = null, status = null, count = null, bestB=-1, bestS=-1, bestC=-1;
+      for (const k of keys){
+        const sb = score(k, ['филиал','подраздел']);
+        if (sb>bestB){bestB=sb; branch=k;}
+        const ss = score(k, ['статус','состоян']);
+        if (ss>bestS){bestS=ss; status=k;}
+        const sc = score(k, ['колич','шт','всего','count','qty','кол-во']);
+        if (sc>bestC){bestC=sc; count=k;}
+      }
+      return {branch,status,count};
     }
 
-    // Агрегатор: {branch}->{status}->sum
     function aggregate(rows, cols){
       const {branch,status,count} = cols;
-      const agg = {};
+      const out = {};
       for (const r of rows){
-        const b = (r[branch] ?? '').toString().trim() || '—';
-        const s = (r[status] ?? '').toString().trim()  || '—';
-        let v   = count ? Number(r[count]) : 1;
+        const b = (r[branch]??'').toString().trim() || '—';
+        const s = (r[status]??'').toString().trim() || '—';
+        let v = count ? Number(r[count]) : 1;
         if (!Number.isFinite(v)) v = 0;
-        agg[b] ??= {};
-        agg[b][s] = (agg[b][s] ?? 0) + v;
+        (out[b] ||= {}); out[b][s] = (out[b][s]||0) + v;
       }
-      return agg;
+      return out;
     }
 
-    // Объединяем множества филиалов/статусов
-    function unionKeys(objA, objB){
-      const set = new Set([...Object.keys(objA||{}), ...Object.keys(objB||{})]);
-      return Array.from(set);
+    function unionKeys(a,b){
+      const set = new Set([...Object.keys(a||{}), ...Object.keys(b||{})]);
+      return [...set];
     }
 
-    // Формирование series для pptxgenjs: series[] = {name, labels[], values[]}
-    function buildSeriesDelta(aggCurr, aggPrev){
-      const branches = unionKeys(aggCurr, aggPrev).sort((a,b)=>a.localeCompare(b,'ru'));
-      const statusSet = new Set();
+    // series: { name:'Статус', labels:[Филиалы], values:[дельты] }
+    function buildDeltaSeries(aggCurr, aggPrev){
+      const branches = unionKeys(aggCurr, aggPrev).sort((x,y)=>x.localeCompare(y,'ru'));
+      const statuses = new Set();
       for (const b of branches){
-        Object.keys(aggCurr[b] || {}).forEach(s => statusSet.add(s));
-        Object.keys(aggPrev[b] || {}).forEach(s => statusSet.add(s));
+        Object.keys(aggCurr[b]||{}).forEach(s=>statuses.add(s));
+        Object.keys(aggPrev[b]||{}).forEach(s=>statuses.add(s));
       }
-      const statuses = Array.from(statusSet);
+      const stats = [...statuses];
+      // упорядочим статусы по сумме текущих значений (визуально удобнее)
+      const sumCurr = s => branches.reduce((acc,b)=>acc+(aggCurr[b]?.[s]??0),0);
+      stats.sort((a,b)=>sumCurr(b)-sumCurr(a));
 
-      // Упорядочим так, чтобы популярные статусы шли первыми (эвристика: по сумме текущих)
-      const byTotalCurr = (s) => branches.reduce((acc,b)=>acc + (aggCurr[b]?.[s] ?? 0),0);
-      statuses.sort((s1,s2)=>byTotalCurr(s2) - byTotalCurr(s1));
-
-      const series = statuses.map(s => ({
+      const series = stats.map(s=>({
         name: s,
         labels: branches,
-        values: branches.map(b => (aggCurr[b]?.[s] ?? 0) - (aggPrev[b]?.[s] ?? 0))
+        values: branches.map(b => (aggCurr[b]?.[s]??0) - (aggPrev[b]?.[s]??0))
       }));
-
-      return {series, branches, statuses};
+      return series;
     }
 
-    // ========== Генерация PPTX ==========
-    function addTitleSlide(pptx, title, subtitle){
+    // ---------- PPTX ----------
+    function addTitle(pptx){
       const slide = pptx.addSlide();
-      slide.addText(title,   {x:0.5,y:0.8,w:12,h:1,fontSize:28,bold:true,color:'0033A0'});
-      slide.addText(subtitle,{x:0.5,y:1.6,w:12,h:0.6,fontSize:16,color:'334155'});
-      slide.addText('vols-dynamics', {x:0.5,y:6.5,w:12,h:0.4,fontSize:10,color:'667085'});
+      slide.addText('Аналитика ВОЛС', {x:0.5,y:0.8,w:12.5,h:1,fontSize:28,bold:true,color:'0033A0'});
+      slide.addText('Динамика статусов по филиалам', {x:0.5,y:1.7,w:12.5,h:0.6,fontSize:16,color:'334155'});
     }
 
-    // *** ГЛАВНЫЙ ФИКС: авторазбиение + горизонтальные столбцы ***
-    function addStatusByBranchSlides(pptx, chartData, titleBase = 'Динамика статусов по филиалам', maxPerSlide = 8) {
-      if (!pptx || !chartData || !chartData.length) return;
-
-      const labels = (chartData[0].labels || []).slice();
-      if (!labels.length) return;
-
-      const MAX_BRANCHES_PER_SLIDE = Math.max(4, Math.min(15, Number(maxPerSlide)||8));
-      const totalPages = Math.ceil(labels.length / MAX_BRANCHES_PER_SLIDE);
-
-      const statusesCount = chartData.length;
-      const legendFont = Math.max(8, 12 - Math.floor((statusesCount - 4) / 2)); // 12..8
-      const axisFont   = 10;
-      const dataLblFont= 8;
-
-      for (let page = 0; page < totalPages; page++) {
-        const start = page * MAX_BRANCHES_PER_SLIDE;
-        const end   = Math.min(start + MAX_BRANCHES_PER_SLIDE, labels.length);
-        const labelsPart = labels.slice(start, end);
-
-        const dataPart = chartData.map(s => ({
-          name: s.name,
-          labels: labelsPart,
-          values: (s.values || []).slice(start, end)
-        }));
-
-        const slide = pptx.addSlide();
-        slide.addText(`${titleBase} (стр. ${page + 1} из ${totalPages})`, {
-          x: 0.5, y: 0.25, w: 12.5, h: 0.5,
-          fontSize: 16, bold: true, color: '0033A0'
-        });
-
-        slide.addChart(pptx.ChartType.bar, dataPart, {
-          x: 0.4, y: 0.9, w: 12.2, h: 5.2,
-          barDir: 'bar',               // горизонтальные столбцы
-          barGrouping: 'clustered',
-          legendPos: 'b',
-          legendFontSize: legendFont,
-          catAxisLabelFontSize: axisFont,
-          valAxisLabelFontSize: axisFont,
-          dataLabelFontSize: dataLblFont,
-          dataLabelFormatCode: '0',
-          showLegend: true,
-          showValue: true,
-          barGapWidthPct: 75
-        });
-      }
+    function addStatusByBranchHorizontal(pptx, series){
+      // ТОЛЬКО ЭТО — твой запрос: горизонтальные столбцы и шире область
+      const slide = pptx.addSlide();
+      slide.addText('Динамика статусов по филиалам', {
+        x:0.5,y:0.25,w:12.5,h:0.5,fontSize:16,bold:true,color:'0033A0'
+      });
+      slide.addChart(pptx.ChartType.bar, series, {
+        x:0.2, y:0.9, w:13.0, h:5.3,         // максимум ширины слайда
+        barDir:'bar',                        // ГОРИЗОНТАЛЬНО
+        barGrouping:'clustered',
+        legendPos:'b',                       // легенда снизу — ширина свободна
+        legendFontSize:10,
+        catAxisLabelFontSize:10,             // подписи филиалов
+        valAxisLabelFontSize:10,             // ось значений
+        dataLabelFontSize:8,
+        dataLabelFormatCode:'0',
+        showLegend:true,
+        showValue:true,
+        barGapWidthPct:75
+      });
     }
 
-    async function generatePPTX({rowsCurr, rowsPrev, maxPerSlide=8}){
-      const colsCurr = autodetectColumns(rowsCurr);
-      const colsPrev = autodetectColumns(rowsPrev);
+    async function generatePPTX(rowsCurr, rowsPrev){
+      const colsCurr = autodetectCols(rowsCurr);
+      const colsPrev = autodetectCols(rowsPrev);
       log('Колонки (текущий):', colsCurr);
       log('Колонки (предыдущий):', colsPrev);
 
-      if (!colsCurr.branch || !colsCurr.status){
-        throw new Error('Не найдены колонки «Филиал» и/или «Статус» в текущем отчёте.');
-      }
-      if (!colsPrev.branch || !colsPrev.status){
-        throw new Error('Не найдены колонки «Филиал» и/или «Статус» в предыдущем отчёте.');
-      }
+      if (!colsCurr.branch || !colsCurr.status) throw new Error('В текущем отчёте не найдены «Филиал/Статус».');
+      if (!colsPrev.branch || !colsPrev.status) throw new Error('В предыдущем отчёте не найдены «Филиал/Статус».');
 
       const aggCurr = aggregate(rowsCurr, colsCurr);
       const aggPrev = aggregate(rowsPrev, colsPrev);
-      const {series} = buildSeriesDelta(aggCurr, aggPrev);
+      const series = buildDeltaSeries(aggCurr, aggPrev);
 
-      // PPTX
       const pptx = new PptxGenJS();
       pptx.author = 'vols-dynamics';
-      pptx.company = 'Россети Кубань';
       pptx.layout = 'LAYOUT_WIDE'; // 16:9
 
-      addTitleSlide(pptx, 'Аналитика ВОЛС', 'Динамика статусов по филиалам (текущий vs предыдущий)');
+      addTitle(pptx);
+      // === ТВОЯ ПРОСЬБА: только этот слайд меняем на горизонтальный ===
+      addStatusByBranchHorizontal(pptx, series);
 
-      // === НАШ ФИКС — вместо прежней «не влезает» диаграммы ===
-      addStatusByBranchSlides(pptx, series, 'Динамика статусов по филиалам', maxPerSlide);
-
-      const fileName = `vols-dynamics_${new Date().toISOString().slice(0,10)}.pptx`;
-      await pptx.writeFile({fileName});
-      log('Готово:', fileName);
+      const name = `vols-dynamics_${new Date().toISOString().slice(0,10)}.pptx`;
+      await pptx.writeFile({fileName:name});
+      log('Готово:', name);
     }
 
-    // ========== Обработчики UI ==========
-    async function handleGenerate(useTest=false){
+    // ---------- Обработчики ----------
+    async function run(useDemo=false){
       try{
         $('#log').textContent = '';
-        const maxPerSlide = Number($('#maxPerSlide').value) || 8;
-
         let rowsCurr = [], rowsPrev = [];
-        if (useTest){
-          // Тестовый набор (имена совпадают с автодетектом)
+
+        if (useDemo){
+          // Минимальный демо-набор
           rowsPrev = [
-            {Филиал:'Краснодарские ЭС', Статус:'В работе у филиала', Количество: 300},
-            {Филиал:'Краснодарские ЭС', Статус:'Демонтировано', Количество: 50},
-            {Филиал:'Юго-Западные ЭС',  Статус:'В работе у филиала', Количество: 120},
-            {Филиал:'Юго-Западные ЭС',  Статус:'Демонтировано', Количество: 25},
-            {Филиал:'Усть-Лабинские ЭС',Статус:'В работе у филиала', Количество: 90},
-            {Филиал:'Усть-Лабинские ЭС',Статус:'Будет включено в следующее доп. соглашение после подписания', Количество: 5},
+            {Филиал:'Краснодарские ЭС', Статус:'В работе у филиала', Количество:300},
+            {Филиал:'Краснодарские ЭС', Статус:'Демонтировано', Количество:50},
+            {Филиал:'Юго-Западные ЭС',  Статус:'В работе у филиала', Количество:120},
+            {Филиал:'Юго-Западные ЭС',  Статус:'Демонтировано', Количество:25},
+            {Филиал:'Усть-Лабинские ЭС',Статус:'Будет включено в следующее доп. соглашение после подписания', Количество:5},
           ];
           rowsCurr = [
-            {Филиал:'Краснодарские ЭС', Статус:'В работе у филиала', Количество: 320},
-            {Филиал:'Краснодарские ЭС', Статус:'Демонтировано', Количество: 60},
-            {Филиал:'Юго-Западные ЭС',  Статус:'В работе у филиала', Количество: 150},
-            {Филиал:'Юго-Западные ЭС',  Статус:'Демонтировано', Количество: 40},
-            {Филиал:'Усть-Лабинские ЭС',Статус:'В работе у филиала', Количество: 110},
-            {Филиал:'Усть-Лабинские ЭС',Статус:'Будет включено в следующее доп. соглашение после подписания', Количество: 9},
+            {Филиал:'Краснодарские ЭС', Статус:'В работе у филиала', Количество:320},
+            {Филиал:'Краснодарские ЭС', Статус:'Демонтировано', Количество:60},
+            {Филиал:'Юго-Западные ЭС',  Статус:'В работе у филиала', Количество:150},
+            {Филиал:'Юго-Западные ЭС',  Статус:'Демонтировано', Количество:40},
+            {Филиал:'Усть-Лабинские ЭС',Статус:'Будет включено в следующее доп. соглашение после подписания', Количество:9},
           ];
         } else {
-          const fCurr = $('#fileCurr').files[0];
-          const fPrev = $('#filePrev').files[0];
-          if (!fCurr || !fPrev) throw new Error('Загрузите оба файла: текущий и предыдущий.');
-
-          const bufCurr = await readFileAsArrayBuffer(fCurr);
-          const bufPrev = await readFileAsArrayBuffer(fPrev);
-          rowsCurr = parseWorkbookToRows(fCurr.name, bufCurr);
-          rowsPrev = parseWorkbookToRows(fPrev.name, bufPrev);
-
-          log(`Текущий: ${fCurr.name}, строк: ${rowsCurr.length}`);
-          log(`Предыдущий: ${fPrev.name}, строк: ${rowsPrev.length}`);
+          const f1 = $('#curr').files[0], f2 = $('#prev').files[0];
+          if (!f1 || !f2) throw new Error('Загрузи оба файла: текущий и предыдущий.');
+          const [b1,b2] = await Promise.all([readAsArrayBuffer(f1), readAsArrayBuffer(f2)]);
+          rowsCurr = parseTable(f1.name, b1);
+          rowsPrev = parseTable(f2.name, b2);
+          log(`Текущий: ${f1.name}, строк: ${rowsCurr.length}`);
+          log(`Предыдущий: ${f2.name}, строк: ${rowsPrev.length}`);
         }
 
-        await generatePPTX({rowsCurr, rowsPrev, maxPerSlide});
-
+        await generatePPTX(rowsCurr, rowsPrev);
       }catch(e){
-        log('❌ Ошибка:', e.message || e);
-        alert(e.message || e);
+        log('Ошибка:', e.message||e);
+        alert(e.message||e);
       }
     }
 
-    $('#btnGenPptx').addEventListener('click', ()=>handleGenerate(false));
-    $('#btnTest').addEventListener('click', ()=>handleGenerate(true));
+    $('#go').addEventListener('click', ()=>run(false));
+    $('#demo').addEventListener('click', ()=>run(true));
   </script>
 </body>
 </html>
