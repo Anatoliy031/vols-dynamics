@@ -6,18 +6,14 @@
 <title>Динамика ВОЛС</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --rs-blue:#0033A0; --rs-blue-2:#0A47C6;
-    --rs-light:#f4f7fb; --border:#e7edf5;
-    --ok:#0a7a2d; --bad:#b00020; --muted:#5f6b7a; --card:#fff
-  }
+  :root{--rs-blue:#0033A0;--rs-light:#f4f7fb;--border:#e7edf5;--ok:#0a7a2d;--bad:#b00020;--muted:#5f6b7a;--card:#fff}
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--rs-light);color:#0b1a2b;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
   header{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,var(--rs-blue),#0953d6);color:#fff;padding:18px 20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
   .brand{display:flex;gap:14px;align-items:center;font-weight:800}
   .dot{width:14px;height:14px;border-radius:50%;background:#fff;opacity:.9}
-  .container{max-width:1280px;margin:22px auto;padding:0 16px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 16px;box-shadow:0 4px 14px rgba(0,0,0,.03)}
+  .container{max-width:1200px;margin:22px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 16px}
   .grid{display:grid;gap:16px}
   .grid.cols-2{grid-template-columns:1fr 1fr}
   .grid.cols-3{grid-template-columns:repeat(3,1fr)}
@@ -26,12 +22,8 @@
   .inputs{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
   .pill{display:inline-flex;align-items:center;gap:10px;border:1px dashed var(--border);background:#fff;border-radius:12px;padding:12px}
   input[type=file]{border:none}
-  button{transition:transform .05s ease, box-shadow .2s ease}
-  button:active{transform:translateY(1px)}
   button.primary{background:var(--rs-blue);color:#fff;border:none;border-radius:12px;padding:12px 14px;font-weight:700;letter-spacing:.2px;cursor:pointer}
-  button.primary:hover{box-shadow:0 6px 18px rgba(0,51,160,.22)}
   button.secondary{background:#fff;color:#0033A0;border:1px solid #0033A0;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
-  button.secondary:hover{background:#f5f8ff}
   h2{margin:4px 0 10px 0;font-size:20px}
   .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);background:#f8fafc;color:#334155}
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -41,14 +33,10 @@
   .kpi .value{font-size:24px;font-weight:800;margin-top:6px}
   .delta{font-size:12px;margin-top:4px}
   .up{color:var(--ok)} .down{color:#b00020} .muted{color:#5f6b7a}
-
-  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-  th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:right}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums}
   th:first-child,td:first-child{text-align:left}
   tfoot td{font-weight:800}
-  /* Улучшения таблиц без изменения структуры */
-  table.sticky thead th{position:sticky;top:0;background:#fff;z-index:1}
-  table.zebra tbody tr:nth-child(odd){background:#fafcff}
   .exports{display:flex;flex-wrap:wrap;gap:10px}
   .hr{height:1px;background:var(--border);margin:12px 0}
   #presentationPrint,#summaryPrint{background:#fff;padding:16px 18px}
@@ -63,13 +51,6 @@
   .compact .hr{margin:6px 0}
   .planfact-wrap{overflow:hidden}
   .planfact-scale{transform-origin: top left; transform: scale(0.92); width:108%}
-
-  /* Авто-вписывание широких блоков (матрица стадий) */
-  .fit-wrap{overflow:hidden}
-  .fit-scale{transform-origin: top left}
-  /* графики */
-  canvas{max-height:460px}
-
   @media print{
     body{background:#fff}
     #presentationPrint,#summaryPrint{padding:10mm}
@@ -122,7 +103,7 @@
   <section class="card">
     <h2>Таблица (стр. 2) — Δ «Всего опор, шт.»</h2>
     <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px">
-      <table id="tblBranches" class="sticky zebra">
+      <table id="tblBranches">
         <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><td>Итого</td><td id="sumPrev">0</td><td id="sumCurr">0</td><td id="sumDelta">0</td></tr></tfoot>
@@ -141,7 +122,7 @@
   <section class="card">
     <h2>Таблица (стр. 3) — Δ «Всего опор, шт.»</h2>
     <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px">
-      <table id="tblBranchesS3" class="sticky zebra">
+      <table id="tblBranchesS3">
         <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><td>Итого</td><td id="sumPrevS3">0</td><td id="sumCurrS3">0</td><td id="sumDeltaS3">0</td></tr></tfoot>
@@ -160,7 +141,7 @@
   <section class="card">
     <h2>Таблица (стр. 4) — Δ «Всего опор, шт.»</h2>
     <div style="max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px">
-      <table id="tblBranchesS4" class="sticky zebra">
+      <table id="tblBranchesS4">
         <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
         <tfoot><tr><td>Итого</td><td id="sumPrevS4">0</td><td id="sumCurrS4">0</td><td id="sumDeltaS4">0</td></tr></tfoot>
@@ -176,12 +157,12 @@
   </section>
 </div>
 
-<!-- Стадии -->
+<!-- Стадии (интерфейс оставляем как было) -->
 <div class="container grid cols-3">
   <section class="card">
     <h2>Стр. 2 — Стадии (прирост)</h2>
     <div style="max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:12px">
-      <table id="tblStagesS2" class="sticky zebra">
+      <table id="tblStagesS2">
         <thead><tr><th>Стадия</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
       </table>
@@ -190,7 +171,7 @@
   <section class="card">
     <h2>Стр. 4 (РТК) — Стадии (прирост)</h2>
     <div style="max-height:360px;overflow:auto;border:1px solid var(--border);border-radius:12px">
-      <table id="tblStagesS4" class="sticky zebra">
+      <table id="tblStagesS4">
         <thead><tr><th>Стадия</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
         <tbody></tbody>
       </table>
@@ -266,6 +247,7 @@ const STATUS_PATTERNS = [
   {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора/i},
   {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале/i},
   {key:"incl_next",  title:"Будет включено в следующее доп. соглашение после подписания",
+    // допускаем переносы/варианты формулировок/пробелы, «доп.»/«доп»
     re:/Будет\s*включено(?:[\s\S]{0,80})в(?:\s*следующее)?(?:[\s\S]{0,80})доп\.?\s*соглашение(?:[\s\S]{0,80}после\s*подписания)?/i
   },
 ];
@@ -327,30 +309,44 @@ function parseTotalsFromPage(page1){
   };
 }
 
-/* ==== Парсер таблиц по филиалам ==== */
+/* ==== ВАЖНО: новый устойчивый парсер таблиц по филиалам ==== */
+/* Идея:
+   1) разбиваем страницу на строки;
+   2) выделяем "сегмент" текста для каждого филиала — от его строки до строки следующего филиала;
+   3) в сегменте ищем:
+      - total: первое число рядом с названием филиала;
+      - статусы: число "после" подписи статуса, допускаем разрывы строк.
+*/
 function parseBranchTable(pageText){
   const text = normalize(pageText);
   const lines = text.split("\n").filter(Boolean);
 
+  // Находим все индексы строк с названиями филиалов
   const idx = [];
   for(let i=0;i<lines.length;i++){
     const line = lines[i];
     for(const bp of BRANCH_PATTERNS){
-      if(bp.re.test(line)){ idx.push({i, name: bp.name}); break; }
+      if(bp.re.test(line)){
+        idx.push({i, name: bp.name});
+        break;
+      }
     }
   }
+  // Добавим "хвост" для последнего сегмента
   idx.push({i: lines.length, name:null});
 
   const branches = new Map();
 
   for(let k=0;k<idx.length-1;k++){
-    const start = idx[k].i, end = idx[k+1].i;
+    const start = idx[k].i;
+    const end   = idx[k+1].i;
     const branchName = idx[k].name;
     if(!branchName) continue;
 
     const headLine = lines[start] || "";
-    const segText  = lines.slice(start+1, end).join(" ");
+    const segText  = lines.slice(start+1, end).join(" "); // объединяем — статус может быть с переносами
 
+    // total — берем число рядом с названием филиала (в его строке) или на следующей строке
     let total = 0;
     const headNums = headLine.match(/\d[\d\s]*/g);
     if(headNums && headNums.length) total = numberize(headNums[headNums.length-1]);
@@ -361,18 +357,22 @@ function parseBranchTable(pageText){
 
     const data = { total, statuses:{} };
 
+    // Функция: число сразу после подписи статуса (с допуском 0..200 символов, без цифр)
     function numAfter(re, hay){
       const rx = new RegExp(re.source + "[^\\d]{0,200}(\\d[\\d\\s]*)", re.flags);
       const m = hay.match(rx);
       return m ? numberize(m[1]) : null;
     }
 
+    // Ищем все статусы по устойчивым шаблонам в сегменте + "подстраховка" по строкам
     for(const sp of STATUS_PATTERNS){
       let v = numAfter(sp.re, segText);
       if(v === null){
+        // подстраховка: просмотр по строкам сегмента, иногда число на следующей строке
         for(let j=start+1;j<end;j++){
           const l0 = lines[j]||"", l1 = lines[j+1]||"";
           if(sp.re.test(l0) || sp.re.test(l1)){
+            // число в той же строке или на следующей
             let cap = (l0.match(/(\d[\d\s]*)/g)||[]).pop();
             if(!cap) cap = (l1.match(/(\d[\d\s]*)/g)||[]).pop();
             if(cap){ v = numberize(cap); break; }
@@ -385,8 +385,10 @@ function parseBranchTable(pageText){
     branches.set(branchName, data);
   }
 
+  // Гарантируем все филиалы
   for(const b of BRANCHES){ if(!branches.has(b)) branches.set(b, { total:0, statuses:{} }); }
 
+  // Итоги по стадиям
   const stages = {};
   for(const [_, obj] of branches){
     for(const [k,v] of Object.entries(obj.statuses)){
@@ -420,13 +422,14 @@ function computeDynamics(curr, prev){
   const makeRows = (cPage, pPage) => BRANCHES.map(b=>{
     const c = cPage.branches.get(b)?.total || 0;
     const p = pPage.branches.get(b)?.total || 0;
-    return {b, p, c, d: (c - p)};
+    return {b, p, c, d: (c - p)}; // строго ТЕК − ПРЕД
   });
 
   const branchRows   = makeRows(curr.p2, prev.p2);
   const branchRowsS3 = makeRows(curr.p3, prev.p3);
   const branchRowsS4 = makeRows(curr.p4, prev.p4);
 
+  // агрегаты по стадиям (итого)
   const allKeys = Array.from(new Set([
     ...Object.keys(prev.p2.stages||{}), ...Object.keys(curr.p2.stages||{}),
     ...Object.keys(prev.p3.stages||{}), ...Object.keys(curr.p3.stages||{}),
@@ -443,6 +446,7 @@ function computeDynamics(curr, prev){
   const stagesS2 = diffStages(curr.p2.stages||{}, prev.p2.stages||{});
   const stagesS4 = diffStages(curr.p4.stages||{}, prev.p4.stages||{});
 
+  // динамика статусов в разрезе филиалов — ТОЛЬКО стр.2
   function perBranchStages(cPage, pPage){
     return BRANCHES.map(b=>{
       const cst = cPage.branches.get(b)?.statuses || {};
@@ -510,39 +514,41 @@ function renderBranchesTable(rows, tbodySel, sumPrevId, sumCurrId, sumDeltaId){
   document.getElementById(sumDeltaId).textContent = (sD>0?"+":"")+fmt(sD);
 }
 
-function makeHorizBar(ctx, prevData, currData, labels){
-  return new Chart(ctx, {
-    type:"bar",
-    data:{labels, datasets:[
-      {label:"Пред. неделя", data:prevData, backgroundColor:"#94a3b8"},
-      {label:"Тек. неделя",  data:currData, backgroundColor:"#0033A0"}
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      indexAxis:'y',
-      plugins:{legend:{position:"bottom"}},
-      scales:{x:{beginAtZero:true, ticks:{precision:0}}}
-    }
-  });
-}
-
 function renderCharts(curr, prev, dyn){
   const labels = BRANCHES;
 
   const prevS2 = labels.map(b=>prev.p2.branches.get(b)?.total||0);
   const currS2 = labels.map(b=>curr.p2.branches.get(b)?.total||0);
   if(chartBranches) chartBranches.destroy();
-  chartBranches = makeHorizBar(document.getElementById("chartBranches"), prevS2, currS2, labels);
+  chartBranches = new Chart(document.getElementById("chartBranches"), {
+    type:"bar",
+    data:{labels, datasets:[
+      {label:"Пред. неделя", data:prevS2, backgroundColor:"#94a3b8"},
+      {label:"Тек. неделя",  data:currS2, backgroundColor:"#0033A0"}]},
+    options:{responsive:true,plugins:{legend:{position:"top"}},scales:{y:{beginAtZero:true}}}
+  });
 
   const prevS3 = labels.map(b=>prev.p3.branches.get(b)?.total||0);
   const currS3 = labels.map(b=>curr.p3.branches.get(b)?.total||0);
   if(chartBranchesS3) chartBranchesS3.destroy();
-  chartBranchesS3 = makeHorizBar(document.getElementById("chartBranchesS3"), prevS3, currS3, labels);
+  chartBranchesS3 = new Chart(document.getElementById("chartBranchesS3"), {
+    type:"bar",
+    data:{labels, datasets:[
+      {label:"Пред. неделя", data:prevS3, backgroundColor:"#94a3b8"},
+      {label:"Тек. неделя",  data:currS3, backgroundColor:"#0033A0"}]},
+    options:{responsive:true,plugins:{legend:{position:"top"}},scales:{y:{beginAtZero:true}}}
+  });
 
   const prevS4 = labels.map(b=>prev.p4.branches.get(b)?.total||0);
   const currS4 = labels.map(b=>curr.p4.branches.get(b)?.total||0);
   if(chartBranchesS4) chartBranchesS4.destroy();
-  chartBranchesS4 = makeHorizBar(document.getElementById("chartBranchesS4"), prevS4, currS4, labels);
+  chartBranchesS4 = new Chart(document.getElementById("chartBranchesS4"), {
+    type:"bar",
+    data:{labels, datasets:[
+      {label:"Пред. неделя", data:prevS4, backgroundColor:"#94a3b8"},
+      {label:"Тек. неделя",  data:currS4, backgroundColor:"#0033A0"}]},
+    options:{responsive:true,plugins:{legend:{position:"top"}},scales:{y:{beginAtZero:true}}}
+  });
 
   const rtkD = labels.map(b => (dyn.rtkRows.find(x => x.b === b) || {c:0,p:0}).c - (dyn.rtkRows.find(x => x.b === b) || {c:0,p:0}).p);
   if(chartRTKDelta) chartRTKDelta.destroy();
@@ -550,7 +556,7 @@ function renderCharts(curr, prev, dyn){
     type:"bar",
     data:{labels, datasets:[{label:"Δ РТК (тек. − пред.)", data:rtkD,
       backgroundColor: rtkD.map(v=>v>0?"#0a7a2d":"#b00020")}]},
-    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:"bottom"}}, scales:{y:{}, x:{beginAtZero:true}}}
+    options:{responsive:true,plugins:{legend:{position:"top"}},scales:{y:{beginAtZero:true}}}
   });
 }
 
@@ -619,17 +625,14 @@ function stageMatrixHTML(title, branchStages){
     ${cols.map(k=>`<td style="padding:4px;text-align:right;font-weight:800;color:${totals[k]>0?'#0a7a2d':(totals[k]<0?'#b00020':'#5f6b7a')}">${totals[k]>0?'+':''}${fmt(totals[k])}</td>`).join("")}
   </tr>`;
 
-  /* Оборачиваем в fit-wrap/fit-scale — далее при экспорте выставим масштаб */
   return `
     <div style="font-weight:700;margin:8px 0">${title}</div>
-    <div class="fit-wrap">
-      <div class="fit-scale" id="s2MatrixFit">
-        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:860px">
-          <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Филиал</th>${head}</tr></thead>
-          <tbody>${body}</tbody>
-          <tfoot>${totalRow}</tfoot>
-        </table>
-      </div>
+    <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:860px">
+        <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Филиал</th>${head}</tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot>${totalRow}</tfoot>
+      </table>
     </div>`;
 }
 
@@ -689,13 +692,12 @@ function buildPresentationHTML(curr, prev, dyn){
   document.getElementById("presTableS3").innerHTML = presTableHTML("Динамика выявления по 425 Приказу", (DATA?.dyn?.branchRowsS3||[]), ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
   document.getElementById("presTableS4").innerHTML = presTableHTML("Динамика выявления по Ростелекому", (DATA?.dyn?.branchRowsS4||[]), ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-  // Последний слайд (стр.2): матрица Δ по филиалам + итоги по статусам
+  // Последний слайд: только стр.2 — матрица Δ по филиалам + суммарные итоги по статусам
   const s2Matrix = stageMatrixHTML("Динамика статусов по филиалам (стр. 2, Δ)", dyn.s2BranchStages);
   const s2Totals = stageTotalsHTML("Стр. 2 — Итого по статусам", dyn.stagesS2);
   document.getElementById("presStages").innerHTML = s2Matrix + s2Totals;
 }
 
-/* ===== Выжимка ===== */
 function buildSummaryBlocks(curr, prev, dyn){
   const blocks = document.getElementById("briefBlocks");
   const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
@@ -725,7 +727,7 @@ function buildSummaryBlocks(curr, prev, dyn){
   `;
 }
 
-/* ===== Google Sheets: План-Факт ===== */
+/* ===== Google Sheets: «План-Факт» (как есть) ===== */
 const SHEET_HTML_URL = "https://docs.google.com/spreadsheets/d/1Y9bM7zLRf_gonMUgfQLl57Iu3NgPa78rBXnpxkKLvO0/gviz/tq?tqx=out:html";
 async function injectPlanFactHTML(){
   try{
@@ -747,52 +749,20 @@ async function injectPlanFactHTML(){
   }
 }
 
-/* ===== Авто-вписывание широкой матрицы + выбор ориентации ===== */
-function autoscaleFit(containerEl){
-  const fit = containerEl.querySelector(".fit-scale");
-  if(!fit) return {scale:1};
-  const wrapW = containerEl.clientWidth || containerEl.offsetWidth || 0;
-  const contentW = fit.scrollWidth || 0;
-  let scale = 1;
-  if(contentW > wrapW && wrapW>0){
-    scale = Math.max(0.6, wrapW / contentW); // не меньше 60%
-    fit.style.transform = `scale(${scale})`;
-    fit.style.width = (100/scale) + "%"; // чтобы не обрезало справа
-  }else{
-    fit.style.transform = "scale(1)"; fit.style.width = "100%";
-  }
-  return {scale};
-}
-
 /* ===== Экспорт PDF ===== */
 async function exportPresPDF(){
   const el = document.getElementById("presentationPrint");
   el.style.display = "block";
-  // дождаться рендера
-  await new Promise(r=>requestAnimationFrame(r));
-
-  // авто-масштаб широкой матрицы
-  const presStages = document.getElementById("presStages");
-  const {scale} = autoscaleFit(presStages);
-
-  // если даже после масштабирования контент потенциально широк — поворачиваем в landscape
-  const needLandscape = scale < 0.85;
-
   await html2pdf().from(el).set({
     margin: 8,
     filename: "Презентация_ВОЛС.pdf",
     image: {type: 'jpeg', quality: 0.98},
     html2canvas: {scale: 2.2, useCORS: true},
-    jsPDF: {unit: 'mm', format: 'a4', orientation: needLandscape ? 'landscape' : 'portrait', compress: true},
+    jsPDF: {unit: 'mm', format: 'a4', compress: true},
     pagebreak: { mode: ['css','legacy'], avoid: ['tr','.avoid-break'] }
   }).save();
-
-  // вернуть как было
   el.style.display = "none";
-  const fit = presStages.querySelector(".fit-scale");
-  if(fit){ fit.style.transform="scale(1)"; fit.style.width="100%"; }
 }
-
 async function exportBriefPDF(){
   const el = document.getElementById("summaryPrint");
   el.style.display = "block";
@@ -801,13 +771,13 @@ async function exportBriefPDF(){
     filename: "Выжимка_ВОЛС.pdf",
     image: {type: 'jpeg', quality: 0.98},
     html2canvas: {scale: 2.2, useCORS: true},
-    jsPDF: {unit: 'mm', format: 'a4', orientation:'portrait', compress: true},
+    jsPDF: {unit: 'mm', format: 'a4', compress: true},
     pagebreak: { mode: ['css','legacy'], avoid: ['tr','.avoid-break'] }
   }).save();
   el.style.display = "none";
 }
 
-/* ===== PPTX / DOCX (как было) ===== */
+/* ===== PPTX / DOCX (без изменений требований) ===== */
 async function exportPresPPTX(curr, prev, dyn, rows){
   try {
     const pptx = new PptxGenJS();
