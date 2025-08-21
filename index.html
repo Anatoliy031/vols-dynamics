@@ -5,120 +5,68 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Динамика ВОЛС — отчёты, презентация, выжимка</title>
 
-<!-- Шрифты -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Стили -->
 <style>
   :root{
-    --rs-blue:#0033A0;        /* Россети */
-    --rs-blue-2:#0A47C6;
-    --rs-bg:#F6F8FB;
-    --rs-text:#101828;
-    --rs-muted:#667085;
-    --rs-accent:#00AEEF;
-    --ok:#16A34A;
-    --warn:#D97706;
-    --bad:#DC2626;
-    --card:#FFFFFF;
-    --border:#E5E7EB;
+    --rs-blue:#0033A0; --rs-blue-2:#0A47C6; --rs-bg:#F6F8FB; --rs-text:#101828;
+    --rs-muted:#667085; --rs-accent:#00AEEF; --ok:#16A34A; --warn:#D97706; --bad:#DC2626;
+    --card:#FFFFFF; --border:#E5E7EB;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    color:var(--rs-text); background:var(--rs-bg);
-  }
-  header{
-    position:sticky; top:0; z-index:20;
-    background:linear-gradient(180deg,#fff 0%, #fff 70%, rgba(255,255,255,.8) 100%);
-    border-bottom:1px solid var(--border);
-    backdrop-filter:saturate(1.2) blur(6px);
-  }
-  .wrap{max-width:1200px; margin:0 auto; padding:14px 16px}
+  body{margin:0;font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--rs-text);background:var(--rs-bg)}
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#fff 0%,#fff 70%,rgba(255,255,255,.8) 100%);border-bottom:1px solid var(--border);backdrop-filter:saturate(1.2) blur(6px)}
+  .wrap{max-width:1200px;margin:0 auto;padding:14px 16px}
   .brand{display:flex;align-items:center;gap:10px}
-  .logo{
-    width:36px;height:36px;border-radius:9px;background:var(--rs-blue);
-    display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800
-  }
-  h1{font-size:18px; margin:0; font-weight:800; letter-spacing:.2px}
-  .muted{color:var(--rs-muted); font-size:12px}
+  .logo{width:36px;height:36px;border-radius:9px;background:var(--rs-blue);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+  h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px}
+  .muted{color:var(--rs-muted);font-size:12px}
 
   main{max-width:1200px;margin:18px auto;padding:0 16px 60px}
-  .grid{display:grid; gap:16px}
+  .grid{display:grid;gap:16px}
   .g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  @media (max-width:980px){ .g-3,.g-4{grid-template-columns:1fr 1fr} }
-  @media (max-width:720px){ .g-2,.g-3,.g-4{grid-template-columns:1fr} }
+  @media (max-width:980px){ .g-3{grid-template-columns:1fr 1fr} }
+  @media (max-width:720px){ .g-2,.g-3{grid-template-columns:1fr} }
 
-  .card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px;
-    box-shadow:0 6px 16px rgba(0,0,0,0.04);
-  }
-  .card h2{margin:0 0 8px; font-size:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,0.04)}
+  .card h2{margin:0 0 8px;font-size:16px}
   .pad{padding:16px}
 
-  .uploader{display:grid; gap:12px}
-  .box{
-    border:1.5px dashed var(--rs-blue-2); border-radius:16px; padding:18px;
-    background:#fff; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
-  }
+  .uploader{display:grid;gap:12px}
+  .box{border:1.5px dashed var(--rs-blue-2);border-radius:16px;padding:18px;background:#fff;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
   .box label{font-weight:700}
   input[type="file"]{display:none}
-  .btn{
-    display:inline-flex;gap:8px;align-items:center;justify-content:center;
-    padding:10px 14px; border-radius:12px; border:1px solid var(--border);
-    background:#fff; color:var(--rs-blue); font-weight:700; cursor:pointer;
-    transition:.15s transform;
-  }
+  .btn{display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--rs-blue);font-weight:700;cursor:pointer;transition:.15s transform}
   .btn:hover{transform:translateY(-1px)}
-  .btn.primary{background:var(--rs-blue); color:#fff; border-color:var(--rs-blue)}
-  .btn.ghost{background:#fff; color:var(--rs-blue); border-color:var(--rs-blue)}
-  .btn.small{padding:7px 10px; font-weight:600}
+  .btn.primary{background:var(--rs-blue);color:#fff;border-color:var(--rs-blue)}
+  .btn.small{padding:7px 10px;font-weight:600}
   .btn-row{display:flex;gap:10px;flex-wrap:wrap}
 
-  .kpi{display:flex; align-items:center; justify-content:space-between}
+  .kpi{display:flex;align-items:center;justify-content:space-between}
   .kpi .val{font-size:26px;font-weight:800}
   .tag{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:#fff}
-  .tag.ok{color:var(--ok); border-color:var(--ok)}
-  .tag.warn{color:var(--warn); border-color:var(--warn)}
-  .tag.bad{color:var(--bad); border-color:var(--bad)}
+  .tag.ok{color:var(--ok);border-color:var(--ok)}
+  .tag.warn{color:var(--warn);border-color:var(--warn)}
 
-  /* Таблица динамики по филиалам */
-  .table-wrap{
-    overflow:auto; border:1px solid var(--border); border-radius:14px; background:#fff;
-  }
-  table{
-    border-collapse:separate; border-spacing:0; width:100%; min-width:960px;
-  }
-  th,td{
-    padding:10px 12px; border-bottom:1px solid var(--border); text-align:right; white-space:nowrap;
-  }
-  th{position:sticky; top:0; background:#fff; z-index:1; text-align:center; font-size:12px}
-  th:first-child, td:first-child{position:sticky; left:0; background:#fff; text-align:left}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px;background:#fff}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:960px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+  th{position:sticky;top:0;background:#fff;z-index:1;text-align:center;font-size:12px}
+  th:first-child,td:first-child{position:sticky;left:0;background:#fff;text-align:left}
   tr:last-child td{border-bottom:0}
-  .delta-plus{color:var(--ok); font-weight:700}
-  .delta-minus{color:var(--bad); font-weight:700}
-  .delta-zero{color:var(--rs-muted); font-weight:700}
+  .delta-plus{color:var(--ok);font-weight:700}
+  .delta-minus{color:var(--bad);font-weight:700}
+  .delta-zero{color:var(--rs-muted);font-weight:700}
 
-  .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
-  .legend .dot{width:10px;height:10px;border-radius:999px;background:var(--rs-blue)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
   .status-pill{padding:2px 6px;border-radius:8px;border:1px solid var(--border);font-size:11px;background:#fff}
+  .compact th,.compact td{padding:6px 8px;font-size:12px}
+  .compact th.status-rot{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;min-width:20px}
 
-  /* Компактный режим таблицы */
-  .compact th, .compact td{padding:6px 8px; font-size:12px}
-  .compact th.status-rot{writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; min-width:20px}
-
-  /* Ненавязчивые уведомления */
-  .toast{
-    position:fixed; bottom:18px; right:18px; z-index:50; padding:10px 14px;
-    background:#111827; color:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15); display:none
-  }
+  .toast{position:fixed;bottom:18px;right:18px;z-index:50;padding:10px 14px;background:#111827;color:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none}
   .toast.show{display:block}
-
-  /* Секции */
-  section + section{margin-top:16px}
 </style>
 </head>
 <body>
@@ -128,37 +76,36 @@
       <div class="logo">РС</div>
       <div>
         <h1>Аналитика ВОЛС — динамика статусов</h1>
-        <div class="muted">Текущий и предыдущий отчёты → расчёт динамики → презентация .pptx и выжимка .docx</div>
+        <div class="muted">Загрузите текущий и предыдущий отчёты (PDF/Excel/CSV) → расчёт → PPTX и DOCX</div>
       </div>
     </div>
   </div>
 </header>
 
 <main>
-  <!-- Загрузка файлов -->
   <section class="grid g-2">
     <div class="card pad">
       <h2>1) Загрузите отчёты (текущий и предыдущий)</h2>
       <div class="uploader">
         <div class="box">
           <div>
-            <label for="fileCurrent">Текущий отчёт (XLSX/CSV)</label><br>
-            <span class="muted">Файл со сводной таблицей: «Филиал» + статусы, в т.ч. «В работе всего, шт»</span>
+            <label for="fileCurrent">Текущий отчёт (PDF/XLSX/CSV)</label><br>
+            <span class="muted">Таблица с колонкой «Филиал» и статусами (текстовый PDF, не скан)</span>
           </div>
           <div>
-            <label class="btn ghost" for="fileCurrent">Выбрать файл</label>
-            <input id="fileCurrent" type="file" accept=".xlsx,.xls,.csv" />
+            <label class="btn" for="fileCurrent">Выбрать файл</label>
+            <input id="fileCurrent" type="file" accept=".pdf,.xlsx,.xls,.csv" />
             <span id="fileCurrentName" class="muted"></span>
           </div>
         </div>
         <div class="box">
           <div>
-            <label for="filePrev">Предыдущий отчёт (XLSX/CSV)</label><br>
+            <label for="filePrev">Предыдущий отчёт (PDF/XLSX/CSV)</label><br>
             <span class="muted">Тот же формат, чтобы корректно посчитать динамику</span>
           </div>
           <div>
-            <label class="btn ghost" for="filePrev">Выбрать файл</label>
-            <input id="filePrev" type="file" accept=".xlsx,.xls,.csv" />
+            <label class="btn" for="filePrev">Выбрать файл</label>
+            <input id="filePrev" type="file" accept=".pdf,.xlsx,.xls,.csv" />
             <span id="filePrevName" class="muted"></span>
           </div>
         </div>
@@ -170,85 +117,51 @@
       </div>
     </div>
 
-    <!-- KPI -->
     <div class="card pad">
       <h2>2) Итоги по обществу</h2>
       <div class="grid g-2">
         <div class="card pad">
-          <div class="kpi">
-            <div>
-              <div class="muted">В работе всего, шт — предыдущий</div>
-              <div class="val" id="kpiPrev">—</div>
-            </div>
-            <span class="tag">prev</span>
-          </div>
+          <div class="kpi"><div><div class="muted">В работе всего — пред</div><div class="val" id="kpiPrev">—</div></div><span class="tag">prev</span></div>
         </div>
         <div class="card pad">
-          <div class="kpi">
-            <div>
-              <div class="muted">В работе всего, шт — текущий</div>
-              <div class="val" id="kpiCurr">—</div>
-            </div>
-            <span class="tag ok">curr</span>
-          </div>
+          <div class="kpi"><div><div class="muted">В работе всего — тек</div><div class="val" id="kpiCurr">—</div></div><span class="tag ok">curr</span></div>
         </div>
         <div class="card pad">
-          <div class="kpi">
-            <div>
-              <div class="muted">«Выявлено» (текущий − предыдущий)</div>
-              <div class="val" id="kpiFound">—</div>
-            </div>
-            <span class="tag warn">Δ</span>
-          </div>
+          <div class="kpi"><div><div class="muted">«Выявлено» (тек−пред)</div><div class="val" id="kpiFound">—</div></div><span class="tag warn">Δ</span></div>
         </div>
         <div class="card pad">
-          <div>
-            <div class="muted">Комментарий по динамике</div>
-            <div id="kpiComment">—</div>
-          </div>
+          <div><div class="muted">Комментарий по динамике</div><div id="kpiComment">—</div></div>
         </div>
       </div>
-      <div class="legend">
-        <span class="status-pill"><b>Сокращения статусов</b> отображаются в таблицах и в PPTX, полная легенда ниже.</span>
-      </div>
+      <div class="legend"><span class="status-pill"><b>Сокращения статусов</b> в таблицах и PPTX, полная легенда ниже.</span></div>
     </div>
   </section>
 
-  <!-- Таблица динамики статусов по филиалам -->
   <section class="card pad">
-    <h2>3) Динамика статусов по филиалам (читаемый вид)</h2>
+    <h2>3) Динамика статусов по филиалам (читаемо)</h2>
     <div class="btn-row" style="margin-bottom:8px">
       <button class="btn small" id="btnViewAll">Все статусы (таблица)</button>
-      <button class="btn small" id="btnPerStatus">Постранично по статусам</button>
+      <button class="btn small" id="btnPerStatus">По каждому статусу</button>
     </div>
     <div id="statusesLegend" class="legend"></div>
-    <div id="tableContainer" class="table-wrap">
-      <table id="tableDynamics"></table>
-    </div>
+    <div id="tableContainer" class="table-wrap"><table id="tableDynamics"></table></div>
   </section>
 
-  <!-- Экспорты -->
   <section class="grid g-3">
     <div class="card pad">
       <h2>4) Презентация</h2>
-      <p class="muted">Формируется .pptx (таблицы с пагинацией по филиалам + слайды по каждому статусу)</p>
-      <div class="btn-row">
-        <button class="btn primary" id="btnPPTX">Скачать .pptx</button>
-      </div>
+      <p class="muted">.pptx: пагинация по филиалам + слайды по статусам</p>
+      <div class="btn-row"><button class="btn primary" id="btnPPTX">Скачать .pptx</button></div>
     </div>
     <div class="card pad">
       <h2>5) Выжимка</h2>
-      <p class="muted">Краткий отчёт .docx (итоги по обществу + сводная по статусам)</p>
-      <div class="btn-row">
-        <button class="btn primary" id="btnDOCX">Скачать .docx</button>
-      </div>
+      <p class="muted">.docx: итоги по обществу + сводная по статусам</p>
+      <div class="btn-row"><button class="btn primary" id="btnDOCX">Скачать .docx</button></div>
     </div>
     <div class="card pad">
       <h2>Служебное</h2>
-      <p class="muted">Отрисовка таблиц без «топов». Все филиалы отражаются. Числа аккуратно нормализуются.</p>
-      <div class="btn-row">
-        <button class="btn" id="btnSample">Загрузить демо-данные</button>
-      </div>
+      <p class="muted">Можно тестировать без файлов.</p>
+      <div class="btn-row"><button class="btn" id="btnSample">Загрузить демо-данные</button></div>
     </div>
   </section>
 </main>
@@ -262,30 +175,31 @@
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
+<!-- pdf.js (устойчивая UMD-сборка) -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+  // Настройка worker для pdf.js
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+</script>
+
 <script>
 (() => {
-  // ------- Утилиты -------
-  const toast = (msg, ms=2400) => {
-    const el = document.getElementById('toast');
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(()=> el.classList.remove('show'), ms);
-  };
-  const normNum = (v) => {
-    if (v===null || v===undefined) return 0;
-    if (typeof v === 'number') return isFinite(v)? v : 0;
-    const s = String(v).replace(/\s+/g,'').replace(/\u00A0/g,'').replace(',', '.');
-    const n = parseFloat(s);
-    return isFinite(n)? n : 0;
-  };
+  // ---------- Утилиты ----------
+  const toast = (msg, ms=2400) => { const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(()=> el.classList.remove('show'), ms); };
   const trim = s => (s??'').toString().trim();
+  const fmt  = n => new Intl.NumberFormat('ru-RU').format(n);
+  const normNum = (v) => {
+    if (v===null||v===undefined) return 0;
+    if (typeof v==='number') return isFinite(v)?v:0;
+    const s = String(v).replace(/\u00A0/g,'').replace(/\s+/g,'').replace(',', '.');
+    const n = parseFloat(s); return isFinite(n)? n:0;
+  };
 
-  // Мягкая нормализация заголовков статусов
+  // Нормализация статусов
   const normalizeStatus = (raw) => {
-    const s = trim(raw)
-      .replace(/\s+/g,' ')
-      .replace(/[«»"]/g,'')
-      .toLowerCase();
-    // Карта известных длинных форм в унифицированные
+    const s = trim(raw).replace(/\s+/g,' ').replace(/[«»"]/g,'').toLowerCase();
     const map = new Map([
       ['в работе у филиала','в работе у филиала'],
       ['демонтировано','демонтировано'],
@@ -294,16 +208,12 @@
       ['будет включено в следующее доп. соглашение','включено после подписания'],
       ['будет включено в следующее доп соглашение','включено после подписания'],
       ['в работе всего, шт','в работе всего, шт'],
+      ['в работе всего шт','в работе всего, шт'],
       ['в работе всего,шт','в работе всего, шт'],
-      ['в работе всего шт','в работе всего, шт']
     ]);
-    for (const [k,v] of map.entries()){
-      if (s === k) return v;
-    }
-    return s; // оставляем как есть, если не знаем
+    for (const [k,v] of map.entries()) if (s===k) return v;
+    return s;
   };
-
-  // Сокращения для читаемого заголовка
   const shortStatus = (name) => {
     const s = normalizeStatus(name);
     const map = {
@@ -312,487 +222,420 @@
       'включено после подписания':'После подпис.',
       'в работе всего, шт':'В работе всего'
     };
-    return map[s] || s.slice(0, 18) + (s.length>18?'…':'');
+    return map[s] || (s.length>18 ? s.slice(0,18)+'…' : s);
   };
 
-  // ------- Глобальные данные -------
-  let currentBook = null, prevBook = null;
-  let dataCurr = [], dataPrev = [];
-  let unionStatuses = []; // множество всех статусов (кроме 'Филиал')
-  let branches = [];      // список филиалов
-  let compact = false;
-  let viewPerStatus = false;
+  // ---------- Глобальные ----------
+  let currentBook=null, prevBook=null;
+  let unionStatuses=[], branches=[], compact=false, viewPerStatus=false;
 
-  // ------- Чтение файлов -------
-  const readAsArrayBuffer = (file) => new Promise((resolve,reject)=>{
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result);
-    fr.onerror = reject;
-    fr.readAsArrayBuffer(file);
-  });
+  // ---------- Чтение файлов ----------
+  const readAsArrayBuffer = (file) => new Promise((resolve,reject)=>{ const fr=new FileReader(); fr.onload=()=>resolve(fr.result); fr.onerror=reject; fr.readAsArrayBuffer(file); });
 
-  const parseWorkbook = async (file) => {
+  const parseWorkbookXLS = async (file) => {
     const buf = await readAsArrayBuffer(file);
     const wb = XLSX.read(buf, {type:'array', cellDates:false, raw:false});
-    return wb;
+    return wb; // стандартный workbook
   };
 
+  // ====== PDF → rows ======
+  const parsePDFtoRows = async (file) => {
+    if (!window['pdfjsLib']) throw new Error('pdf.js не загружен');
+    const buf = await readAsArrayBuffer(file);
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+
+    const lines = []; // {y, items:[{x, str}]}
+    const tol = 2; // y-кластеризация
+    for (let p=1;p<=pdf.numPages;p++){
+      const page = await pdf.getPage(p);
+      const tc = await page.getTextContent();
+      const buckets = new Map(); // yKey -> items
+      for (const it of tc.items){
+        const str = (it.str||'').trim();
+        if (!str) continue;
+        const [,, , , x, y] = it.transform;
+        const yKey = Math.round(y / tol)*tol;
+        if (!buckets.has(yKey)) buckets.set(yKey, []);
+        buckets.get(yKey).push({x, str});
+      }
+      const pageLines = Array.from(buckets.entries())
+        .sort((a,b)=> b[0]-a[0]) // сверху вниз
+        .map(([yKey, arr])=>{
+          arr.sort((a,b)=> a.x-b.x);
+          return { y:yKey, items:arr, text: arr.map(t=>t.str).join(' ').replace(/\s+/g,' ').trim() };
+        });
+      lines.push(...pageLines);
+    }
+
+    // Поиск шапки таблицы
+    const isHeaderLine = (txt) => {
+      const t = txt.toLowerCase();
+      return t.includes('филиал') && (
+        t.includes('в работе всего') ||
+        t.includes('в работе у филиала') ||
+        t.includes('демонт') ||
+        t.includes('будет включено')
+      );
+    };
+
+    // Определяем порядок статусов по первой обнаруженной шапке
+    let headerIdx = lines.findIndex(l => isHeaderLine(l.text));
+    if (headerIdx === -1) {
+      // fallback: попробуем найти строку, где есть «Филиал» отдельно
+      headerIdx = lines.findIndex(l => l.text.toLowerCase().includes('филиал'));
+    }
+    if (headerIdx === -1) throw new Error('Не найдена шапка таблицы в PDF');
+
+    const headerText = lines[headerIdx].text.toLowerCase();
+
+    // Извлекаем статусы в порядке появления в шапке
+    const candidates = [
+      { key:'в работе всего, шт', pats:['в работе всего'] },
+      { key:'в работе у филиала', pats:['в работе у филиала','в работе у фил'] },
+      { key:'демонтировано', pats:['демонт'] },
+      { key:'включено после подписания', pats:['будет включено','включено после'] },
+    ];
+    const found = [];
+    for (const c of candidates){
+      let pos = Infinity;
+      for (const p of c.pats){
+        const i = headerText.indexOf(p);
+        if (i>=0 && i<pos) pos=i;
+      }
+      if (pos<Infinity) found.push({key:c.key, pos});
+    }
+    found.sort((a,b)=>a.pos-b.pos);
+    let statusOrder = found.map(f=>f.key);
+    // Если из шапки ничего не вытащили, используем базовый порядок
+    if (statusOrder.length===0) statusOrder = ['в работе у филиала','демонтировано','включено после подписания','в работе всего, шт'];
+
+    // Будем собирать строки после шапки до следующей шапки/конца
+    const rows = [];
+    const numCols = statusOrder.length;
+    const numberRe = /^-?\d{1,3}(\s?\d{3})*(,\d+)?$|^-?\d+([.,]\d+)?$/;
+
+    for (let i=headerIdx+1; i<lines.length; i++){
+      const txt = lines[i].text;
+      const low = txt.toLowerCase();
+      if (!txt) continue;
+      // Пропустим повторные шапки
+      if (isHeaderLine(low)) continue;
+
+      // Токены строки
+      const tokens = txt.split(/\s+/).filter(Boolean);
+
+      // Забираем справа числа под количество статусов
+      const nums = [];
+      for (let k=tokens.length-1; k>=0 && nums.length<numCols; k--){
+        if (numberRe.test(tokens[k])) {
+          nums.unshift(tokens[k]);
+        } else {
+          break;
+        }
+      }
+      if (nums.length < Math.min(2, numCols)) continue; // мало чисел — вероятно не строка таблицы
+      // В некоторых отчётах «В работе всего, шт» может отсутствовать как колонка. Тогда nums.length может быть на 1 меньше
+      // Мы не требуем строго numCols.
+
+      // Имя филиала — всё, что осталось слева
+      const branchTokensCount = tokens.length - nums.length;
+      if (branchTokensCount<=0) continue;
+      const branchName = tokens.slice(0, branchTokensCount).join(' ').replace(/\s+/g,' ').trim();
+      const brl = branchName.toLowerCase();
+      if (!branchName || brl==='филиал' || brl.startsWith('итого')) continue; // убрать итоги и шапки
+
+      // Раскладываем числа по статусам справа налево
+      const rowObj = {'Филиал': branchName};
+      // сопоставление справа: последние N чисел — последние N статусов
+      const startIdx = statusOrder.length - nums.length;
+      for (let j=0; j<nums.length; j++){
+        const st = statusOrder[startIdx + j] || statusOrder[j] || `status_${j}`;
+        rowObj[st] = normNum(nums[j]);
+      }
+      rows.push(rowObj);
+    }
+
+    // Валидация: если ни одной строки — ошибка
+    if (!rows.length) throw new Error('Не удалось распознать строки таблицы в PDF');
+
+    return { __asRows: rows };
+  };
+
+  // ===== Универсальный парсер: принимает PDF/XLS/CSV =====
+  const parseUniversal = async (file) => {
+    const name = (file?.name||'').toLowerCase();
+    if (name.endsWith('.pdf')) {
+      const wbLike = await parsePDFtoRows(file); // вернём «псевдо-workbook»
+      return wbLike;
+    }
+    // Excel/CSV
+    return await parseWorkbookXLS(file);
+  };
+
+  // ---------- Трансформация к rows ----------
   const sheetToJsonSmart = (wb) => {
-    // Берём первую лист
+    // Если это результат PDF-парсера
+    if (wb && Array.isArray(wb.__asRows)) {
+      // Нормализуем статусы-ключи
+      const rows = wb.__asRows.map(r=>{
+        const o={'Филиал': trim(r['Филиал'])};
+        for (const [k,v] of Object.entries(r)) {
+          if (k==='Филиал') continue;
+          o[normalizeStatus(k)] = normNum(v);
+        }
+        return o;
+      });
+      return { rows };
+    }
+
+    // Обычный workbook (Excel/CSV)
     const sheetName = wb.SheetNames[0];
     const ws = wb.Sheets[sheetName];
-    // sheet_to_json со всеми заголовками
     let rows = XLSX.utils.sheet_to_json(ws, {defval:'', raw:false});
-    // Ищем колонку филиала
     const headers = Object.keys(rows[0] || {});
     const branchKey = headers.find(h => /филиал/i.test(h)) || 'Филиал';
-    // Нормализуем статусы
     const normRows = rows
       .map(r => {
         const obj = {};
         for (const [k,v] of Object.entries(r)) {
           const key = /филиал/i.test(k) ? 'Филиал' : normalizeStatus(k);
-          obj[key] = normNum(v);
-          if (/филиал/i.test(k)) obj[key] = trim(r[k]); // филиал — строка
+          obj[key] = /филиал/i.test(k) ? trim(v) : normNum(v);
         }
         return obj;
       })
       .filter(r => trim(r['Филиал']) !== '');
-
-    return {rows:normRows};
+    return { rows: normRows };
   };
 
-  // Построить внутреннюю структуру: { branch -> {status -> value} }
+  // ---------- Индексация/агрегация ----------
   const indexByBranch = (rows) => {
     const map = new Map();
     for (const r of rows) {
-      const b = trim(r['Филиал']);
-      if (!b) continue;
+      const b = trim(r['Филиал']); if (!b) continue;
       if (!map.has(b)) map.set(b, {});
       for (const [k,v] of Object.entries(r)) {
-        if (k === 'Филиал') continue;
+        if (k==='Филиал') continue;
         map.get(b)[k] = normNum(v);
       }
     }
     return map;
   };
-
-  // Собрать юнион статусов
   const getUnionStatuses = (mapCurr, mapPrev) => {
     const set = new Set();
     for (const obj of [mapCurr, mapPrev]) {
-      for (const [,st] of obj.entries()) {
-        for (const k of Object.keys(st)) set.add(k);
-      }
+      for (const [,st] of obj.entries()) for (const k of Object.keys(st)) set.add(k);
     }
-    // Фикс — явно обеспечим ключ «В работе всего, шт»
     if (!set.has('в работе всего, шт')) set.add('в работе всего, шт');
     return Array.from(set);
   };
-
-  // Суммы по обществу
   const totalByStatus = (map, statuses) => {
     const totals = Object.fromEntries(statuses.map(s=>[s,0]));
-    for (const [,st] of map.entries()) {
-      for (const s of statuses) totals[s] += normNum(st[s] || 0);
-    }
+    for (const [,st] of map.entries()) for (const s of statuses) totals[s] += normNum(st[s]||0);
     return totals;
   };
 
-  // Отличия (Δ) по статусам для ИТОГО
-  const deltaTotals = (totCurr, totPrev, statuses) => {
-    const d = {};
-    for (const s of statuses) d[s] = normNum(totCurr[s]||0) - normNum(totPrev[s]||0);
-    return d;
-  };
-
-  // ------- Рендер -------
+  // ---------- Рендер ----------
   const $ = s => document.querySelector(s);
-  const $$ = s => Array.from(document.querySelectorAll(s));
-
-  const fmt = (n) => new Intl.NumberFormat('ru-RU').format(n);
-
   const setKPIs = (totCurr, totPrev) => {
-    const curr = normNum(totCurr['в работе всего, шт'] || 0);
-    const prev = normNum(totPrev['в работе всего, шт'] || 0);
+    const curr = normNum(totCurr['в работе всего, шт']||0);
+    const prev = normNum(totPrev['в работе всего, шт']||0);
     const diff = curr - prev;
     $('#kpiPrev').textContent = fmt(prev);
     $('#kpiCurr').textContent = fmt(curr);
     $('#kpiFound').textContent = fmt(diff);
-    $('#kpiComment').textContent = (diff>0)
-      ? `Рост «в работе» на ${fmt(diff)} позиций.`
-      : (diff<0 ? `Снижение «в работе» на ${fmt(Math.abs(diff))} позиций.` : 'Без изменений к предыдущему периоду.');
+    $('#kpiComment').textContent = (diff>0)? `Рост «в работе» на ${fmt(diff)}.` : (diff<0? `Снижение «в работе» на ${fmt(Math.abs(diff))}.` : 'Без изменений.');
   };
-
   const buildLegend = (statuses) => {
-    const wrap = $('#statusesLegend');
-    wrap.innerHTML = '';
-    statuses
-      .filter(s => s!=='в работе всего, шт')
-      .forEach(s=>{
-        const sp = document.createElement('span');
-        sp.className='status-pill';
-        sp.title = s;
-        sp.textContent = `${shortStatus(s)} — ${s}`;
-        wrap.appendChild(sp);
-      });
+    const wrap = $('#statusesLegend'); wrap.innerHTML='';
+    statuses.filter(s=>s!=='в работе всего, шт').forEach(s=>{
+      const sp = document.createElement('span'); sp.className='status-pill'; sp.title=s; sp.textContent=`${shortStatus(s)} — ${s}`; wrap.appendChild(sp);
+    });
   };
 
-  // Таблица "все статусы" (широкая, со скроллом и компактным режимом)
-  const renderAllStatusesTable = (mapCurr, mapPrev, statuses, branchList) => {
-    viewPerStatus = false;
-    const table = $('#tableDynamics');
-    const container = $('#tableContainer');
-    table.className = compact ? 'compact' : '';
-    table.innerHTML = '';
+  let _mapCurr,_mapPrev,_statuses,_branches,_totalsCurr,_totalsPrev;
 
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    const th0 = document.createElement('th'); th0.textContent = 'Филиал'; trh.appendChild(th0);
+  const renderAllStatusesTable = () => {
+    const table = $('#tableDynamics'); const container=$('#tableContainer');
+    table.className = compact ? 'compact':'';
+    table.innerHTML='';
 
-    const statCols = statuses.filter(s => s!=='в работе всего, шт');
-    for (const s of statCols){
-      const th = document.createElement('th');
-      th.textContent = shortStatus(s);
-      th.title = s;
-      if (compact) th.classList.add('status-rot');
-      trh.appendChild(th);
-    }
-    const thDeltaAll = document.createElement('th');
-    thDeltaAll.textContent = 'Δ всего в работе';
-    trh.appendChild(thDeltaAll);
+    const statCols = _statuses.filter(s=>s!=='в работе всего, шт');
+    const thead = document.createElement('thead'); const trh=document.createElement('tr');
+    const th0=document.createElement('th'); th0.textContent='Филиал'; trh.appendChild(th0);
+    for (const s of statCols){ const th=document.createElement('th'); th.textContent=shortStatus(s); th.title=s; if (compact) th.classList.add('status-rot'); trh.appendChild(th); }
+    const thAll=document.createElement('th'); thAll.textContent='Δ всего в работе'; trh.appendChild(thAll);
+    thead.appendChild(trh); table.appendChild(thead);
 
-    thead.appendChild(trh);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    for (const b of branchList){
-      const tr = document.createElement('tr');
-      const tdB = document.createElement('td');
-      tdB.textContent = b;
-      tr.appendChild(tdB);
-
-      // по каждому статусу — разница (curr - prev)
+    const tbody=document.createElement('tbody');
+    for (const b of _branches){
+      const tr=document.createElement('tr');
+      const tdB=document.createElement('td'); tdB.textContent=b; tr.appendChild(tdB);
       for (const s of statCols){
-        const c = normNum(mapCurr.get(b)?.[s] || 0);
-        const p = normNum(mapPrev.get(b)?.[s] || 0);
-        const d = c - p;
-        const td = document.createElement('td');
-        td.textContent = fmt(d);
-        td.className = d>0 ? 'delta-plus' : (d<0 ? 'delta-minus' : 'delta-zero');
-        td.title = `Текущий: ${fmt(c)} | Пред: ${fmt(p)} | Δ: ${fmt(d)}`;
+        const c=normNum(_mapCurr.get(b)?.[s]||0), p=normNum(_mapPrev.get(b)?.[s]||0), d=c-p;
+        const td=document.createElement('td'); td.textContent=fmt(d);
+        td.className = d>0?'delta-plus':(d<0?'delta-minus':'delta-zero');
+        td.title=`Текущий: ${fmt(c)} | Пред: ${fmt(p)} | Δ: ${fmt(d)}`;
         tr.appendChild(td);
       }
-      // общий Δ "в работе всего, шт"
-      const cAll = normNum(mapCurr.get(b)?.['в работе всего, шт'] || 0);
-      const pAll = normNum(mapPrev.get(b)?.['в работе всего, шт'] || 0);
-      const dAll = cAll - pAll;
-      const tdAll = document.createElement('td');
-      tdAll.textContent = fmt(dAll);
-      tdAll.className = dAll>0 ? 'delta-plus' : (dAll<0 ? 'delta-minus' : 'delta-zero');
-      tdAll.title = `Текущий: ${fmt(cAll)} | Пред: ${fmt(pAll)} | Δ: ${fmt(dAll)}`;
+      const cAll=normNum(_mapCurr.get(b)?.['в работе всего, шт']||0), pAll=normNum(_mapPrev.get(b)?.['в работе всего, шт']||0), dAll=cAll-pAll;
+      const tdAll=document.createElement('td'); tdAll.textContent=fmt(dAll);
+      tdAll.className=dAll>0?'delta-plus':(dAll<0?'delta-minus':'delta-zero');
+      tdAll.title=`Текущий: ${fmt(cAll)} | Пред: ${fmt(pAll)} | Δ: ${fmt(dAll)}`;
       tr.appendChild(tdAll);
-
       tbody.appendChild(tr);
     }
     table.appendChild(tbody);
-
-    container.scrollLeft = 0;
+    container.scrollLeft=0;
   };
 
-  // Представление "по одному статусу на страницу"
-  const renderPerStatusView = (mapCurr, mapPrev, statuses, branchList) => {
-    viewPerStatus = true;
-    const table = $('#tableDynamics');
-    table.className = compact ? 'compact' : '';
-    table.innerHTML = '';
+  const renderPerStatusView = () => {
+    const table = $('#tableDynamics'); table.className = compact ? 'compact':'';
+    table.innerHTML='';
+    const statCols = _statuses.filter(s=>s!=='в работе всего, шт');
 
-    const statCols = statuses.filter(s => s!=='в работе всего, шт');
-
-    // Показываем первый статус по умолчанию
-    const nav = document.createElement('div');
-    nav.className = 'btn-row';
+    const navId='statusNav';
+    let nav = document.getElementById(navId);
+    if (!nav){ nav=document.createElement('div'); nav.id=navId; nav.className='btn-row'; table.parentElement.parentElement.insertBefore(nav, table.parentElement.nextSibling); }
+    nav.innerHTML='';
     statCols.forEach((s,idx)=>{
-      const btn = document.createElement('button');
-      btn.className = 'btn small';
-      btn.textContent = shortStatus(s);
-      btn.title = s;
-      btn.onclick = () => renderSingleStatusTable(s, mapCurr, mapPrev, branchList);
+      const btn=document.createElement('button'); btn.className='btn small'; btn.textContent=shortStatus(s); btn.title=s;
+      btn.onclick=()=> renderSingleStatusTable(s);
       nav.appendChild(btn);
-      if (idx===0) setTimeout(()=>btn.click(), 0);
+      if (idx===0) setTimeout(()=>btn.click());
     });
-
-    table.parentElement.parentElement.insertBefore(nav, table.parentElement.nextSibling);
-    // Создадим контейнер для таблицы статуса
-    renderSingleStatusTable(statCols[0], mapCurr, mapPrev, branchList);
   };
 
-  const renderSingleStatusTable = (status, mapCurr, mapPrev, branchList) => {
-    const table = $('#tableDynamics');
-    table.innerHTML = '';
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    ['Филиал','Пред','Текущий','Δ','Δ, %'].forEach(h=>{
-      const th = document.createElement('th'); th.textContent = h; trh.appendChild(th);
-    });
-    thead.appendChild(trh);
-    table.appendChild(thead);
+  const renderSingleStatusTable = (status) => {
+    const table = $('#tableDynamics'); table.innerHTML='';
+    const thead=document.createElement('thead'); const trh=document.createElement('tr');
+    ['Филиал','Пред','Текущий','Δ','Δ, %'].forEach(h=>{ const th=document.createElement('th'); th.textContent=h; trh.appendChild(th); });
+    thead.appendChild(trh); table.appendChild(thead);
 
-    const tbody = document.createElement('tbody');
-    for (const b of branchList){
-      const p = normNum(mapPrev.get(b)?.[status] || 0);
-      const c = normNum(mapCurr.get(b)?.[status] || 0);
-      const d = c - p;
-      const dPct = p===0 ? (c===0 ? 0 : 100) : (d/p*100);
-      const tr = document.createElement('tr');
-      const cells = [
-        b,
-        fmt(p),
-        fmt(c),
-        (d>0?'+':'')+fmt(d),
-        (dPct>0?'+':'')+ (isFinite(dPct)? dPct.toFixed(1): '0') + '%'
-      ];
-      cells.forEach((val,i)=>{
-        const td = document.createElement('td');
-        td.textContent = val;
-        if (i===3){
-          td.className = d>0 ? 'delta-plus' : (d<0 ? 'delta-minus' : 'delta-zero');
-        }
-        tr.appendChild(td);
-      });
+    const tbody=document.createElement('tbody');
+    for (const b of _branches){
+      const p=normNum(_mapPrev.get(b)?.[status]||0), c=normNum(_mapCurr.get(b)?.[status]||0), d=c-p;
+      const pct = p===0 ? (c===0?0:100) : (d/p*100);
+      const tr=document.createElement('tr');
+      const cells=[b, fmt(p), fmt(c), (d>0?'+':'')+fmt(d), (isFinite(pct)?(pct>0?'+':'')+pct.toFixed(1):'0')+'%'];
+      cells.forEach((val,i)=>{ const td=document.createElement('td'); td.textContent=val; if (i===3) td.className=d>0?'delta-plus':(d<0?'delta-minus':'delta-zero'); tr.appendChild(td); });
       tbody.appendChild(tr);
     }
     table.appendChild(tbody);
   };
 
-  // ------- PPTX -------
-  const buildPPTX = async (mapCurr, mapPrev, statuses, branchList, totalsCurr, totalsPrev) => {
-    const pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_16x9';
-
-    // Титульный
-    {
-      const s = pptx.addSlide();
-      s.addText('Динамика статусов ВОЛС', {x:0.5,y:0.7,w:9.0,h:0.8,fontSize:28,bold:true,color:'0033A0'});
-      s.addText('Презентация сформирована автоматически', {x:0.5,y:1.5,w:9.0,h:0.5,fontSize:14,color:'6B7280'});
-      s.addText(dayjs().format('DD.MM.YYYY HH:mm'), {x:0.5,y:2.0,fontSize:12,color:'6B7280'});
-    }
-
-    // Итого по обществу — таблица
-    {
-      const s = pptx.addSlide();
-      s.addText('Итоги по обществу', {x:0.5,y:0.4,fontSize:20,bold:true,color:'0033A0'});
-      const headers = ['Статус','Пред','Текущий','Δ'];
-      const rows = [];
-      const statCols = statuses.filter(x => x!=='в работе всего, шт');
-      const order = ['в работе всего, шт', ...statCols];
-      for (const st of order){
-        const p = normNum(totalsPrev[st]||0);
-        const c = normNum(totalsCurr[st]||0);
-        const d = c - p;
-        rows.push([shortStatus(st), fmt(p), fmt(c), (d>0?'+':'')+fmt(d)]);
-      }
-      const data = [headers, ...rows];
-      s.addTable(data, {
-        x:0.5, y:1.0, w:9.0,
-        fontSize:12,
-        rowHeight:0.35,
-        border:{pt:0.75,color:'D1D5DB'},
-        fill:'FFFFFF',
-        color:'111827'
-      });
-    }
-
-    // Широкая таблица по филиалам — пагинация по 16 строк
-    {
-      const statCols = statuses.filter(s => s!=='в работе всего, шт');
-      const perPage = 16;
-      for (let i=0;i<branchList.length;i+=perPage){
-        const slice = branchList.slice(i,i+perPage);
-        const sld = pptx.addSlide();
-        sld.addText('Динамика по филиалам — Δ по статусам', {x:0.5,y:0.4,fontSize:18,bold:true,color:'0033A0'});
-        const hdr = ['Филиал', ...statCols.map(shortStatus), 'Δ всего в работе'];
-        const body = slice.map(b=>{
-          const row = [b];
-          for (const st of statCols){
-            const c = normNum(mapCurr.get(b)?.[st] || 0);
-            const p = normNum(mapPrev.get(b)?.[st] || 0);
-            row.push((c-p));
-          }
-          const cAll = normNum(mapCurr.get(b)?.['в работе всего, шт'] || 0);
-          const pAll = normNum(mapPrev.get(b)?.['в работе всего, шт'] || 0);
-          row.push(cAll-pAll);
-          return row;
-        });
-        const data = [hdr, ...body];
-        sld.addTable(data,{
-          x:0.5,y:1.0,w:9.0,
-          fontSize:9,
-          rowHeight:0.28,
-          border:{pt:0.5,color:'D1D5DB'},
-          fill:'FFFFFF',
-          color:'111827'
-        });
-        sld.addText('Легенда: см. сокращения статусов на первом блоке или в выжимке', {x:0.5,y:7.0,fontSize:10,color:'6B7280'});
-      }
-    }
-
-    // Слайды по каждому статусу — таблицы (Prev, Curr, Δ)
-    {
-      const statCols = statuses.filter(s => s!=='в работе всего, шт');
-      const perPage = 24;
-      for (const st of statCols){
-        for (let i=0;i<branchList.length;i+=perPage){
-          const slice = branchList.slice(i,i+perPage);
-          const sld = pptx.addSlide();
-          sld.addText(`Статус: ${shortStatus(st)}`, {x:0.5,y:0.4,fontSize:18,bold:true,color:'0033A0'});
-          const hdr = ['Филиал','Пред','Текущий','Δ','Δ, %'];
-          const body = slice.map(b=>{
-            const p = normNum(mapPrev.get(b)?.[st] || 0);
-            const c = normNum(mapCurr.get(b)?.[st] || 0);
-            const d = c - p;
-            const pct = p===0 ? (c===0 ? 0 : 100) : (d/p*100);
-            return [b, p, c, d, (isFinite(pct)? +pct.toFixed(1) : 0)];
-          });
-          const data = [hdr, ...body];
-          sld.addTable(data,{
-            x:0.5,y:1.0,w:9.0,
-            fontSize:10,
-            rowHeight:0.3,
-            border:{pt:0.5,color:'D1D5DB'},
-            fill:'FFFFFF',
-            color:'111827'
-          });
-        }
-      }
-    }
-
-    const blob = await pptx.write('blob');
-    saveAs(blob, `Динамика_ВОЛС_${dayjs().format('YYYYMMDD_HHmm')}.pptx`);
+  // ---------- PPTX/DOCX ----------
+  const buildPPTX = async () => {
+    const pptx = new PptxGenJS(); pptx.layout='LAYOUT_16x9';
+    { const s=pptx.addSlide(); s.addText('Динамика статусов ВОЛС',{x:0.5,y:0.7,w:9,h:0.8,fontSize:28,bold:true,color:'0033A0'});
+      s.addText('Автогенерация',{x:0.5,y:1.5,w:9,h:0.5,fontSize:14,color:'6B7280'});
+      s.addText(dayjs().format('DD.MM.YYYY HH:mm'),{x:0.5,y:2.0,fontSize:12,color:'6B7280'}); }
+    { const s=pptx.addSlide(); s.addText('Итоги по обществу',{x:0.5,y:0.4,fontSize:20,bold:true,color:'0033A0'});
+      const headers=['Статус','Пред','Текущий','Δ']; const rows=[];
+      const statCols=_statuses.filter(x=>x!=='в работе всего, шт'); const order=['в работе всего, шт',...statCols];
+      for (const st of order){ const p=normNum(_totalsPrev[st]||0), c=normNum(_totalsCurr[st]||0), d=c-p; rows.push([shortStatus(st),fmt(p),fmt(c),(d>0?'+':'')+fmt(d)]); }
+      s.addTable([headers,...rows],{x:0.5,y:1.0,w:9,fontSize:12,rowHeight:0.35,border:{pt:0.75,color:'D1D5DB'},fill:'FFFFFF',color:'111827'}); }
+    { const statCols=_statuses.filter(s=>s!=='в работе всего, шт'); const perPage=16;
+      for (let i=0;i<_branches.length;i+=perPage){ const slice=_branches.slice(i,i+perPage);
+        const s=pptx.addSlide(); s.addText('Динамика по филиалам — Δ по статусам',{x:0.5,y:0.4,fontSize:18,bold:true,color:'0033A0'});
+        const hdr=['Филиал',...statCols.map(shortStatus),'Δ всего в работе'];
+        const body=slice.map(b=>{ const row=[b]; for (const st of statCols){ const c=normNum(_mapCurr.get(b)?.[st]||0), p=normNum(_mapPrev.get(b)?.[st]||0); row.push(c-p); }
+          const cAll=normNum(_mapCurr.get(b)?.['в работе всего, шт']||0), pAll=normNum(_mapPrev.get(b)?.['в работе всего, шт']||0); row.push(cAll-pAll); return row; });
+        s.addTable([hdr,...body],{x:0.5,y:1.0,w:9,fontSize:9,rowHeight:0.28,border:{pt:0.5,color:'D1D5DB'},fill:'FFFFFF',color:'111827'});
+        s.addText('Легенда: см. сокращения статусов на первом блоке/в выжимке',{x:0.5,y:7.0,fontSize:10,color:'6B7280'}); } }
+    { const statCols=_statuses.filter(s=>s!=='в работе всего, шт'); const perPage=24;
+      for (const st of statCols){ for (let i=0;i<_branches.length;i+=perPage){ const slice=_branches.slice(i,i+perPage);
+        const s=pptx.addSlide(); s.addText(`Статус: ${shortStatus(st)}`,{x:0.5,y:0.4,fontSize:18,bold:true,color:'0033A0'});
+        const hdr=['Филиал','Пред','Текущий','Δ','Δ, %'];
+        const body=slice.map(b=>{ const p=normNum(_mapPrev.get(b)?.[st]||0), c=normNum(_mapCurr.get(b)?.[st]||0), d=c-p, pct=p===0?(c===0?0:100):(d/p*100);
+          return [b,p,c,d,(isFinite(pct)?+pct.toFixed(1):0)]; });
+        s.addTable([hdr,...body],{x:0.5,y:1.0,w:9,fontSize:10,rowHeight:0.3,border:{pt:0.5,color:'D1D5DB'},fill:'FFFFFF',color:'111827'}); } } }
+    const blob = await pptx.write('blob'); saveAs(blob, `Динамика_ВОЛС_${dayjs().format('YYYYMMDD_HHmm')}.pptx`);
   };
 
-  // ------- DOCX -------
-  const buildDOCX = async (totalsCurr, totalsPrev, statuses) => {
-    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType } = docx;
-
-    const title = new Paragraph({
-      children:[ new TextRun({ text:'Выжимка — динамика статусов ВОЛС', bold:true, size:28 }) ],
-      spacing:{ after:200 }
-    });
+  const buildDOCX = async () => {
+    const { Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType } = docx;
+    const title = new Paragraph({ children:[ new TextRun({ text:'Выжимка — динамика статусов ВОЛС', bold:true, size:28 }) ], spacing:{ after:200 } });
     const dateP = new Paragraph({ children:[ new TextRun({ text: dayjs().format('DD.MM.YYYY HH:mm'), color:'6B7280' }) ] });
 
-    const headers = ['Статус','Пред','Текущий','Δ'];
-    const statCols = statuses.filter(s => s!=='в работе всего, шт');
-    const order = ['в работе всего, шт', ...statCols];
-
+    const headers=['Статус','Пред','Текущий','Δ'];
+    const statCols=_statuses.filter(s=>s!=='в работе всего, шт'); const order=['в работе всего, шт',...statCols];
     const rows = order.map(st=>{
-      const p = normNum(totalsPrev[st]||0);
-      const c = normNum(totalsCurr[st]||0);
-      const d = c - p;
-      return new TableRow({
-        children: [
-          new TableCell({ children:[ new Paragraph(shortStatus(st)) ] }),
-          new TableCell({ children:[ new Paragraph(fmt(p)) ] }),
-          new TableCell({ children:[ new Paragraph(fmt(c)) ] }),
-          new TableCell({ children:[ new Paragraph((d>0?'+':'')+fmt(d)) ] }),
-        ]
-      });
+      const p=normNum(_totalsPrev[st]||0), c=normNum(_totalsCurr[st]||0), d=c-p;
+      return new TableRow({ children:[
+        new TableCell({ children:[ new Paragraph(shortStatus(st)) ] }),
+        new TableCell({ children:[ new Paragraph(fmt(p)) ] }),
+        new TableCell({ children:[ new Paragraph(fmt(c)) ] }),
+        new TableCell({ children:[ new Paragraph((d>0?'+':'')+fmt(d)) ] }),
+      ]});
     });
 
-    const table = new Table({
-      width:{ size:100, type:WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({ children: headers.map(h=> new TableCell({ children:[ new Paragraph({ children:[ new TextRun({text:h, bold:true}) ] }) ] })) }),
-        ...rows
-      ]
-    });
-
-    const doc = new Document({
-      sections:[{
-        children:[ title, dateP, new Paragraph(' '), table ]
-      }]
-    });
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `Выжимка_ВОЛС_${dayjs().format('YYYYMMDD_HHmm')}.docx`);
+    const table = new Table({ width:{ size:100, type:WidthType.PERCENTAGE }, rows:[ new TableRow({ children: headers.map(h=> new TableCell({ children:[ new Paragraph({ children:[ new TextRun({text:h,bold:true}) ] }) ] })) }), ...rows ] });
+    const doc = new Document({ sections:[{ children:[ title, dateP, new Paragraph(' '), table ] }] });
+    const blob = await Packer.toBlob(doc); saveAs(blob, `Выжимка_ВОЛС_${dayjs().format('YYYYMMDD_HHmm')}.docx`);
   };
 
-  // ------- Главный процессор -------
+  // ---------- Процесс ----------
   const process = async () => {
-    if (!currentBook || !prevBook) {
-      toast('Загрузите оба отчёта (текущий и предыдущий).');
-      return;
-    }
+    if (!currentBook || !prevBook) { toast('Загрузите оба отчёта (текущий и предыдущий).'); return; }
     const {rows:rowsCurr} = sheetToJsonSmart(currentBook);
     const {rows:rowsPrev} = sheetToJsonSmart(prevBook);
 
     const mapCurr = indexByBranch(rowsCurr);
     const mapPrev = indexByBranch(rowsPrev);
 
-    branches = Array.from(new Set([...mapCurr.keys(), ...mapPrev.keys()])).sort((a,b)=>a.localeCompare(b,'ru'));
-    unionStatuses = getUnionStatuses(mapCurr, mapPrev);
+    _mapCurr = mapCurr; _mapPrev = mapPrev;
+    _branches = Array.from(new Set([...mapCurr.keys(), ...mapPrev.keys()])).sort((a,b)=>a.localeCompare(b,'ru'));
+    _statuses  = getUnionStatuses(mapCurr, mapPrev);
+    _totalsCurr = totalByStatus(mapCurr, _statuses);
+    _totalsPrev = totalByStatus(mapPrev, _statuses);
 
-    const totalsCurr = totalByStatus(mapCurr, unionStatuses);
-    const totalsPrev = totalByStatus(mapPrev, unionStatuses);
+    setKPIs(_totalsCurr, _totalsPrev);
+    buildLegend(_statuses);
 
-    setKPIs(totalsCurr, totalsPrev);
-    buildLegend(unionStatuses);
+    renderAllStatusesTable();
 
-    // По умолчанию — широкая таблица всех статусов
-    renderAllStatusesTable(mapCurr, mapPrev, unionStatuses, branches);
-
-    // Кнопки экспорта
-    document.getElementById('btnPPTX').onclick = () => buildPPTX(mapCurr, mapPrev, unionStatuses, branches, totalsCurr, totalsPrev);
-    document.getElementById('btnDOCX').onclick = () => buildDOCX(totalsCurr, totalsPrev, unionStatuses);
-
-    // Переключатели представлений
-    document.getElementById('btnViewAll').onclick = () => renderAllStatusesTable(mapCurr, mapPrev, unionStatuses, branches);
-    document.getElementById('btnPerStatus').onclick = () => renderPerStatusView(mapCurr, mapPrev, unionStatuses, branches);
+    document.getElementById('btnPPTX').onclick = buildPPTX;
+    document.getElementById('btnDOCX').onclick = buildDOCX;
+    document.getElementById('btnViewAll').onclick = renderAllStatusesTable;
+    document.getElementById('btnPerStatus').onclick = renderPerStatusView;
 
     toast('Данные обработаны ✅');
   };
 
-  // ------- События UI -------
-  document.getElementById('fileCurrent').addEventListener('change', async (e)=>{
-    const f = e.target.files[0];
-    if (!f) return;
-    $('#fileCurrentName').textContent = f.name;
-    currentBook = await parseWorkbook(f);
-  });
-  document.getElementById('filePrev').addEventListener('change', async (e)=>{
-    const f = e.target.files[0];
-    if (!f) return;
-    $('#filePrevName').textContent = f.name;
-    prevBook = await parseWorkbook(f);
-  });
+  // ---------- События ----------
+  const handleFile = async (inputEl, target) => {
+    const f = inputEl.files[0]; if (!f) return;
+    document.getElementById(target).textContent = f.name;
+    try {
+      const wb = await parseUniversal(f);
+      if (inputEl.id==='fileCurrent') currentBook = wb; else prevBook = wb;
+      toast((f.name.endsWith('.pdf')?'PDF распознан: ':'Файл загружен: ')+f.name);
+    } catch (e) {
+      console.error(e); toast('Ошибка чтения файла: '+(e?.message||e));
+    }
+  };
+
+  document.getElementById('fileCurrent').addEventListener('change', (e)=>handleFile(e.target,'fileCurrentName'));
+  document.getElementById('filePrev').addEventListener('change', (e)=>handleFile(e.target,'filePrevName'));
   document.getElementById('btnProcess').addEventListener('click', process);
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    currentBook=null; prevBook=null; dataCurr=[]; dataPrev=[];
-    unionStatuses=[]; branches=[]; compact=false; viewPerStatus=false;
-    $('#fileCurrent').value=''; $('#filePrev').value='';
-    $('#fileCurrentName').textContent=''; $('#filePrevName').textContent='';
-    $('#kpiPrev').textContent='—'; $('#kpiCurr').textContent='—'; $('#kpiFound').textContent='—'; $('#kpiComment').textContent='—';
-    $('#tableDynamics').innerHTML=''; $('#statusesLegend').innerHTML='';
+    currentBook=prevBook=null; unionStatuses=[]; branches=[]; compact=false; viewPerStatus=false;
+    document.getElementById('fileCurrent').value=''; document.getElementById('filePrev').value='';
+    document.getElementById('fileCurrentName').textContent=''; document.getElementById('filePrevName').textContent='';
+    document.getElementById('kpiPrev').textContent='—'; document.getElementById('kpiCurr').textContent='—'; document.getElementById('kpiFound').textContent='—'; document.getElementById('kpiComment').textContent='—';
+    document.getElementById('tableDynamics').innerHTML=''; document.getElementById('statusesLegend').innerHTML='';
+    const nav=document.getElementById('statusNav'); if (nav) nav.remove();
     toast('Сброшено.');
   });
   document.getElementById('btnCompact').addEventListener('click', ()=>{
     compact = !compact;
-    const t = document.getElementById('tableDynamics');
-    if (!t || !t.innerHTML.trim()) return;
-    // Перерисуем в соответствии с текущим режимом
-    if (viewPerStatus){
-      // триггерим повторный рендер активной кнопкой (берём первую)
-      const first = document.querySelector('.btn-row button.btn.small');
-      if (first) first.click();
-    } else {
-      // переобработаем полностью
-      document.getElementById('btnProcess').click();
-    }
+    const table = document.getElementById('tableDynamics');
+    if (!table || !table.innerHTML.trim()) return;
+    if (viewPerStatus) renderPerStatusView(); else renderAllStatusesTable();
   });
 
-  // Демо-данные (минимальный набор)
+  // Демо
   document.getElementById('btnSample').addEventListener('click', async ()=>{
-    // Синтетически создаём xlsx с правильными заголовками
     const aoa = [
       ['Филиал','В работе всего, шт','В работе у филиала','Демонтировано','Будет включено в следующее доп. соглашение после подписания'],
       ['Славянские ЭС', 120, 70, 10, 5],
@@ -809,25 +652,16 @@
       ['Краснодарские ЭС', 170, 110, 15, 7],
       ['Апшеронские ЭС', 82, 45, 7, 3]
     ];
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    XLSX.utils.book_append_sheet(wb, ws, 'Текущий');
-    const wb2 = XLSX.utils.book_new();
-    const ws2 = XLSX.utils.aoa_to_sheet(aoaPrev);
-    XLSX.utils.book_append_sheet(wb2, ws2, 'Пред');
-
-    currentBook = wb;
-    prevBook = wb2;
-    $('#fileCurrentName').textContent = 'demo_current.xlsx';
-    $('#filePrevName').textContent = 'demo_prev.xlsx';
-
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Текущий');
+    const wb2 = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet(aoaPrev), 'Пред');
+    currentBook = wb; prevBook = wb2;
+    document.getElementById('fileCurrentName').textContent='demo_current.xlsx';
+    document.getElementById('filePrevName').textContent='demo_prev.xlsx';
     process();
   });
-
 })();
 </script>
 
-<!-- Источники (репозиторий) для прозрачности -->
-<!-- Репозиторий пользователя: https://github.com/Anatoliy031/vols-dynamics -->
+<!-- Репозиторий: https://github.com/Anatoliy031/vols-dynamics -->
 </body>
 </html>
