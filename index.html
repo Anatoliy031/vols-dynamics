@@ -51,6 +51,11 @@
   .compact .hr{margin:6px 0}
   .planfact-wrap{overflow:hidden}
   .planfact-scale{transform-origin: top left; transform: scale(0.92); width:108%}
+
+  /* Авто-вписывание широких таблиц в презентации */
+  .fit-wide{width:100%; overflow:hidden}
+  .fit-wide .scale-wrap{transform-origin: top left}
+
   @media print{
     body{background:#fff}
     #presentationPrint,#summaryPrint{padding:10mm}
@@ -195,7 +200,7 @@
   <div id="presTableS4" class="section avoid-break"></div>
   <div class="hr"></div>
 
-  <!-- Последний слайд: динамика статусов — только стр. 2 -->
+  <!-- Последний слайд: динамика статусов — только стр. 2 (вписывается по ширине) -->
   <div id="presStages" class="section avoid-break"></div>
   <div class="hr"></div>
 
@@ -217,6 +222,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- Надёжные скачивания -->
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <script>
 /* ===== Константы и утилиты ===== */
@@ -247,7 +254,6 @@ const STATUS_PATTERNS = [
   {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора/i},
   {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале/i},
   {key:"incl_next",  title:"Будет включено в следующее доп. соглашение после подписания",
-    // допускаем переносы/варианты формулировок/пробелы, «доп.»/«доп»
     re:/Будет\s*включено(?:[\s\S]{0,80})в(?:\s*следующее)?(?:[\s\S]{0,80})доп\.?\s*соглашение(?:[\s\S]{0,80}после\s*подписания)?/i
   },
 ];
@@ -309,19 +315,11 @@ function parseTotalsFromPage(page1){
   };
 }
 
-/* ==== ВАЖНО: новый устойчивый парсер таблиц по филиалам ==== */
-/* Идея:
-   1) разбиваем страницу на строки;
-   2) выделяем "сегмент" текста для каждого филиала — от его строки до строки следующего филиала;
-   3) в сегменте ищем:
-      - total: первое число рядом с названием филиала;
-      - статусы: число "после" подписи статуса, допускаем разрывы строк.
-*/
+/* ==== Новый устойчивый парсер таблиц по филиалам ==== */
 function parseBranchTable(pageText){
   const text = normalize(pageText);
   const lines = text.split("\n").filter(Boolean);
 
-  // Находим все индексы строк с названиями филиалов
   const idx = [];
   for(let i=0;i<lines.length;i++){
     const line = lines[i];
@@ -332,7 +330,6 @@ function parseBranchTable(pageText){
       }
     }
   }
-  // Добавим "хвост" для последнего сегмента
   idx.push({i: lines.length, name:null});
 
   const branches = new Map();
@@ -344,9 +341,8 @@ function parseBranchTable(pageText){
     if(!branchName) continue;
 
     const headLine = lines[start] || "";
-    const segText  = lines.slice(start+1, end).join(" "); // объединяем — статус может быть с переносами
+    const segText  = lines.slice(start+1, end).join(" ");
 
-    // total — берем число рядом с названием филиала (в его строке) или на следующей строке
     let total = 0;
     const headNums = headLine.match(/\d[\d\s]*/g);
     if(headNums && headNums.length) total = numberize(headNums[headNums.length-1]);
@@ -357,22 +353,18 @@ function parseBranchTable(pageText){
 
     const data = { total, statuses:{} };
 
-    // Функция: число сразу после подписи статуса (с допуском 0..200 символов, без цифр)
     function numAfter(re, hay){
       const rx = new RegExp(re.source + "[^\\d]{0,200}(\\d[\\d\\s]*)", re.flags);
       const m = hay.match(rx);
       return m ? numberize(m[1]) : null;
     }
 
-    // Ищем все статусы по устойчивым шаблонам в сегменте + "подстраховка" по строкам
     for(const sp of STATUS_PATTERNS){
       let v = numAfter(sp.re, segText);
       if(v === null){
-        // подстраховка: просмотр по строкам сегмента, иногда число на следующей строке
         for(let j=start+1;j<end;j++){
           const l0 = lines[j]||"", l1 = lines[j+1]||"";
           if(sp.re.test(l0) || sp.re.test(l1)){
-            // число в той же строке или на следующей
             let cap = (l0.match(/(\d[\d\s]*)/g)||[]).pop();
             if(!cap) cap = (l1.match(/(\d[\d\s]*)/g)||[]).pop();
             if(cap){ v = numberize(cap); break; }
@@ -385,10 +377,8 @@ function parseBranchTable(pageText){
     branches.set(branchName, data);
   }
 
-  // Гарантируем все филиалы
   for(const b of BRANCHES){ if(!branches.has(b)) branches.set(b, { total:0, statuses:{} }); }
 
-  // Итоги по стадиям
   const stages = {};
   for(const [_, obj] of branches){
     for(const [k,v] of Object.entries(obj.statuses)){
@@ -422,14 +412,13 @@ function computeDynamics(curr, prev){
   const makeRows = (cPage, pPage) => BRANCHES.map(b=>{
     const c = cPage.branches.get(b)?.total || 0;
     const p = pPage.branches.get(b)?.total || 0;
-    return {b, p, c, d: (c - p)}; // строго ТЕК − ПРЕД
+    return {b, p, c, d: (c - p)};
   });
 
   const branchRows   = makeRows(curr.p2, prev.p2);
   const branchRowsS3 = makeRows(curr.p3, prev.p3);
   const branchRowsS4 = makeRows(curr.p4, prev.p4);
 
-  // агрегаты по стадиям (итого)
   const allKeys = Array.from(new Set([
     ...Object.keys(prev.p2.stages||{}), ...Object.keys(curr.p2.stages||{}),
     ...Object.keys(prev.p3.stages||{}), ...Object.keys(curr.p3.stages||{}),
@@ -446,7 +435,6 @@ function computeDynamics(curr, prev){
   const stagesS2 = diffStages(curr.p2.stages||{}, prev.p2.stages||{});
   const stagesS4 = diffStages(curr.p4.stages||{}, prev.p4.stages||{});
 
-  // динамика статусов в разрезе филиалов — ТОЛЬКО стр.2
   function perBranchStages(cPage, pPage){
     return BRANCHES.map(b=>{
       const cst = cPage.branches.get(b)?.statuses || {};
@@ -606,6 +594,7 @@ function presTableHTML(title, rows, sumIds){
     </table>`;
 }
 
+/* --- Широкая матрица статусов: вписываемся в ширину страницы --- */
 function stageMatrixHTML(title, branchStages){
   const cols = STATUS_KEYS;
   const head = cols.map(k=>`<th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">${STAGE_TITLE(k)}</th>`).join("");
@@ -625,14 +614,20 @@ function stageMatrixHTML(title, branchStages){
     ${cols.map(k=>`<td style="padding:4px;text-align:right;font-weight:800;color:${totals[k]>0?'#0a7a2d':(totals[k]<0?'#b00020':'#5f6b7a')}">${totals[k]>0?'+':''}${fmt(totals[k])}</td>`).join("")}
   </tr>`;
 
+  const table = `
+    <table style="border-collapse:collapse;font-size:11px;min-width:860px">
+      <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Филиал</th>${head}</tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot>${totalRow}</tfoot>
+    </table>`;
+
+  /* ВАЖНО: оборачиваем таблицу в fit-wide → scale-wrap, чтобы подогнать по ширине */
   return `
     <div style="font-weight:700;margin:8px 0">${title}</div>
-    <div style="overflow:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:860px">
-        <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Филиал</th>${head}</tr></thead>
-        <tbody>${body}</tbody>
-        <tfoot>${totalRow}</tfoot>
-      </table>
+    <div class="fit-wide" data-fit="width">
+      <div class="scale-wrap">
+        ${table}
+      </div>
     </div>`;
 }
 
@@ -658,6 +653,26 @@ function stageTotalsHTML(title, totalsArray){
         }).join("")}
       </tbody>
     </table>`;
+}
+
+/* Подгон по ширине для всех fit-wide */
+function fitWide(container){
+  const wrap = container.querySelector('.scale-wrap');
+  if(!wrap) return;
+  // сброс
+  wrap.style.transform = 'scale(1)';
+  wrap.style.width = '';
+  // измерение
+  const sw = wrap.scrollWidth;
+  const cw = container.clientWidth;
+  if (sw > cw) {
+    const scale = Math.max(0.6, Math.min(1, (cw-2) / sw)); // не меньше 60%, чтобы читалось
+    wrap.style.transform = `scale(${scale})`;
+    wrap.style.width = (100/scale) + '%';
+  }
+}
+function fitAll(){
+  document.querySelectorAll('#presentationPrint .fit-wide').forEach(fitWide);
 }
 
 function buildPresentationHTML(curr, prev, dyn){
@@ -692,12 +707,16 @@ function buildPresentationHTML(curr, prev, dyn){
   document.getElementById("presTableS3").innerHTML = presTableHTML("Динамика выявления по 425 Приказу", (DATA?.dyn?.branchRowsS3||[]), ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
   document.getElementById("presTableS4").innerHTML = presTableHTML("Динамика выявления по Ростелекому", (DATA?.dyn?.branchRowsS4||[]), ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-  // Последний слайд: только стр.2 — матрица Δ по филиалам + суммарные итоги по статусам
+  // Последний слайд: только стр.2 — матрица Δ по филиалам + итоги по статусам (и ВПИСЫВАНИЕ В ШИРИНУ)
   const s2Matrix = stageMatrixHTML("Динамика статусов по филиалам (стр. 2, Δ)", dyn.s2BranchStages);
   const s2Totals = stageTotalsHTML("Стр. 2 — Итого по статусам", dyn.stagesS2);
   document.getElementById("presStages").innerHTML = s2Matrix + s2Totals;
+
+  // Подгон ширины после вставки
+  fitAll();
 }
 
+/* ===== Краткая выжимка ===== */
 function buildSummaryBlocks(curr, prev, dyn){
   const blocks = document.getElementById("briefBlocks");
   const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
@@ -753,6 +772,9 @@ async function injectPlanFactHTML(){
 async function exportPresPDF(){
   const el = document.getElementById("presentationPrint");
   el.style.display = "block";
+  await new Promise(r=>requestAnimationFrame(r));
+  fitAll(); // подгон ширины перед рендером
+  await new Promise(r=>requestAnimationFrame(r));
   await html2pdf().from(el).set({
     margin: 8,
     filename: "Презентация_ВОЛС.pdf",
@@ -766,6 +788,7 @@ async function exportPresPDF(){
 async function exportBriefPDF(){
   const el = document.getElementById("summaryPrint");
   el.style.display = "block";
+  await new Promise(r=>requestAnimationFrame(r));
   await html2pdf().from(el).set({
     margin: 8,
     filename: "Выжимка_ВОЛС.pdf",
@@ -777,7 +800,7 @@ async function exportBriefPDF(){
   el.style.display = "none";
 }
 
-/* ===== PPTX / DOCX (без изменений требований) ===== */
+/* ===== PPTX / DOCX — скачивания через Blob + FileSaver ===== */
 async function exportPresPPTX(curr, prev, dyn, rows){
   try {
     const pptx = new PptxGenJS();
@@ -830,7 +853,8 @@ async function exportPresPPTX(curr, prev, dyn, rows){
       ...rtkRows.map(r => [r.b, fmt(r.p), fmt(r.c), ((r.c-r.p)>0?'+':'') + fmt(r.c-r.p)])
     ], {x: 0.5, y: 1.0, w: 9.0, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
 
-    await pptx.writeFile({fileName: "Презентация_ВОЛС.pptx"});
+    const blob = await pptx.write('blob');
+    saveAs(blob, "Презентация_ВОЛС.pptx");
     document.getElementById("exportStatus").textContent = "PPTX сформирован.";
   } catch(e) {
     console.error(e);
@@ -884,11 +908,7 @@ async function exportBriefDOCX(curr, prev, dyn, rows){
     });
 
     const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "Выжимка_ВОЛС.docx"; a.target = "_blank";
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+    saveAs(blob, "Выжимка_ВОЛС.docx");
     document.getElementById("exportStatus").textContent = "DOCX сформирован.";
   } catch(e) {
     console.error(e);
@@ -963,6 +983,12 @@ document.getElementById("exportBriefDOCX").addEventListener("click", async () =>
 document.getElementById("exportBriefPDF").addEventListener("click", async () => {
   if(!DATA) { alert("Сначала проанализируйте отчёты."); return; }
   await exportBriefPDF();
+});
+
+/* Переподгон ширины при ресайзе окна */
+window.addEventListener('resize', () => {
+  const pres = document.getElementById('presentationPrint');
+  if (pres.style.display !== 'none') fitAll();
 });
 </script>
 </body>
