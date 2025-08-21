@@ -255,7 +255,7 @@ const STATUS_PATTERNS = [
   {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале/i},
   {
     key:"incl_next",
-    title:"Будет включено в следующее доп. соглашение",
+    title:"Будет включено в следующее доп. соглашение после подписания",
     re:/Будет\s*включено(?:\s*в|во)?\s*следующ[её](?:е|ем)?\s*доп(?:\.|олнительн\w*)?\s*соглашен[иеия][\w\s\-–—]*?(?:после\s*подписан[ияие][\w\s\-–—]*)?/i
   },
 ];
@@ -779,452 +779,213 @@ async function exportBriefPDF(){
   el.style.display = "none";
 }
 
-/* ===== УЛУЧШЕННЫЙ ЭКСПОРТ PPTX ===== */
-async function exportPresPPTX(curr, prev, dyn, rows) {
+/* ===== ИСПРАВЛЕННЫЙ ЭКСПОРТ PPTX ===== */
+async function exportPresPPTX(curr, prev, dyn, rows){
   try {
     const pptx = new PptxGenJS();
-    pptx.author = "АО Россети Кубань";
-    pptx.company = "Россети";
-    pptx.title = "Динамика ВОЛС";
     
-    // Цвета Россети
-    const colors = {
-      primary: "0033A0",
-      success: "0A7A2D", 
-      danger: "B00020",
-      gray: "5F6B7A",
-      light: "F4F7FB"
-    };
-
     // Слайд 1: Титульный
     const s1 = pptx.addSlide();
-    s1.background = { color: "FFFFFF" };
-    s1.addText("АО «Россети Кубань»", {
-      x: 0.5, y: 0.5, w: 9, h: 0.6,
-      fontSize: 24, bold: true, color: colors.primary, align: "center"
-    });
-    s1.addText("Динамика бездоговорного подвеса ВОЛС", {
-      x: 0.5, y: 2.0, w: 9, h: 0.8,
-      fontSize: 32, bold: true, align: "center"
-    });
-    s1.addText("Еженедельный отчет", {
-      x: 0.5, y: 2.8, w: 9, h: 0.5,
-      fontSize: 18, color: colors.gray, align: "center"
-    });
-    s1.addText(`Период: ${prev.date} — ${curr.date}`, {
-      x: 0.5, y: 4.5, w: 9, h: 0.4,
-      fontSize: 14, color: colors.gray, align: "center"
-    });
-
-    // Расчеты для показателей
+    s1.addText("АО «Россети Кубань»", {x: 0.5, y: 0.4, fontSize: 18, bold: true, color: "0033A0"});
+    s1.addText("ВОЛС: еженедельная динамика", {x: 0.5, y: 1, fontSize: 28, bold: true});
+    s1.addText(`Пред.: ${prev.date} · Тек.: ${curr.date}`, {x: 0.5, y: 1.6, fontSize: 12, color: "666666"});
+    
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) -
                 (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total
       ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+    
+    // Ключевые показатели
+    s1.addText("В работе всего, шт.", {x: 0.5, y: 2.2, fontSize: 12, color: "666666"});
+    s1.addText(fmt(curr.p1.totals.in_work_total), {x: 0.5, y: 2.45, fontSize: 18, bold: true});
+    s1.addText(`${dyn.in_work_total >= 0 ? '+' : ''}${fmt(dyn.in_work_total)}`, {
+      x: 3.6, y: 2.45, fontSize: 12, 
+      color: dyn.in_work_total > 0 ? '228B22' : (dyn.in_work_total < 0 ? 'B00020' : '666666')
+    });
+    
+    s1.addText("Выявлено за неделю, шт.", {x: 0.5, y: 2.9, fontSize: 12, color: "666666"});
+    s1.addText(fmt(dyn.found_week), {x: 0.5, y: 3.15, fontSize: 18, bold: true});
+    
+    s1.addText("Закрыто (узак.+демонт.), шт.", {x: 0.5, y: 3.6, fontSize: 12, color: "666666"});
+    s1.addText(fmt(eff), {x: 0.5, y: 3.85, fontSize: 18, bold: true});
+    
+    s1.addText("ПАО «Ростелеком» в работе, шт. (доля, %)", {x: 0.5, y: 4.3, fontSize: 12, color: "666666"});
+    s1.addText(`${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`, {x: 0.5, y: 4.55, fontSize: 18, bold: true});
 
-    // Слайд 2: Общая динамика
+    // Слайд 2: Общая динамика выявления бездоговорного ВОЛС по филиалам
     const s2 = pptx.addSlide();
-    s2.background = { color: "FFFFFF" };
-    s2.addText("Общая динамика выявления бездоговорного ВОЛС по филиалам", {
-      x: 0.5, y: 0.3, w: 9, h: 0.5,
-      fontSize: 20, bold: true, color: colors.primary
-    });
-
-    // Ключевые показатели в виде карточек
-    const kpiData = [
-      ["В работе всего", fmt(curr.p1.totals.in_work_total), dyn.in_work_total],
-      ["Выявлено за неделю", fmt(dyn.found_week), dyn.found_week],
-      ["Закрыто за неделю", fmt(eff), eff],
-      ["ПАО Ростелеком", `${fmt(curr.p1.totals.rtk_in_work)} (${rtkShare.toFixed(1)}%)`, dyn.rtk_in_work]
-    ];
-
-    let xPos = 0.5;
-    kpiData.forEach(kpi => {
-      s2.addShape(pptx.ShapeType.rect, {
-        x: xPos, y: 1.0, w: 2.2, h: 1.2,
-        fill: { color: colors.light },
-        line: { color: colors.primary, width: 1 }
-      });
-      s2.addText(kpi[0], {
-        x: xPos, y: 1.1, w: 2.2, h: 0.3,
-        fontSize: 10, color: colors.gray, align: "center"
-      });
-      s2.addText(String(kpi[1]), {
-        x: xPos, y: 1.4, w: 2.2, h: 0.4,
-        fontSize: 14, bold: true, align: "center"
-      });
-      const delta = Number(kpi[2]) || 0;
-      s2.addText(`${delta >= 0 ? '+' : ''}${fmt(delta)}`, {
-        x: xPos, y: 1.8, w: 2.2, h: 0.3,
-        fontSize: 10, color: delta > 0 ? colors.success : (delta < 0 ? colors.danger : colors.gray),
-        align: "center"
-      });
-      xPos += 2.35;
-    });
-
-    // Таблица филиалов
+    s2.addText("Общая динамика выявления бездоговорного ВОЛС по филиалам", {x: 0.5, y: 0.4, fontSize: 18, bold: true, color: "0033A0"});
+    
     const tableData2 = [
-      [{text: "Филиал", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Предыдущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Текущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Изменение", options: {bold: true, fill: colors.primary, color: "FFFFFF"}}],
-      ...rows.sort((a,b) => Math.abs(b.d) - Math.abs(a.d)).map(r => [
-        r.b,
-        fmt(r.p),
-        fmt(r.c),
-        {text: (r.d >= 0 ? '+' : '') + fmt(r.d), options: {color: r.d > 0 ? colors.success : (r.d < 0 ? colors.danger : colors.gray)}}
-      ]),
-      [{text: "ИТОГО", options: {bold: true, fill: colors.light}},
-       {text: document.getElementById("sumPrev").textContent, options: {bold: true, fill: colors.light}},
-       {text: document.getElementById("sumCurr").textContent, options: {bold: true, fill: colors.light}},
-       {text: document.getElementById("sumDelta").textContent, options: {bold: true, fill: colors.light}}]
+      [{text: "Филиал", options: {bold: true}}, 
+       {text: "Пред.", options: {bold: true}}, 
+       {text: "Тек.", options: {bold: true}}, 
+       {text: "Δ", options: {bold: true}}],
+      ...rows.map(r => [r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)]),
+      [{text: "Итого", options: {bold: true}}, 
+       {text: document.getElementById("sumPrev").textContent, options: {bold: true}}, 
+       {text: document.getElementById("sumCurr").textContent, options: {bold: true}}, 
+       {text: document.getElementById("sumDelta").textContent, options: {bold: true}}]
     ];
     
-    s2.addTable(tableData2, {
-      x: 0.5, y: 2.5, w: 9.0, h: 4.5,
-      fontSize: 10,
-      border: {pt: 0.5, color: "DDDDDD"},
-      fill: "FFFFFF",
-      align: "center",
-      valign: "middle"
-    });
+    s2.addTable(tableData2, {x: 0.5, y: 1.0, w: 9.0, fontSize: 10, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
 
-    // Слайд 3: Приказ 425
+    // Слайд 3: В том числе: динамика выявления бездоговорного ВОЛС в рамках Приказа 425
     const s3 = pptx.addSlide();
-    s3.background = { color: "FFFFFF" };
-    s3.addText("В том числе: динамика выявления бездоговорного ВОЛС", {
-      x: 0.5, y: 0.3, w: 9, h: 0.4,
-      fontSize: 20, bold: true, color: colors.primary
-    });
-    s3.addText("в рамках Приказа №425", {
-      x: 0.5, y: 0.7, w: 9, h: 0.3,
-      fontSize: 16, color: colors.primary
-    });
-
-    // График для Приказа 425
-    const chartDataS3 = {
-      name: "Динамика по Приказу 425",
-      categories: BRANCHES.slice(0, 6),
-      series: [
-        {name: "Предыдущая", values: BRANCHES.slice(0, 6).map(b => prev.p3.branches.get(b)?.total || 0)},
-        {name: "Текущая", values: BRANCHES.slice(0, 6).map(b => curr.p3.branches.get(b)?.total || 0)}
-      ]
-    };
+    s3.addText("В том числе: динамика выявления бездоговорного ВОЛС", {x: 0.5, y: 0.3, fontSize: 18, bold: true, color: "0033A0"});
+    s3.addText("в рамках Приказа №425", {x: 0.5, y: 0.7, fontSize: 16, color: "0033A0"});
     
-    s3.addChart(pptx.ChartType.bar, chartDataS3, {
-      x: 0.5, y: 1.3, w: 4.2, h: 2.5,
-      showLegend: true,
-      legendPos: "t",
-      showTitle: false,
-      barGrouping: "clustered",
-      catAxisLabelRotate: 45,
-      valAxisMaxVal: Math.max(...chartDataS3.series.flatMap(s => s.values)) * 1.1
-    });
-
-    // Таблица для Приказа 425
     const tableData3 = [
-      [{text: "Филиал", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Пред.", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Тек.", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Δ", options: {bold: true, fill: colors.primary, color: "FFFFFF"}}],
-      ...(dyn.branchRowsS3 || []).sort((a,b) => Math.abs(b.d) - Math.abs(a.d)).map(r => [
-        r.b,
-        fmt(r.p),
-        fmt(r.c),
-        {text: (r.d >= 0 ? '+' : '') + fmt(r.d), options: {color: r.d > 0 ? colors.success : (r.d < 0 ? colors.danger : colors.gray)}}
-      ])
+      [{text: "Филиал", options: {bold: true}}, 
+       {text: "Пред.", options: {bold: true}}, 
+       {text: "Тек.", options: {bold: true}}, 
+       {text: "Δ", options: {bold: true}}],
+      ...(dyn.branchRowsS3 || []).map(r => [r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)])
     ];
     
-    s3.addTable(tableData3, {
-      x: 5.0, y: 1.3, w: 4.5, h: 5.5,
-      fontSize: 9,
-      border: {pt: 0.5, color: "DDDDDD"},
-      fill: "FFFFFF",
-      align: "center"
-    });
+    s3.addTable(tableData3, {x: 0.5, y: 1.2, w: 9.0, fontSize: 10, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
 
-    // Слайд 4: ПАО Ростелеком
+    // Слайд 4: В том числе: динамика выявления бездоговорного ВОЛС ПАО «Ростелеком»
     const s4 = pptx.addSlide();
-    s4.background = { color: "FFFFFF" };
-    s4.addText("В том числе: динамика выявления бездоговорного ВОЛС", {
-      x: 0.5, y: 0.3, w: 9, h: 0.4,
-      fontSize: 20, bold: true, color: colors.primary
-    });
-    s4.addText("ПАО «Ростелеком»", {
-      x: 0.5, y: 0.7, w: 9, h: 0.3,
-      fontSize: 16, color: colors.primary
-    });
-
-    // График изменений для Ростелеком
-    const rtkDelta = BRANCHES.map(b => {
-      const row = dyn.branchRowsS4.find(r => r.b === b) || {d: 0};
-      return row.d;
-    });
+    s4.addText("В том числе: динамика выявления бездоговорного ВОЛС", {x: 0.5, y: 0.3, fontSize: 18, bold: true, color: "0033A0"});
+    s4.addText("ПАО «Ростелеком»", {x: 0.5, y: 0.7, fontSize: 16, color: "0033A0"});
     
-    const chartDataS4 = {
-      name: "Изменение по филиалам",
-      categories: BRANCHES,
-      series: [{
-        name: "Изменение",
-        values: rtkDelta
-      }]
-    };
-    
-    s4.addChart(pptx.ChartType.bar, chartDataS4, {
-      x: 0.5, y: 1.3, w: 9, h: 3.0,
-      showLegend: false,
-      showTitle: false,
-      barDir: "bar",
-      catAxisLabelRotate: 45,
-      dataLabelPosition: "outEnd",
-      dataLabelFormatCode: "#,##0",
-      chartColors: rtkDelta.map(v => v >= 0 ? colors.success : colors.danger)
-    });
-
-    // Таблица Ростелеком
     const tableData4 = [
-      [{text: "Филиал", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Предыдущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Текущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Изменение", options: {bold: true, fill: colors.primary, color: "FFFFFF"}}],
-      ...(dyn.branchRowsS4 || []).sort((a,b) => Math.abs(b.d) - Math.abs(a.d)).map(r => [
-        r.b,
-        fmt(r.p),
-        fmt(r.c),
-        {text: (r.d >= 0 ? '+' : '') + fmt(r.d), options: {color: r.d > 0 ? colors.success : (r.d < 0 ? colors.danger : colors.gray)}}
-      ])
+      [{text: "Филиал", options: {bold: true}}, 
+       {text: "Пред.", options: {bold: true}}, 
+       {text: "Тек.", options: {bold: true}}, 
+       {text: "Δ", options: {bold: true}}],
+      ...(dyn.branchRowsS4 || []).map(r => [r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)])
     ];
     
-    s4.addTable(tableData4, {
-      x: 0.5, y: 4.5, w: 9.0, h: 2.5,
-      fontSize: 9,
-      border: {pt: 0.5, color: "DDDDDD"},
-      fill: "FFFFFF",
-      align: "center"
-    });
+    s4.addTable(tableData4, {x: 0.5, y: 1.2, w: 9.0, fontSize: 10, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
 
-    // Слайд 5: Стадии работ
+    // Слайд 5: Стадии
     const s5 = pptx.addSlide();
-    s5.background = { color: "FFFFFF" };
-    s5.addText("Стадии работ по устранению бездоговорного ВОЛС", {
-      x: 0.5, y: 0.3, w: 9, h: 0.5,
-      fontSize: 20, bold: true, color: colors.primary
-    });
-
-    // Стадии для страницы 4 (Ростелеком)
-    const stagesData = expandAllStages(dyn.stagesS4 || []).filter(s => s.c > 0 || s.p > 0);
-    const tableStages = [
-      [{text: "Стадия работ", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Предыдущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Текущая", options: {bold: true, fill: colors.primary, color: "FFFFFF"}},
-       {text: "Изменение", options: {bold: true, fill: colors.primary, color: "FFFFFF"}}],
-      ...stagesData.map(s => [
-        s.stage,
-        fmt(s.p),
-        fmt(s.c),
-        {text: (s.d >= 0 ? '+' : '') + fmt(s.d), options: {color: s.d > 0 ? colors.success : (s.d < 0 ? colors.danger : colors.gray)}}
-      ])
-    ];
+    s5.addText("Стадии работ (прирост неделя к неделе)", {x: 0.5, y: 0.4, fontSize: 18, bold: true, color: "0033A0"});
     
-    s5.addTable(tableStages, {
-      x: 0.5, y: 1.0, w: 9.0, h: 5.0,
-      fontSize: 11,
-      border: {pt: 0.5, color: "DDDDDD"},
-      fill: "FFFFFF"
-    });
+    s5.addText("Стр. 2", {x: 0.5, y: 0.9, fontSize: 14, bold: true});
+    if(dyn.stagesS2.length > 0) {
+      const stagesData2 = [
+        [{text: "Стадия", options: {bold: true}}, 
+         {text: "Пред.", options: {bold: true}}, 
+         {text: "Тек.", options: {bold: true}}, 
+         {text: "Δ", options: {bold: true}}],
+        ...dyn.stagesS2.filter(r => r.p > 0 || r.c > 0).map(r => [r.stage, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)])
+      ];
+      s5.addTable(stagesData2, {x: 0.5, y: 1.2, w: 9.0, fontSize: 9, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
+    }
+    
+    s5.addText("Стр. 4 (РТК)", {x: 0.5, y: 3.8, fontSize: 14, bold: true});
+    if(dyn.stagesS4.length > 0) {
+      const stagesData4 = [
+        [{text: "Стадия", options: {bold: true}}, 
+         {text: "Пред.", options: {bold: true}}, 
+         {text: "Тек.", options: {bold: true}}, 
+         {text: "Δ", options: {bold: true}}],
+        ...dyn.stagesS4.filter(r => r.p > 0 || r.c > 0).map(r => [r.stage, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)])
+      ];
+      s5.addTable(stagesData4, {x: 0.5, y: 4.1, w: 9.0, fontSize: 9, border: {pt: 1, color: "DDDDDD"}, fill: "FFFFFF"});
+    }
 
-    await pptx.writeFile({fileName: "Презентация_ВОЛС_Россети.pptx"});
-    document.getElementById("exportStatus").textContent = "Презентация PPTX успешно сформирована";
+    await pptx.writeFile({fileName: "Презентация_ВОЛС.pptx"});
+    document.getElementById("exportStatus").textContent = "PPTX сформирован.";
   } catch(e) {
-    console.error("Ошибка создания PPTX:", e);
-    alert("Ошибка формирования презентации. Проверьте консоль для деталей.");
+    console.error(e);
+    alert("Ошибка формирования PPTX. Подробности в консоли.");
   }
 }
 
-/* ===== УЛУЧШЕННЫЙ ЭКСПОРТ DOCX ===== */
-async function exportBriefDOCX(curr, prev, dyn, rows) {
+/* ===== ИСПРАВЛЕННЫЙ ЭКСПОРТ DOCX ===== */
+async function exportBriefDOCX(curr, prev, dyn, rows){
   try {
-    const docx = window.docx;
-    const {
-      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-      WidthType, AlignmentType, BorderStyle, Header, Footer, PageNumber,
-      HeadingLevel, ShadingType
-    } = docx;
-
-    // Стили для документа
-    const headerStyle = {
+    const d = window.docx;
+    const {Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel} = d;
+    
+    const h = t => new Paragraph({
+      text: t,
       heading: HeadingLevel.HEADING_1,
-      spacing: {before: 240, after: 120},
-      alignment: AlignmentType.LEFT
-    };
-
-    const subHeaderStyle = {
+      spacing: {after: 120}
+    });
+    
+    const h2 = t => new Paragraph({
+      text: t,
       heading: HeadingLevel.HEADING_2,
-      spacing: {before: 200, after: 100},
-      alignment: AlignmentType.LEFT
-    };
-
-    // Функция создания заголовка
-    const createHeader = (text, level = HeadingLevel.HEADING_1) => 
-      new Paragraph({
-        text: text,
-        heading: level,
-        spacing: level === HeadingLevel.HEADING_1 ? {before: 240, after: 120} : {before: 200, after: 100}
-      });
-
-    // Функция создания параграфа
-    const createPara = (text, bold = false) => 
-      new Paragraph({
-        children: [new TextRun({text, bold, size: 24})],
-        spacing: {after: 120}
-      });
-
-    // Функция создания строки таблицы
-    const createRow = (cells, isHeader = false) => 
-      new TableRow({
-        children: cells.map(cell => 
-          new TableCell({
-            children: [new Paragraph({
-              children: [new TextRun({
-                text: String(cell),
-                bold: isHeader,
-                size: isHeader ? 24 : 22
-              })],
-              alignment: isHeader ? AlignmentType.CENTER : AlignmentType.LEFT
-            })],
-            shading: isHeader ? {
-              type: ShadingType.SOLID,
-              color: "E7EDF5"
-            } : undefined
-          })
-        )
-      });
-
-    // Расчеты
+      spacing: {after: 100}
+    });
+    
+    const p = t => new Paragraph({
+      children: [new TextRun({text: t, size: 24})],
+      spacing: {after: 80}
+    });
+    
+    const tr = (vals, bold = false) => new TableRow({
+      children: vals.map(v => new TableCell({
+        children: [new Paragraph({
+          children: [new TextRun({text: String(v), bold, size: 22})]
+        })]
+      }))
+    });
+    
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - 
                 (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total ? 
       (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
 
-    // Создание документа
     const doc = new Document({
-      creator: "АО Россети Кубань",
-      title: "Выжимка для руководителя - ВОЛС",
-      description: "Еженедельный отчет по динамике бездоговорного ВОЛС",
       sections: [{
-        properties: {
-          page: {
-            margin: {top: 1440, right: 1440, bottom: 1440, left: 1440}
-          }
-        },
-        headers: {
-          default: new Header({
-            children: [new Paragraph({
-              children: [
-                new TextRun({
-                  text: "АО «РОССЕТИ КУБАНЬ» — ДИНАМИКА ВОЛС",
-                  bold: true,
-                  size: 20,
-                  color: "0033A0"
-                })
-              ],
-              alignment: AlignmentType.CENTER
-            })]
-          })
-        },
-        footers: {
-          default: new Footer({
-            children: [new Paragraph({
-              children: [
-                new TextRun({
-                  text: `${prev.date} — ${curr.date}`,
-                  size: 18,
-                  color: "5F6B7A"
-                }),
-                new TextRun({
-                  text: "  |  Страница ",
-                  size: 18,
-                  color: "5F6B7A"
-                }),
-                PageNumber.CURRENT,
-                new TextRun({
-                  text: " из ",
-                  size: 18,
-                  color: "5F6B7A"
-                }),
-                PageNumber.TOTAL_PAGES
-              ],
-              alignment: AlignmentType.CENTER
-            })]
-          })
-        },
         children: [
-          // Титул
-          createHeader("ВЫЖИМКА ДЛЯ РУКОВОДИТЕЛЯ"),
-          createPara(`Период: ${prev.date} — ${curr.date}`),
+          h("Выжимка для руководителя"),
+          new Paragraph({
+            children: [new TextRun({text: `Период: ${prev.date} — ${curr.date}`, size: 20, color: "666666"})],
+            spacing: {after: 200}
+          }),
+
+          h2("Основные показатели"),
+          p(`• В работе всего: ${fmt(curr.p1.totals.in_work_total)} (${dyn.in_work_total >= 0 ? '+' : ''}${fmt(dyn.in_work_total)})`),
+          p(`• Выявлено за неделю: ${fmt(dyn.found_week)}`),
+          p(`• Закрыто за неделю (узак.+демонт.): ${fmt(eff)}`),
+          p(`• ПАО «Ростелеком» в работе: ${fmt(curr.p1.totals.rtk_in_work)} (${dyn.rtk_in_work >= 0 ? '+' : ''}${fmt(dyn.rtk_in_work)}), доля: ${rtkShare.toFixed(1)}%`),
+
+          h2("Филиалы: динамика «Всего опор, шт.»"),
+          new Table({
+            width: {size: 100, type: WidthType.PERCENTAGE},
+            rows: [
+              tr(["Филиал", "Пред.", "Тек.", "Δ"], true),
+              ...rows.map(r => tr([r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)])),
+              tr(["Итого", 
+                  document.getElementById("sumPrev").textContent, 
+                  document.getElementById("sumCurr").textContent, 
+                  document.getElementById("sumDelta").textContent], true)
+            ]
+          }),
+
+          h2("Приказ №425: динамика по филиалам"),
+          new Table({
+            width: {size: 100, type: WidthType.PERCENTAGE},
+            rows: [
+              tr(["Филиал", "Пред.", "Тек.", "Δ"], true),
+              ...(dyn.branchRowsS3 || []).filter(r => r.d !== 0).map(r => tr([r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)]))
+            ]
+          }),
+
+          h2("ПАО «Ростелеком»: динамика по филиалам"),
+          new Table({
+            width: {size: 100, type: WidthType.PERCENTAGE},
+            rows: [
+              tr(["Филиал", "Пред.", "Тек.", "Δ"], true),
+              ...(dyn.branchRowsS4 || []).filter(r => r.d !== 0).map(r => tr([r.b, fmt(r.p), fmt(r.c), (r.d >= 0 ? '+' : '') + fmt(r.d)]))
+            ]
+          }),
           
-          // Основные показатели
-          createHeader("ОСНОВНЫЕ ПОКАЗАТЕЛИ", HeadingLevel.HEADING_2),
-          createPara(`В работе всего: ${fmt(curr.p1.totals.in_work_total)} шт. (${dyn.in_work_total >= 0 ? '+' : ''}${fmt(dyn.in_work_total)})`),
-          createPara(`Выявлено за неделю: ${fmt(dyn.found_week)} шт.`),
-          createPara(`Закрыто за неделю: ${fmt(eff)} шт.`),
-          createPara(`ПАО «Ростелеком»: ${fmt(curr.p1.totals.rtk_in_work)} шт. (${rtkShare.toFixed(1)}% от общего)`),
-
-          // Таблица филиалов
-          createHeader("ДИНАМИКА ПО ФИЛИАЛАМ", HeadingLevel.HEADING_2),
+          h2("Стадии работ (ПАО «Ростелеком»)"),
           new Table({
             width: {size: 100, type: WidthType.PERCENTAGE},
             rows: [
-              createRow(["Филиал", "Предыдущая", "Текущая", "Изменение"], true),
-              ...rows.sort((a,b) => Math.abs(b.d) - Math.abs(a.d))
-                .map(r => createRow([r.b, fmt(r.p), fmt(r.c), `${r.d >= 0 ? '+' : ''}${fmt(r.d)}`])),
-              createRow([
-                "ИТОГО",
-                document.getElementById("sumPrev").textContent,
-                document.getElementById("sumCurr").textContent,
-                document.getElementById("sumDelta").textContent
-              ], true)
-            ],
-            borders: {
-              top: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              bottom: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              left: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              right: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              insideHorizontal: {style: BorderStyle.SINGLE, size: 1, color: "EEEEEE"},
-              insideVertical: {style: BorderStyle.SINGLE, size: 1, color: "EEEEEE"}
-            }
+              tr(["Стадия", "Пред.", "Тек.", "Δ"], true),
+              ...(dyn.stagesS4 || []).filter(s => s.p > 0 || s.c > 0).map(s => tr([s.stage, fmt(s.p), fmt(s.c), (s.d >= 0 ? '+' : '') + fmt(s.d)]))
+            ]
           }),
-
-          // ПАО Ростелеком
-          createHeader("ПАО «РОСТЕЛЕКОМ»", HeadingLevel.HEADING_2),
-          new Table({
-            width: {size: 100, type: WidthType.PERCENTAGE},
-            rows: [
-              createRow(["Филиал", "Предыдущая", "Текущая", "Изменение"], true),
-              ...(dyn.branchRowsS4 || [])
-                .filter(r => r.d !== 0)
-                .sort((a,b) => Math.abs(b.d) - Math.abs(a.d))
-                .map(r => createRow([r.b, fmt(r.p), fmt(r.c), `${r.d >= 0 ? '+' : ''}${fmt(r.d)}`]))
-            ],
-            borders: {
-              top: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              bottom: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              left: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              right: {style: BorderStyle.SINGLE, size: 1, color: "CCCCCC"},
-              insideHorizontal: {style: BorderStyle.SINGLE, size: 1, color: "EEEEEE"},
-              insideVertical: {style: BorderStyle.SINGLE, size: 1, color: "EEEEEE"}
-            }
-          }),
-
-          // Выводы
-          createHeader("ВЫВОДЫ", HeadingLevel.HEADING_2),
-          createPara(dyn.found_week > 0 
-            ? `За отчетную неделю выявлено ${fmt(dyn.found_week)} новых случаев бездоговорного подвеса ВОЛС.`
-            : `За отчетную неделю новых случаев бездоговорного подвеса ВОЛС не выявлено.`),
-          createPara(eff > 0 
-            ? `Устранено ${fmt(eff)} случаев (узаконено + демонтировано).`
-            : `Случаев устранения за неделю не зафиксировано.`),
-          createPara(`Доля ПАО «Ростелеком» составляет ${rtkShare.toFixed(1)}% от общего количества.`)
         ]
       }]
     });
@@ -1233,17 +994,92 @@ async function exportBriefDOCX(curr, prev, dyn, rows) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "Выжимка_ВОЛС_Россети.docx";
+    a.download = "Выжимка_ВОЛС.docx";
+    a.target = "_blank";
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       URL.revokeObjectURL(url);
       a.remove();
     }, 0);
-    
-    document.getElementById("exportStatus").textContent = "Выжимка DOCX успешно сформирована";
+    document.getElementById("exportStatus").textContent = "DOCX сформирован.";
   } catch(e) {
-    console.error("Ошибка создания DOCX:", e);
-    alert("Ошибка формирования документа Word. Проверьте консоль для деталей.");
+    console.error(e);
+    alert("Ошибка формирования DOCX. Подробности в консоли.");
   }
 }
+
+/* ===== Работа интерфейса ===== */
+let DATA = null;
+
+document.getElementById("btnParse").addEventListener("click", async () => {
+  const fPrev = document.getElementById("filePrev").files[0];
+  const fCurr = document.getElementById("fileCurr").files[0];
+  if(!fPrev || !fCurr) {
+    document.getElementById("errorMsg").textContent = "Загрузите оба PDF: предыдущий и текущий.";
+    return;
+  }
+
+  try {
+    document.getElementById("loadingMsg").classList.add("active");
+    document.getElementById("errorMsg").textContent = "";
+    
+    const [pPrev, pCurr] = await Promise.all([pdfToPages(fPrev), pdfToPages(fCurr)]);
+    const prev = parseReportByPages(pPrev);
+    const curr = parseReportByPages(pCurr);
+    const dyn = computeDynamics(curr, prev);
+    DATA = {prev, curr, dyn};
+
+    document.getElementById("dates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
+
+    renderKpis(curr, prev, dyn);
+    renderBranchesTable(dyn.branchRows,   "#tblBranches tbody",   "sumPrev",   "sumCurr",   "sumDelta");
+    renderBranchesTable(dyn.branchRowsS3, "#tblBranchesS3 tbody", "sumPrevS3", "sumCurrS3", "sumDeltaS3");
+    renderBranchesTable(dyn.branchRowsS4, "#tblBranchesS4 tbody", "sumPrevS4", "sumCurrS4", "sumDeltaS4");
+    renderCharts(curr, prev, dyn);
+    renderStagesTables(dyn);
+
+    buildPresentationHTML(curr, prev, dyn);
+    document.getElementById("briefDates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
+    buildSummaryBlocks(curr, prev, dyn);
+
+    await injectPlanFactHTML();
+
+    document.getElementById("loadingMsg").classList.remove("active");
+  } catch(e) {
+    console.error(e);
+    document.getElementById("loadingMsg").classList.remove("active");
+    document.getElementById("errorMsg").textContent = "Ошибка разбора PDF. Проверьте формат отчётов. Подробности в консоли.";
+  }
+});
+
+document.getElementById("exportPresPDF").addEventListener("click", async () => {
+  if(!DATA) { alert("Сначала проанализируйте отчёты."); return; }
+  await exportPresPDF();
+});
+
+document.getElementById("exportPresPPTX").addEventListener("click", async () => {
+  if(!DATA) { alert("Сначала проанализируйте отчёты."); return; }
+  const rows = Array.from(document.querySelectorAll("#tblBranches tbody tr")).map(tr => {
+    const t = tr.querySelectorAll("td");
+    return { b: t[0].textContent, p: numberize(t[1].textContent), c: numberize(t[2].textContent), d: numberize(t[3].textContent) };
+  });
+  await exportPresPPTX(DATA.curr, DATA.prev, DATA.dyn, rows);
+});
+
+document.getElementById("exportBriefDOCX").addEventListener("click", async () => {
+  if(!DATA) { alert("Сначала проанализируйте отчёты."); return; }
+  const rows = Array.from(document.querySelectorAll("#tblBranches tbody tr")).map(tr => {
+    const t = tr.querySelectorAll("td");
+    return { b: t[0].textContent, p: numberize(t[1].textContent), c: numberize(t[2].textContent), d: numberize(t[3].textContent) };
+  });
+  await exportBriefDOCX(DATA.curr, DATA.prev, DATA.dyn, rows);
+});
+
+document.getElementById("exportBriefPDF").addEventListener("click", async () => {
+  if(!DATA) { alert("Сначала проанализируйте отчёты."); return; }
+  await exportBriefPDF();
+});
+</script>
+</body>
+</html>
