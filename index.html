@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ВОЛС — Еженедельная динамика (АО «Россети Кубань»)</title>
+<title>Динамика ВОЛС</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--rs-blue:#0033A0;--rs-light:#f4f7fb;--border:#e7edf5;--ok:#0a7a2d;--bad:#b00020;--muted:#5f6b7a;--card:#fff}
@@ -196,7 +196,7 @@
   <div id="presTableS4" class="section avoid-break"></div>
   <div class="hr"></div>
 
-  <!-- НОВЫЙ «последний слайд»: динамика статусов по филиалам + итого по статусам -->
+  <!-- Последний слайд: теперь ТОЛЬКО стр.2 -->
   <div id="presStages" class="section avoid-break"></div>
   <div class="hr"></div>
 
@@ -248,7 +248,9 @@ const STATUS_PATTERNS = [
   {key:"op_sign",    title:"Договор на подписании у оператора",   re:/Договор\s*на\s*подписании\s*у\s*оператора/i},
   {key:"filial_appr",title:"Договор на согласовании в филиале",   re:/Договор\s*на\s*согласовании\s*в\s*филиале/i},
   {key:"incl_next",  title:"Будет включено в следующее доп. соглашение после подписания",
-    re:/Будет\s*включено/i},
+    // устойчиво к переносам, дефисам, вариантам формулировки
+    re:/Будет\s*включено(?:[\s\S]{0,40})в(?:\s*следующее)?(?:[\s\S]{0,40})доп\.?\s*соглашение(?:[\s\S]{0,40}после\s*подписания)?/i
+  },
 ];
 
 const STATUS_KEYS = STATUS_PATTERNS.map(s=>s.key);
@@ -307,6 +309,13 @@ function parseTotalsFromPage(page1){
 
 function isBranchHeader(line){ return BRANCH_PATTERNS.some(bp => bp.re.test(line)); }
 
+/* ——— целевой захват числа сразу после текста статуса ——— */
+function numberAfterStatus(re, text){
+  const rx = new RegExp(re.source + "[^\\d\\n]{0,60}(\\d[\\d\\s]*)", re.flags);
+  const m = text.match(rx);
+  return m ? numberize(m[1]) : null;
+}
+
 function parseBranchTable(pageText) {
   const text = normalize(pageText);
   const lines = text.split("\n").filter(Boolean);
@@ -318,7 +327,7 @@ function parseBranchTable(pageText) {
     for(const bp of BRANCH_PATTERNS){ if(bp.re.test(line)){ branchName = bp.name; break; } }
     if(!branchName) continue;
 
-    // Всего опор
+    // «Всего опор»
     let total = 0;
     const n1 = line.match(/\d[\d\s]*/g);
     if(n1 && n1.length) total = numberize(n1[n1.length-1]);
@@ -331,22 +340,31 @@ function parseBranchTable(pageText) {
       branches.set(branchName,{ total, statuses:{} });
     }
 
-    // статусы — смотрим до следующего филиала
+    // статусы — читаем до следующего филиала
     let j=i+1;
     while(j<lines.length && j<i+18){
-      const ln = lines[j];
-      if(isBranchHeader(ln)) break;
+      const l0 = lines[j] || "";
+      const l1 = lines[j+1] || "";
+      const l2 = lines[j+2] || "";
+      const windowText = `${l0} ${l1} ${l2}`; // для фраз с переносами
+      if(isBranchHeader(l0)) break;
+
       for(const sp of STATUS_PATTERNS){
-        if(sp.re.test(ln)){
-          const nums = ln.match(/\d[\d\s\-]*/g);
-          if(nums && nums.length){
-            const v = numberize(nums[nums.length-1]);
-            if(v>0){
-              const obj = branches.get(branchName);
-              if(!obj.statuses[sp.key] || obj.statuses[sp.key]===0){
-                obj.statuses[sp.key] = v;
-              }
-            }
+        if(sp.re.test(windowText) || sp.re.test(l0)){
+          // сперва пробуем окно (с переносами), затем текущую строку, затем следующую
+          let v = numberAfterStatus(sp.re, windowText);
+          if(v === null) v = numberAfterStatus(sp.re, l0);
+          if(v === null) v = numberAfterStatus(sp.re, l1);
+          if(v === null){
+            // последний шанс — берем ближайшее число в текущей строке
+            const nums = l0.match(/\d[\d\s]*/g);
+            if(nums && nums.length) v = numberize(nums[nums.length-1]);
+          }
+          if(v !== null){
+            const obj = branches.get(branchName);
+            const cur = obj.statuses[sp.key];
+            // если уже было — берём максимально осмысленное значение
+            obj.statuses[sp.key] = typeof cur === "number" ? Math.max(cur, v) : v;
           }
         }
       }
@@ -354,11 +372,12 @@ function parseBranchTable(pageText) {
     }
   }
 
+  // заполним отсутствующие филиалы нулями
   for(const b of BRANCHES){ if(!branches.has(b)) branches.set(b,{ total:0, statuses:{} }); }
 
   const stages = {};
   for(const [_, data] of branches){
-    for(const [key, value] of Object.entries(data.statuses)) stages[key] = (stages[key]||0) + value;
+    for(const [key, value] of Object.entries(data.statuses)) stages[key] = (stages[key]||0) + (value||0);
   }
 
   const overall = [...branches.values()].reduce((s,r)=>s+(r.total||0),0);
@@ -414,7 +433,7 @@ function computeDynamics(curr, prev){
   const stagesS3 = diffStages(curr.p3.stages||{}, prev.p3.stages||{});
   const stagesS4 = diffStages(curr.p4.stages||{}, prev.p4.stages||{});
 
-  // НОВОЕ: динамика статусов в разрезе филиалов (матрицы)
+  // динамика статусов в разрезе филиалов — нужна ТОЛЬКО для стр.2
   function perBranchStages(cPage, pPage){
     return BRANCHES.map(b=>{
       const cst = cPage.branches.get(b)?.statuses || {};
@@ -428,14 +447,12 @@ function computeDynamics(curr, prev){
     });
   }
   const s2BranchStages = perBranchStages(curr.p2, prev.p2);
-  const s3BranchStages = perBranchStages(curr.p3, prev.p3);
-  const s4BranchStages = perBranchStages(curr.p4, prev.p4);
 
   return {
     ...dyn,
     branchRows, branchRowsS3, branchRowsS4,
     stagesS2, stagesS3, stagesS4,
-    s2BranchStages, s3BranchStages, s4BranchStages,
+    s2BranchStages,
     rtkRows: branchRowsS4
   };
 }
@@ -543,7 +560,7 @@ function renderStagesTables(dyn){
   fill("#tblStagesS4", dyn.stagesS4);
 }
 
-/* ====== Печатные таблицы ====== */
+/* ===== ПЕЧАТНЫЕ ПОМОЩНИКИ ===== */
 function presTableHTML(title, rows, sumIds){
   return `
     <div style="font-weight:700;margin:8px 0">${title}</div>
@@ -576,7 +593,7 @@ function presTableHTML(title, rows, sumIds){
     </table>`;
 }
 
-/* ——— НОВОЕ: матрица статусов по филиалам ——— */
+/* ——— Матрица статусов по филиалам (ТОЛЬКО стр.2) ——— */
 function stageMatrixHTML(title, branchStages){
   const cols = STATUS_KEYS;
   const head = cols.map(k=>`<th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">${STAGE_TITLE(k)}</th>`).join("");
@@ -679,21 +696,14 @@ function buildPresentationHTML(curr, prev, dyn){
   const rowsS4 = (DATA?.dyn?.branchRowsS4||[]);
   document.getElementById("presTableS4").innerHTML = presTableHTML("Динамика выявления по Ростелекому", rowsS4, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-  // НОВОЕ: Последний слайд — матрицы статусов по филиалам + итого по статусам
-  const s2Matrix = stageMatrixHTML("Стр. 2 — Динамика статусов по филиалам (Δ)", dyn.s2BranchStages);
+  // ПОСЛЕДНИЙ СЛАЙД — только стр.2: матрица + итого по статусам
+  const s2Matrix = stageMatrixHTML("Динамика статусов по филиалам (стр. 2, Δ)", dyn.s2BranchStages);
   const s2Totals = stageTotalsHTML("Стр. 2 — Итого по статусам", dyn.stagesS2);
-  const s3Matrix = stageMatrixHTML("Стр. 3 — Динамика статусов по филиалам (Δ)", dyn.s3BranchStages);
-  const s3Totals = stageTotalsHTML("Стр. 3 — Итого по статусам", dyn.stagesS3);
-  const s4Matrix = stageMatrixHTML("Стр. 4 — Динамика статусов по филиалам (Δ)", dyn.s4BranchStages);
-  const s4Totals = stageTotalsHTML("Стр. 4 — Итого по статусам", dyn.stagesS4);
 
-  document.getElementById("presStages").innerHTML =
-    s2Matrix + s2Totals + '<div class="hr"></div>' +
-    s3Matrix + s3Totals + '<div class="hr"></div>' +
-    s4Matrix + s4Totals;
+  document.getElementById("presStages").innerHTML = s2Matrix + s2Totals;
 }
 
-/* ===== Выжимка (HTML/PDF) — без изменений ===== */
+/* ===== Выжимка (HTML/PDF) ===== */
 function buildSummaryBlocks(curr, prev, dyn){
   const blocks = document.getElementById("briefBlocks");
   const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
@@ -773,7 +783,7 @@ async function exportBriefPDF(){
   el.style.display = "none";
 }
 
-/* ===== PPTX / DOCX — без изменений ===== */
+/* ===== PPTX / DOCX — как было ===== */
 async function exportPresPPTX(curr, prev, dyn, rows){
   try {
     const pptx = new PptxGenJS();
