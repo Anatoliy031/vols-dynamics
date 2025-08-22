@@ -343,7 +343,6 @@
 
   const numberize = s => {
     const t = String(s||"").replace(/\u00A0|\u202F/g," ").replace(/[^\d\- ,.%]/g,"").trim();
-    // keep digits, minus, space, comma, dot, percent for later parsing
     const n = t.replace(/[^\d\-.,]/g,"").replace(/\s+/g,"");
     if(!n) return 0;
     const val = Number(n.replace(",", "."));
@@ -852,7 +851,7 @@
     document.getElementById("exportStatus").textContent = "PDF выжимки сохранен.";
   }
 
-  /* ==================== Экспорт Word-HTML (добавлен План-Факт) ==================== */
+  /* ==================== Экспорт Word-HTML ==================== */
   function exportWordHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
@@ -940,11 +939,9 @@
     });
 
     function pickNumbers(cells){
-      // возвращает массив чисел в порядке появления
       const nums = [];
       for(const c of cells){
         const txt = c.textContent.replace(/\u00A0|\u202F/g,' ').trim();
-        // собираем либо проценты, либо числа
         const matches = txt.match(/-?\d{1,3}(?:[\s\u00A0\u202F]?\d{3})*(?:[.,]\d+)?%?/g);
         if(matches){
           for(const m of matches){
@@ -968,7 +965,6 @@
         const m = pickNumbers([cells[colFact]])[0];
         if(m){ fact = m.val; factPct = !!m.isPct; }
       }
-      // если не нашли по заголовкам — берём первые два числа в строке
       if(plan===null || fact===null){
         const nums = pickNumbers(cells);
         if(nums.length>=2){
@@ -1004,18 +1000,15 @@
     canvas.width = size; canvas.height = size;
     const ctx = canvas.getContext("2d");
 
-    // фон
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0,0,size,size);
 
-    // серое кольцо
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI*2);
     ctx.strokeStyle = "#e6edf6";
     ctx.lineWidth = thickness;
     ctx.stroke();
 
-    // прогресс
     const ang = Math.max(0, Math.min(100, percent)) / 100 * Math.PI*2;
     ctx.beginPath();
     ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + ang, false);
@@ -1024,7 +1017,6 @@
     ctx.lineWidth = thickness;
     ctx.stroke();
 
-    // центр
     ctx.fillStyle = "#0b1a2b";
     ctx.font = "700 28px Inter,Arial";
     ctx.textAlign = "center";
@@ -1054,38 +1046,16 @@
     return canvas.toDataURL("image/png");
   }
 
-  /* ==================== Экспорт презентации в HTML (только презентация, по вашим пунктам) ==================== */
+  /* ==================== Экспорт презентации в HTML (только презентация) ==================== */
   function exportPresHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
 
-    // Снимки графиков с экрана
     const imgS2 = document.getElementById("chartBranches").toDataURL("image/png", 1.0);
     const imgS3 = document.getElementById("chartBranchesS3").toDataURL("image/png", 1.0);
     const imgS4 = document.getElementById("chartBranchesS4").toDataURL("image/png", 1.0);
 
-    // План-Факт HTML
     const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "";
-
-    // Парсим два показателя из План-Факт
-    const pf = parsePlanFactMetricsFromHTML(planfactHTML);
-
-    // Готовим изображения донатов
-    let imgPodves, imgRevenue;
-    if(pf.podves){
-      const p = pf.podves;
-      const percent = (p.planPct || p.factPct) ? (p.plan ? (p.fact / p.plan * 100) : 0) : (p.plan ? (p.fact / p.plan * 100) : 0);
-      imgPodves = donutImage(percent, "Доля подвеса", `Факт ${p.fact}${p.factPct?"%":""} / План ${p.plan}${p.planPct?"%":""}`);
-    }else{
-      imgPodves = donutPlaceholder("Доля подвеса");
-    }
-    if(pf.revenue){
-      const r = pf.revenue;
-      const percent = r.plan ? (r.fact / r.plan * 100) : 0;
-      imgRevenue = donutImage(percent, "Выручка", `Факт ${fmt(r.fact)} / План ${fmt(r.plan)}`);
-    }else{
-      imgRevenue = donutPlaceholder("Выручка");
-    }
 
     // Сортировка для презентации (А→Я, ru)
     const collator = new Intl.Collator("ru", {sensitivity:"base"});
@@ -1095,16 +1065,13 @@
     const s3Sorted = [...(dyn.branchRowsS3||[])].sort(sortByBranch);
     const s4Sorted = [...(dyn.branchRowsS4||[])].sort(sortByBranch);
 
-    // Пересборка HTML таблиц для презентации, уже отсортированных по филиалу
     const tblS2HTML_sorted = presTableHTML("Динамика по филиалам (всего)", s2Sorted, ["sumPrev","sumCurr","sumDelta"]);
     const tblS3HTML_sorted = presTableHTML("Динамика по Приказу №425", s3Sorted, ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
     const tblS4HTML_sorted = presTableHTML("Динамика по ПАО «Ростелеком»", s4Sorted, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-    // Матрица статусов — тоже сортируем по филиалу только для презентации
     const s2BranchStagesSorted = [...dyn.s2BranchStages].sort((a,b)=>collator.compare(a.b,b.b));
     const stagesHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted) + stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
 
-    // Компактные KPI строкой для слайда 2
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
     const sign = v=> v>0?"+":"";
@@ -1139,31 +1106,17 @@
 </head>
 <body>
 
-  <!-- Слайд 1: Титул + План-Факт + 2 графика -->
+  <!-- Слайд 1: Только заголовок и План-Факт (без графиков) -->
   <div class="slide">
-    <h1>АО «Россети Кубань»</h1>
-    <div class="muted" style="font-size:18px;margin-bottom:12px">Выполнение плановых показателей БП</div>
-    <div class="grid2">
-      <div class="panel">
-        <h3 style="margin:0 0 8px 0">План-Факт</h3>
-        ${planfactHTML}
-      </div>
-      <div class="panel">
-        <h3 style="margin:0 0 8px 0">Графики выполнения</h3>
-        <div class="imgbox">
-          <div class="legend" style="margin-bottom:6px">Выполнение плана по доле подвеса</div>
-          <img src="${imgPodves}" alt="Выполнение плана по доле подвеса" style="width:240px;height:auto;display:inline-block"/>
-        </div>
-        <div class="imgbox" style="margin-top:12px">
-          <div class="legend" style="margin-bottom:6px">Выполнение плана по выручке</div>
-          <img src="${imgRevenue}" alt="Выполнение плана по выручке" style="width:240px;height:auto;display:inline-block"/>
-        </div>
-      </div>
+    <h1>Выполнение плановых показателей БП по размещению ВОЛС на ВЛ</h1>
+    <div class="panel">
+      <h3 style="margin:0 0 8px 0">План-Факт</h3>
+      ${planfactHTML}
     </div>
     <div class="slide-no">1</div>
   </div>
 
-  <!-- Слайд 2: Заголовок строго по тексту, слева график, справа таблица, ниже KPI строкой -->
+  <!-- Слайд 2 -->
   <div class="slide">
     <h2>Динамика выявления бездоговорного размещения ВОЛС в разрезе филиалов ЭС (итого):</h2>
     <div class="grid2">
@@ -1174,7 +1127,7 @@
     <div class="slide-no">2</div>
   </div>
 
-  <!-- Слайд 3: Приказ №425 + подзаголовок -->
+  <!-- Слайд 3 -->
   <div class="slide">
     <h2>Динамика по Приказу №425</h2>
     <div class="subline">В том числе: динамика по Приказу №425</div>
@@ -1185,7 +1138,7 @@
     <div class="slide-no">3</div>
   </div>
 
-  <!-- Слайд 4: ПАО «Ростелеком» + подзаголовок -->
+  <!-- Слайд 4 -->
   <div class="slide">
     <h2>Динамика по ПАО «Ростелеком»</h2>
     <div class="subline">В том числе: динамика по ПАО «Ростелеком»</div>
@@ -1196,7 +1149,7 @@
     <div class="slide-no">4</div>
   </div>
 
-  <!-- Слайд 5: Динамика по статусам (таблица отсортирована по филиалам) -->
+  <!-- Слайд 5 -->
   <div class="slide">
     <h2>Динамика по статусам</h2>
     <div class="panel">${stagesHTML_sorted}</div>
@@ -1208,7 +1161,7 @@
 
     const blob = new Blob([presHTML], {type: 'text/html; charset=utf-8'});
     triggerDownload(blob, `Презентация_ВОЛС_${curr.date.replace(/\./g,'-')}.html`);
-    document.getElementById("exportStatus").textContent = "HTML презентация сохранена: слайд 1 (План-Факт + 2 графика), слайд 2 (заголовок по ТЗ + KPI строкой), слайды 3–4 с подзаголовками; таблицы отсортированы А→Я только для презентации.";
+    document.getElementById("exportStatus").textContent = "HTML презентация сохранена.";
   }
 
   /* ==================== Вспомогательные ==================== */
