@@ -115,6 +115,9 @@
     #presentationPrint,#summaryPrint{background:#fff;padding:14px;border:1px solid var(--border);border-radius:12px}
     .logoTitle{font-weight:800;color:var(--rs-blue);font-size:20px;margin-bottom:6px}
 
+    /* Убираем «Топ/Инсайты» на сайте везде */
+    .insights-card{display:none !important}
+
     /* Принт */
     @media print{
       body{background:#fff}
@@ -253,9 +256,10 @@
         </table>
       </div>
     </section>
-    <section class="card">
+    <!-- Инсайты убраны со всего сайта -->
+    <section class="card insights-card">
       <h2>Инсайты (авто)</h2>
-      <div id="insightsBox" class="sub">Появятся после анализа.</div>
+      <div id="insightsBox" class="sub">—</div>
     </section>
   </div>
 
@@ -276,7 +280,8 @@
     <div class="hr"></div>
     <div id="presStages" class="section"></div>
     <div class="hr"></div>
-    <div id="presInsights" class="section"></div>
+    <!-- Блок инсайтов скрыт/не используется -->
+    <div id="presInsights" class="section" style="display:none"></div>
   </div>
 
   <div id="summaryPrint" class="compact" style="display:none">
@@ -337,9 +342,12 @@
   const SHORT_STAGE_TITLE = k => SHORT_STAGE_TITLES[k] || STAGE_TITLE(k);
 
   const numberize = s => {
-    const t = String(s||"").replace(/\u00A0|\u202F/g," ").replace(/[^\d\- ]/g,"").trim();
-    const n = t.replace(/\s+/g,"");
-    return n ? Number(n) : 0;
+    const t = String(s||"").replace(/\u00A0|\u202F/g," ").replace(/[^\d\- ,.%]/g,"").trim();
+    // keep digits, minus, space, comma, dot, percent for later parsing
+    const n = t.replace(/[^\d\-.,]/g,"").replace(/\s+/g,"");
+    if(!n) return 0;
+    const val = Number(n.replace(",", "."));
+    return isNaN(val) ? 0 : val;
   };
   const fmt = n => (typeof n === "number" ? n : Number(n||0)).toLocaleString("ru-RU");
   const normalize = txt => String(txt||"")
@@ -492,7 +500,7 @@
 
     const allKeys = Array.from(new Set([
       ...Object.keys(prev.p2.stages||{}), ...Object.keys(curr.p2.stages||{}),
-      ...Object.keys(prev.p3.stages||{}), ...Object.keys[curr?.p3?.stages||{}],
+      ...Object.keys(prev.p3.stages||{}), ...Object.keys(curr.p3.stages||{}),
       ...Object.keys(prev.p4.stages||{}), ...Object.keys(curr.p4.stages||{}),
       ...STATUS_KEYS
     ]));
@@ -643,14 +651,7 @@
     fill("#tblStagesS4", dyn.stagesS4);
   }
 
-  function generateInsights(dyn){
-    const byDelta = [...dyn.branchRows].map(r=>({...r})).sort((a,b)=>b.d-a.d);
-    const topUp = byDelta.slice(0,3).map(r=>`+ ${r.b}: +${fmt(r.d)} шт.`);
-    const topDown = byDelta.slice(-3).reverse().map(r=>`− ${r.b}: ${fmt(r.d)} шт.`);
-    return { up: topUp, down: topDown };
-  }
-
-  /* ==================== Презентация (печатный HTML-блок для PDF/бривка) ==================== */
+  /* ==================== Презентация (печатный HTML-блок для PDF/выжимки) ==================== */
   function presTableHTML(title, rows, sumIds){
     return `<div style="font-weight:700;margin:6px 0">${title}</div>
       <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -759,22 +760,44 @@
     });
 
     document.getElementById("presTable").innerHTML = presTableHTML("Динамика по филиалам (всего)", rowsS2, ["sumPrev","sumCurr","sumDelta"]);
-    document.getElementById("presTableS3").innerHTML = presTableHTML("Динамика выявления по 425 Приказу", (DATA?.dyn?.branchRowsS3||[]), ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
-    document.getElementById("presTableS4").innerHTML = presTableHTML("Динамика выявления по Ростелекому", (DATA?.dyn?.branchRowsS4||[]), ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
+    document.getElementById("presTableS3").innerHTML = presTableHTML("Динамика по Приказу №425", (DATA?.dyn?.branchRowsS3||[]), ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
+    document.getElementById("presTableS4").innerHTML = presTableHTML("Динамика по ПАО «Ростелеком»", (DATA?.dyn?.branchRowsS4||[]), ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-    const s2Matrix = stageMatrixHTML("Динамика статусов по филиалам (стр. 2, Δ)", dyn.s2BranchStages);
-    const s2Totals = stageTotalsHTML("Стр. 2 — Итого по статусам", dyn.stagesS2);
+    const s2Matrix = stageMatrixHTML("Динамика по статусам (Δ)", dyn.s2BranchStages);
+    const s2Totals = stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
     document.getElementById("presStages").innerHTML = s2Matrix + s2Totals;
 
-    const insights = generateInsights(dyn);
-    document.getElementById("presInsights").innerHTML = `
-      <div style="font-weight:700;margin-bottom:6px">Автоматические инсайты</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div><div style="color:#0a7a2d;font-weight:700;margin-bottom:4px">Топ-3 рост</div>${insights.up.map(x=>`<div>• ${x}</div>`).join("")}</div>
-        <div><div style="color:#b00020;font-weight:700;margin-bottom:4px">Топ-3 снижение</div>${insights.down.map(x=>`<div>• ${x}</div>`).join("")}</div>
-      </div>
+    // Инсайты/Топ – по требованию удалены из всех документов
+    const presIns = document.getElementById("presInsights");
+    if (presIns) presIns.style.display = "none";
+  }
+
+  function buildSummaryBlocks(curr, prev, dyn){
+    const blocks = document.getElementById("briefBlocks");
+    const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
+    const listAll = rows => rows.map(r=>{
+      const p=Number(r.p)||0,c=Number(r.c)||0,d=c-p;
+      return `• ${r.b}: ${fmt(p)} → <b>${fmt(c)}</b> (${d>0?'+':''}${fmt(d)})`;
+    }).join("<br/>");
+
+    blocks.innerHTML = `<h3>Стр. 1 — Общая (нарастающим)</h3>
+      <div>• В работе всего: <b>${fmt(curr.p1.totals.in_work_total)}</b> (${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)})</div>
+      <div>• Выявлено за неделю: <b>${fmt(dyn.found_week)}</b> (расчёт от «в работе всего»)</div>
+      <div>• Закрыто за неделю (узак.+демонт.): <b>${fmt(eff)}</b></div>
+      <div>• ПАО «Ростелеком» в работе: <b>${fmt(curr.p1.totals.rtk_in_work)}</b> (${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)})</div>
+      <hr/>
+      <h3>Динамика по филиалам (всего)</h3>
+      <div>${listAll(dyn.branchRows)}</div>
+      <div style="margin-top:6px"><b>Итого:</b> Пред. ${document.getElementById("sumPrev").textContent}; Тек. ${document.getElementById("sumCurr").textContent}; Δ ${document.getElementById("sumDelta").textContent}</div>
+      <hr/>
+      <h3>Динамика по Приказу №425</h3>
+      <div>${listAll(dyn.branchRowsS3 || [])}</div>
+      <div style="margin-top:6px"><b>Итого:</b> Пред. ${document.getElementById("sumPrevS3").textContent}; Тек. ${document.getElementById("sumCurrS3").textContent}; Δ ${document.getElementById("sumDeltaS3").textContent}</div>
+      <hr/>
+      <h3>Динамика по ПАО «Ростелеком»</h3>
+      <div>${listAll(dyn.branchRowsS4 || [])}</div>
+      <div style="margin-top:6px"><b>Итого:</b> Пред. ${document.getElementById("sumPrevS4").textContent}; Тек. ${document.getElementById("sumCurrS4").textContent}; Δ ${document.getElementById("sumDeltaS4").textContent}</div>
     `;
-    document.getElementById("insightsBox").innerHTML = document.getElementById("presInsights").innerHTML;
   }
 
   /* ==================== План-Факт из Google Sheets ==================== */
@@ -829,12 +852,14 @@
     document.getElementById("exportStatus").textContent = "PDF выжимки сохранен.";
   }
 
-  /* ==================== Экспорт Word-HTML ==================== */
+  /* ==================== Экспорт Word-HTML (добавлен План-Факт) ==================== */
   function exportWordHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+
+    const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "<div>План-Факт недоступен</div>";
 
     const htmlDoc = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Отчет ВОЛС - ${curr.date}</title>
@@ -843,7 +868,8 @@
   h1{color:#0033A0;border-bottom:2px solid #0033A0;padding-bottom:10px}
   h2{color:#0033A0;margin-top:26px} h3{color:#333;margin-top:18px}
   table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
-  th,td{border:1px solid #ddd;padding:8px;text-align:left}
+  th,td{border:1px solid #ddd;padding:8px;text-align:center}
+  th:first-child,td:first-child{ text-align:left }
   th{background-color:#0033A0;color:#fff;font-weight:700}
   tr:nth-child(even){background:#f7f9fc}
   .positive{color:#0a7a2d;font-weight:700}.negative{color:#b00020;font-weight:700}
@@ -852,6 +878,10 @@
 <body>
 <h1>АО «Россети Кубань» — Отчет по ВОЛС</h1>
 <div class="info-box"><p><b>Отчетный период:</b><br>Предыдущая неделя: ${prev.date}<br>Текущая неделя: ${curr.date}</p></div>
+
+<h2>План-Факт</h2>
+<div>${planfactHTML}</div>
+
 <h2>Основные показатели</h2>
 <ul>
   <li>В работе всего: <b>${fmt(curr.p1.totals.in_work_total)}</b> <span class="${dyn.in_work_total>=0?'positive':'negative'}">(${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)})</span></li>
@@ -863,23 +893,23 @@
 <h2>Динамика по филиалам</h2>
 <h3>Общая динамика (все операторы)</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
-<tbody>${dyn.branchRows.map(r=>`<tr><td>${r.b}</td><td style="text-align:center">${fmt(r.p)}</td><td style="text-align:center">${fmt(r.c)}</td><td style="text-align:center" class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td style="text-align:center">${document.getElementById("sumPrev").textContent}</td><td style="text-align:center">${document.getElementById("sumCurr").textContent}</td><td style="text-align:center">${document.getElementById("sumDelta").textContent}</td></tr></tfoot>
+<tbody>${dyn.branchRows.map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
+<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrev").textContent}</td><td>${document.getElementById("sumCurr").textContent}</td><td>${document.getElementById("sumDelta").textContent}</td></tr></tfoot>
 </table>
 
 <h3>Приказ №425</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
-<tbody>${(dyn.branchRowsS3||[]).map(r=>`<tr><td>${r.b}</td><td style="text-align:center">${fmt(r.p)}</td><td style="text-align:center">${fmt(r.c)}</td><td style="text-align:center" class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td style="text-align:center">${document.getElementById("sumPrevS3").textContent}</td><td style="text-align:center">${document.getElementById("sumCurrS3").textContent}</td><td style="text-align:center">${document.getElementById("sumDeltaS3").textContent}</td></tr></tfoot></table>
+<tbody>${(dyn.branchRowsS3||[]).map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
+<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrevS3").textContent}</td><td>${document.getElementById("sumCurrS3").textContent}</td><td>${document.getElementById("sumDeltaS3").textContent}</td></tr></tfoot></table>
 
 <h3>ПАО «Ростелеком»</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
-<tbody>${(dyn.branchRowsS4||[]).map(r=>`<tr><td>${r.b}</td><td style="text-align:center">${fmt(r.p)}</td><td style="text-align:center">${fmt(r.c)}</td><td style="text-align:center" class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td style="text-align:center">${document.getElementById("sumPrevS4").textContent}</td><td style="text-align:center">${document.getElementById("sumCurrS4").textContent}</td><td style="text-align:center">${document.getElementById("sumDeltaS4").textContent}</td></tr></tfoot></table>
+<tbody>${(dyn.branchRowsS4||[]).map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
+<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrevS4").textContent}</td><td>${document.getElementById("sumCurrS4").textContent}</td><td>${document.getElementById("sumDeltaS4").textContent}</td></tr></tfoot></table>
 
-<h2>Динамика по статусам (стр. 2)</h2>
+<h2>Динамика по статусам</h2>
 <table><thead><tr><th>Статус</th><th>Пред.</th><th>Тек.</th><th>Δ</th></tr></thead>
-<tbody>${(dyn.stagesS2||[]).map(r=>`<tr><td>${r.stage}</td><td style="text-align:center">${fmt(r.p)}</td><td style="text-align:center">${fmt(r.c)}</td><td style="text-align:center" class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody></table>
+<tbody>${(dyn.stagesS2||[]).map(r=>`<tr><td>${r.stage}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody></table>
 
 <div class="info-box"><p><b>Примечание:</b> Отчет сформирован автоматически на основе загруженных PDF-файлов. Дата формирования: ${new Date().toLocaleDateString('ru-RU')}</p></div>
 </body></html>`;
@@ -889,63 +919,197 @@
     document.getElementById("exportStatus").textContent = "HTML отчет сохранен. Откройте в браузере или Word.";
   }
 
-  /* ==================== Экспорт презентации в HTML (обновлено) ==================== */
+  /* ==================== ВСПОМОГАТЕЛЬНОЕ ДЛЯ СЛАЙДА 1 (донаты по План-Факт) ==================== */
+  function parsePlanFactMetricsFromHTML(pfHTML){
+    const res = { podves:null, revenue:null, hasData:false };
+    if(!pfHTML) return res;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = pfHTML;
+    const table = tmp.querySelector("table");
+    if(!table) return res;
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if(!rows.length) return res;
+
+    // Определяем индексы колонок План/Факт (если есть в заголовке)
+    let colPlan = -1, colFact = -1;
+    const headCells = Array.from(rows[0].querySelectorAll("th,td")).map(c=>c.textContent.trim().toLowerCase());
+    headCells.forEach((t,i)=>{
+      if(colPlan===-1 && /план/.test(t)) colPlan = i;
+      if(colFact===-1 && /факт/.test(t)) colFact = i;
+    });
+
+    function pickNumbers(cells){
+      // возвращает массив чисел в порядке появления
+      const nums = [];
+      for(const c of cells){
+        const txt = c.textContent.replace(/\u00A0|\u202F/g,' ').trim();
+        // собираем либо проценты, либо числа
+        const matches = txt.match(/-?\d{1,3}(?:[\s\u00A0\u202F]?\d{3})*(?:[.,]\d+)?%?/g);
+        if(matches){
+          for(const m of matches){
+            const isPct = /%/.test(m);
+            const val = Number(m.replace('%','').replace(/\s/g,'').replace(',','.'));
+            if(!isNaN(val)) nums.push({val, isPct});
+          }
+        }
+      }
+      return nums;
+    }
+
+    function rowToPlanFact(row){
+      const cells = Array.from(row.querySelectorAll("td,th"));
+      let plan=null, fact=null, planPct=false, factPct=false;
+      if(colPlan>=0 && colPlan<cells.length) {
+        const m = pickNumbers([cells[colPlan]])[0];
+        if(m){ plan = m.val; planPct = !!m.isPct; }
+      }
+      if(colFact>=0 && colFact<cells.length) {
+        const m = pickNumbers([cells[colFact]])[0];
+        if(m){ fact = m.val; factPct = !!m.isPct; }
+      }
+      // если не нашли по заголовкам — берём первые два числа в строке
+      if(plan===null || fact===null){
+        const nums = pickNumbers(cells);
+        if(nums.length>=2){
+          if(plan===null){ plan = nums[0].val; planPct = !!nums[0].isPct; }
+          if(fact===null){ fact = nums[1].val; factPct = !!nums[1].isPct; }
+        }
+      }
+      if(plan===null || fact===null) return null;
+      return {plan, fact, planPct, factPct};
+    }
+
+    function findByKeys(keys){
+      const re = new RegExp(keys.join("|"), "i");
+      for(const r of rows){
+        const txt = r.textContent || "";
+        if(re.test(txt)) return rowToPlanFact(r);
+      }
+      return null;
+    }
+
+    const podves = findByKeys(["доля\\s*подвеса","подвес"]);
+    const revenue = findByKeys(["выручк"]);
+
+    if(podves){ res.podves = podves; res.hasData = true; }
+    if(revenue){ res.revenue = revenue; res.hasData = true; }
+
+    return res;
+  }
+
+  function donutImage(percent, centerText, subText){
+    const size = 220, cx=size/2, cy=size/2, r=85, thickness=18;
+    const canvas = document.createElement("canvas");
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    // фон
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,size,size);
+
+    // серое кольцо
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = "#e6edf6";
+    ctx.lineWidth = thickness;
+    ctx.stroke();
+
+    // прогресс
+    const ang = Math.max(0, Math.min(100, percent)) / 100 * Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + ang, false);
+    ctx.strokeStyle = varGet("--rs-blue") || "#0033A0";
+    ctx.lineCap = "round";
+    ctx.lineWidth = thickness;
+    ctx.stroke();
+
+    // центр
+    ctx.fillStyle = "#0b1a2b";
+    ctx.font = "700 28px Inter,Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${Math.round(percent)}%`, cx, cy-6);
+
+    ctx.fillStyle = "#5f6b7a";
+    ctx.font = "12px Inter,Arial";
+    ctx.fillText(centerText, cx, cy+18);
+
+    ctx.font = "11px Inter,Arial";
+    ctx.fillText(subText, cx, cy+36);
+
+    return canvas.toDataURL("image/png");
+  }
+
+  function donutPlaceholder(label){
+    const size=220, canvas=document.createElement("canvas");
+    canvas.width=size; canvas.height=size;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle="#e6edf6";
+    ctx.beginPath(); ctx.arc(size/2,size/2,85,0,Math.PI*2); ctx.lineWidth=18; ctx.stroke();
+    ctx.fillStyle="#5f6b7a"; ctx.textAlign="center";
+    ctx.font="700 18px Inter,Arial"; ctx.fillText("нет данных", size/2, size/2-6);
+    ctx.font="12px Inter,Arial"; ctx.fillText(label, size/2, size/2+18);
+    return canvas.toDataURL("image/png");
+  }
+
+  /* ==================== Экспорт презентации в HTML (только презентация, по вашим пунктам) ==================== */
   function exportPresHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
 
-    // Снимки графиков
+    // Снимки графиков с экрана
     const imgS2 = document.getElementById("chartBranches").toDataURL("image/png", 1.0);
     const imgS3 = document.getElementById("chartBranchesS3").toDataURL("image/png", 1.0);
     const imgS4 = document.getElementById("chartBranchesS4").toDataURL("image/png", 1.0);
 
-    // Готовые блоки
+    // План-Факт HTML
     const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "";
-    const kpisHTML     = document.getElementById("presKpis").innerHTML || "";
 
-    /* Таблицы для презентации: алфавитная сортировка (а→я) */
-    const collator = new Intl.Collator('ru');
-    const alpha    = rows => [...(rows||[])].sort((a,b)=>collator.compare(a.b, b.b));
-    const sumRow   = rows => rows.reduce((s,r)=>{const p=+r.p||0,c=+r.c||0,d=c-p; s.p+=p; s.c+=c; s.d+=d; return s;},{p:0,c:0,d:0});
-    const tableHTMLAlpha = (title, rows) => {
-      const sorted = alpha(rows||[]);
-      const s = sumRow(sorted);
-      return `<div style="font-weight:700;margin:6px 0">${title}</div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr>
-            <th style="text-align:left;border:1px solid #e6edf6;background:#0033A0;color:#fff;padding:8px">Филиал</th>
-            <th style="text-align:center;border:1px solid #e6edf6;background:#0033A0;color:#fff;padding:8px">Пред.</th>
-            <th style="text-align:center;border:1px solid #e6edf6;background:#0033A0;color:#fff;padding:8px">Тек.</th>
-            <th style="text-align:center;border:1px solid #e6edf6;background:#0033A0;color:#fff;padding:8px">Δ</th>
-          </tr></thead>
-          <tbody>
-            ${sorted.map(r=>{
-              const p=+r.p||0, c=+r.c||0, d=c-p;
-              const col = d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a');
-              return `<tr>
-                <td style="border:1px solid #e6edf6;padding:8px;text-align:left">${r.b}</td>
-                <td style="border:1px solid #e6edf6;padding:8px;text-align:center">${fmt(p)}</td>
-                <td style="border:1px solid #e6edf6;padding:8px;text-align:center">${fmt(c)}</td>
-                <td style="border:1px solid #e6edf6;padding:8px;text-align:center;color:${col}">${d>0?'+':''}${fmt(d)}</td>
-              </tr>`;
-            }).join("")}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td style="border:1px solid #e6edf6;padding:8px;font-weight:800;background:#f7f9fc;text-align:left">Итого</td>
-              <td style="border:1px solid #e6edf6;padding:8px;font-weight:800;background:#f7f9fc;text-align:center">${fmt(s.p)}</td>
-              <td style="border:1px solid #e6edf6;padding:8px;font-weight:800;background:#f7f9fc;text-align:center">${fmt(s.c)}</td>
-              <td style="border:1px solid #e6edf6;padding:8px;font-weight:800;background:#f7f9fc;text-align:center">${s.d>0?'+':''}${fmt(s.d)}</td>
-            </tr>
-          </tfoot>
-        </table>`;
-    };
+    // Парсим два показателя из План-Факт
+    const pf = parsePlanFactMetricsFromHTML(planfactHTML);
 
-    const s2TableAlpha = tableHTMLAlpha("Динамика по филиалам (всего)", dyn.branchRows || []);
-    const s3TableAlpha = tableHTMLAlpha("Динамика по Приказу №425",   dyn.branchRowsS3 || []);
-    const s4TableAlpha = tableHTMLAlpha("Динамика по ПАО «Ростелеком»", dyn.branchRowsS4 || []);
+    // Готовим изображения донатов
+    let imgPodves, imgRevenue;
+    if(pf.podves){
+      const p = pf.podves;
+      const percent = (p.planPct || p.factPct) ? (p.plan ? (p.fact / p.plan * 100) : 0) : (p.plan ? (p.fact / p.plan * 100) : 0);
+      imgPodves = donutImage(percent, "Доля подвеса", `Факт ${p.fact}${p.factPct?"%":""} / План ${p.plan}${p.planPct?"%":""}`);
+    }else{
+      imgPodves = donutPlaceholder("Доля подвеса");
+    }
+    if(pf.revenue){
+      const r = pf.revenue;
+      const percent = r.plan ? (r.fact / r.plan * 100) : 0;
+      imgRevenue = donutImage(percent, "Выручка", `Факт ${fmt(r.fact)} / План ${fmt(r.plan)}`);
+    }else{
+      imgRevenue = donutPlaceholder("Выручка");
+    }
 
-    /* Презентация */
+    // Сортировка для презентации (А→Я, ru)
+    const collator = new Intl.Collator("ru", {sensitivity:"base"});
+    const sortByBranch = (a,b)=>collator.compare(a.b, b.b);
+
+    const s2Sorted = [...dyn.branchRows].sort(sortByBranch);
+    const s3Sorted = [...(dyn.branchRowsS3||[])].sort(sortByBranch);
+    const s4Sorted = [...(dyn.branchRowsS4||[])].sort(sortByBranch);
+
+    // Пересборка HTML таблиц для презентации, уже отсортированных по филиалу
+    const tblS2HTML_sorted = presTableHTML("Динамика по филиалам (всего)", s2Sorted, ["sumPrev","sumCurr","sumDelta"]);
+    const tblS3HTML_sorted = presTableHTML("Динамика по Приказу №425", s3Sorted, ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
+    const tblS4HTML_sorted = presTableHTML("Динамика по ПАО «Ростелеком»", s4Sorted, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
+
+    // Матрица статусов — тоже сортируем по филиалу только для презентации
+    const s2BranchStagesSorted = [...dyn.s2BranchStages].sort((a,b)=>collator.compare(a.b,b.b));
+    const stagesHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted) + stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
+
+    // Компактные KPI строкой для слайда 2
+    const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
+    const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+    const sign = v=> v>0?"+":"";
+    const compactKPIs = `Ключевые показатели: В работе всего — ${fmt(curr.p1.totals.in_work_total)} (${sign(dyn.in_work_total)}${fmt(dyn.in_work_total)}); Выявлено — ${fmt(dyn.found_week)}; Закрыто — ${fmt(eff)}; РТК — ${fmt(curr.p1.totals.rtk_in_work)} (${sign(dyn.rtk_in_work)}${fmt(dyn.rtk_in_work)}, ${rtkShare.toFixed(1)}%).`;
+
     const presHTML = `<!DOCTYPE html>
 <html>
 <head>
@@ -957,71 +1121,85 @@
            box-shadow:0 10px 30px rgba(0,0,0,.18);padding:44px;box-sizing:border-box;
            page-break-after:always;border-radius:14px;border:1px solid #e6edf6;position:relative}
     h1{color:#0033A0;font-size:40px;margin:0 0 8px 0}
-    h2{color:#0033A0;font-size:30px;margin:10px 0 14px 0}
+    h2{color:#0033A0;font-size:30px;margin:0 0 14px 0}
     h3{color:#334155;font-size:20px;margin:8px 0}
     .muted{color:#5f6b7a}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .panel{border:1px solid #e6edf6;border-radius:12px;padding:12px;background:#fff}
-    .imgbox{border:1px solid #e6edf6;border-radius:12px;padding:8px;background:#fafcff}
+    .panel{border:1px solid #e6edf6;border-radius:12px;padding:12px}
+    .imgbox{border:1px solid #e6edf6;border-radius:12px;padding:8px;background:#fafcff;text-align:center}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{border:1px solid #e6edf6;padding:8px;text-align:center !important}
+    th:first-child, td:first-child{ text-align:left !important }
+    th{background:#0033A0;color:#fff;font-weight:700}
+    tfoot td{font-weight:800;background:#f7f9fc}
+    .legend{font-size:12px;color:#5f6b7a}
+    .subline{font-size:16px;color:#5f6b7a;margin:-6px 0 10px}
     .slide-no{position:absolute;bottom:22px;right:26px;color:#94a3b8;font-weight:700}
-    .kpis-inline{display:flex;flex-wrap:wrap;gap:8px}
-    .kpis-inline>div{display:inline-block;min-width:210px;margin-right:8px}
   </style>
 </head>
 <body>
 
-  <!-- 1. Первый слайд: АО + Выполнение БП + План-Факт -->
+  <!-- Слайд 1: Титул + План-Факт + 2 графика -->
   <div class="slide">
     <h1>АО «Россети Кубань»</h1>
-    <!-- Убрана строка с текстом "Динамика выявления бездоговорного размещения ВОЛС" -->
-    <h2>Выполнение плановых показателей БП</h2>
-    <div class="panel">
-      <h3 style="margin:0 0 8px 0">План-Факт</h3>
-      ${planfactHTML}
+    <div class="muted" style="font-size:18px;margin-bottom:12px">Выполнение плановых показателей БП</div>
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin:0 0 8px 0">План-Факт</h3>
+        ${planfactHTML}
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 8px 0">Графики выполнения</h3>
+        <div class="imgbox">
+          <div class="legend" style="margin-bottom:6px">Выполнение плана по доле подвеса</div>
+          <img src="${imgPodves}" alt="Выполнение плана по доле подвеса" style="width:240px;height:auto;display:inline-block"/>
+        </div>
+        <div class="imgbox" style="margin-top:12px">
+          <div class="legend" style="margin-bottom:6px">Выполнение плана по выручке</div>
+          <img src="${imgRevenue}" alt="Выполнение плана по выручке" style="width:240px;height:auto;display:inline-block"/>
+        </div>
+      </div>
     </div>
     <div class="slide-no">1</div>
   </div>
 
-  <!-- 2. Второй слайд: Динамика (итого) + KPI ниже -->
+  <!-- Слайд 2: Заголовок строго по тексту, слева график, справа таблица, ниже KPI строкой -->
   <div class="slide">
     <h2>Динамика выявления бездоговорного размещения ВОЛС в разрезе филиалов ЭС (итого):</h2>
-    <div class="grid2" style="margin-bottom:8px">
+    <div class="grid2">
       <div class="imgbox"><img src="${imgS2}" alt="График по филиалам (всего)" style="width:100%;height:auto"/></div>
-      <div class="panel">${s2TableAlpha}</div>
+      <div class="panel">${tblS2HTML_sorted}</div>
     </div>
-    <div class="panel">
-      <h3 style="margin:0 0 6px 0">Ключевые показатели</h3>
-      <div class="kpis-inline">${kpisHTML}</div>
-    </div>
+    <div class="legend" style="margin-top:10px">${compactKPIs}</div>
     <div class="slide-no">2</div>
   </div>
 
-  <!-- 3. Приказ 425 -->
+  <!-- Слайд 3: Приказ №425 + подзаголовок -->
   <div class="slide">
     <h2>Динамика по Приказу №425</h2>
-    <div class="muted" style="margin-top:-6px;margin-bottom:10px">В том числе: динамика по Приказу №425</div>
+    <div class="subline">В том числе: динамика по Приказу №425</div>
     <div class="grid2">
       <div class="imgbox"><img src="${imgS3}" alt="График по Приказу 425" style="width:100%;height:auto"/></div>
-      <div class="panel">${s3TableAlpha}</div>
+      <div class="panel">${tblS3HTML_sorted}</div>
     </div>
     <div class="slide-no">3</div>
   </div>
 
-  <!-- 4. ПАО Ростелеком -->
+  <!-- Слайд 4: ПАО «Ростелеком» + подзаголовок -->
   <div class="slide">
     <h2>Динамика по ПАО «Ростелеком»</h2>
-    <div class="muted" style="margin-top:-6px;margin-bottom:10px">В том числе: динамика по ПАО «Ростелеком»</div>
+    <div class="subline">В том числе: динамика по ПАО «Ростелеком»</div>
     <div class="grid2">
       <div class="imgbox"><img src="${imgS4}" alt="График по ПАО Ростелеком" style="width:100%;height:auto"/></div>
-      <div class="panel">${s4TableAlpha}</div>
+      <div class="panel">${tblS4HTML_sorted}</div>
     </div>
     <div class="slide-no">4</div>
   </div>
 
-  <!-- 5. Динамика по статусам -->
+  <!-- Слайд 5: Динамика по статусам (таблица отсортирована по филиалам) -->
   <div class="slide">
     <h2>Динамика по статусам</h2>
-    <div class="panel">${document.getElementById("presStages").innerHTML}</div>
+    <div class="panel">${stagesHTML_sorted}</div>
     <div class="slide-no">5</div>
   </div>
 
@@ -1030,8 +1208,7 @@
 
     const blob = new Blob([presHTML], {type: 'text/html; charset=utf-8'});
     triggerDownload(blob, `Презентация_ВОЛС_${curr.date.replace(/\./g,'-')}.html`);
-    document.getElementById("exportStatus").textContent =
-      "HTML презентация сохранена (слайды и сортировка по ТЗ).";
+    document.getElementById("exportStatus").textContent = "HTML презентация сохранена: слайд 1 (План-Факт + 2 графика), слайд 2 (заголовок по ТЗ + KPI строкой), слайды 3–4 с подзаголовками; таблицы отсортированы А→Я только для презентации.";
   }
 
   /* ==================== Вспомогательные ==================== */
