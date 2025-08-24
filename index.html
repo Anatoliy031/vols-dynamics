@@ -25,7 +25,6 @@
       --warn:#b36b00;
       --shadow:0 10px 28px rgba(2,12,27,.08);
       --radius:14px;
-      --radius-lg:16px;
       --ring: 0 0 0 3px rgba(0,51,160,.18);
       --focus: 0 0 0 3px rgba(0,174,239,.28);
     }
@@ -356,12 +355,17 @@
   </div>
 
   <!-- Библиотеки -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
+  <!-- Chart & html2pdf можно как раньше -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <script>
+  /* ==================== Глобальный обработчик ошибок, чтобы не было "мертвой" кнопки ==================== */
+  window.addEventListener('error', e=>{
+    const box=document.getElementById('errorMsg'); 
+    if(box && !box.textContent){ box.textContent = 'Ошибка: ' + (e.message||e.error||'неизвестно'); }
+  });
+
   /* ==================== Визуальные настройки Chart.js (без изменения логики) ==================== */
   (function(){
     if(window.Chart){
@@ -377,6 +381,48 @@
       Chart.defaults.plugins.tooltip.titleColor = "#fff";
       Chart.defaults.plugins.tooltip.bodyColor = "#e5e7eb";
     }
+  })();
+
+  /* ==================== Надежная загрузка pdf.js (3 CDN + guard) ==================== */
+  let __pdfReady = (function(){
+    const cdns = [
+      {lib:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+       worker:"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"},
+      {lib:"https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+       worker:"https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"},
+      {lib:"https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js",
+       worker:"https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js"},
+    ];
+    function loadScript(src){
+      return new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src=src; s.async=true;
+        s.onload=()=>resolve();
+        s.onerror=()=>reject(new Error('Не загрузился: '+src));
+        document.head.appendChild(s);
+      });
+    }
+    return (async ()=>{
+      if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
+        // уже загружен где-то — просто вернемся
+        return true;
+      }
+      let loadedIdx = -1, lastErr=null;
+      for(let i=0;i<cdns.length;i++){
+        try{ await loadScript(cdns[i].lib); loadedIdx=i; break; }
+        catch(e){ lastErr=e; console.warn(e); }
+      }
+      if(loadedIdx<0){
+        const box=document.getElementById('errorMsg');
+        if(box){ box.textContent='Не удалось загрузить PDF.js. Проверьте интернет/блокировки CDN.'; }
+        console.error(lastErr);
+        return false;
+      }
+      if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
+        pdfjsLib.GlobalWorkerOptions.workerSrc = cdns[loadedIdx].worker;
+      }
+      return true;
+    })();
   })();
 
   /* ==================== Константы и утилиты ==================== */
@@ -439,6 +485,8 @@
 
   /* ==================== Чтение PDF ==================== */
   async function pdfToPages(file){
+    const ready = await __pdfReady;
+    if(!ready || !window.pdfjsLib) throw new Error("PDF.js не загружен.");
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({data:buf}).promise;
     const pages = [];
@@ -847,7 +895,6 @@
     const s2Totals = stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
     document.getElementById("presStages").innerHTML = s2Matrix + s2Totals;
 
-    // Инсайты/Топ – по требованию скрыты
     const presIns = document.getElementById("presInsights");
     if (presIns) presIns.style.display = "none";
   }
@@ -897,7 +944,7 @@
       document.getElementById("briefPlanFactInner").innerHTML = caption + table.outerHTML;
     }catch(e){
       console.warn("Не удалось вставить таблицу Google Sheets:", e);
-      const fallback = `<div class="note">План-Факт: не удалось получить HTML таблицы. <a href="https://docs.google.com/spreadsheets/d/1Y9bM7zLRf_gonMUgfQLl57Iу3NgPa78rBXnpxkKLvO0/edit?usp=drivesdk" target="_blank" rel="noopener">Открыть по ссылке</a></div>`;
+      const fallback = `<div class="note">План-Факт: не удалось получить HTML таблицы. <a href="https://docs.google.com/spreadsheets/d/1Y9bM7zLRf_gonMUgfQLl57Iu3NgPa78rBXnpxkKLvO0/edit?usp=drivesdk" target="_blank" rel="noopener">Открыть по ссылке</a></div>`;
       document.getElementById("presPlanFactInner").innerHTML = fallback;
       document.getElementById("briefPlanFactInner").innerHTML = fallback;
     }
@@ -937,7 +984,7 @@
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
-    const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+    const rtkShare = curr.p1.totals.in_work_total ? (.curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
 
     const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "<div>План-Факт недоступен</div>";
 
@@ -999,82 +1046,7 @@
     document.getElementById("exportStatus").textContent = "HTML отчет сохранен. Откройте в браузере или Word.";
   }
 
-  /* ==================== ВСПОМОГАТЕЛЬНОЕ ДЛЯ СЛАЙДА 1 (донаты по План-Факт) ==================== */
-  function parsePlanFactMetricsFromHTML(pfHTML){
-    const res = { podves:null, revenue:null, hasData:false };
-    if(!pfHTML) return res;
-    const tmp = document.createElement("div");
-    tmp.innerHTML = pfHTML;
-    const table = tmp.querySelector("table");
-    if(!table) return res;
-
-    const rows = Array.from(table.querySelectorAll("tr"));
-    if(!rows.length) return res;
-
-    // Определяем индексы колонок План/Факт (если есть в заголовке)
-    let colPlan = -1, colFact = -1;
-    const headCells = Array.from(rows[0].querySelectorAll("th,td")).map(c=>c.textContent.trim().toLowerCase());
-    headCells.forEach((t,i)=>{
-      if(colPlan===-1 && /план/.test(t)) colPlan = i;
-      if(colFact===-1 && /факт/.test(t)) colFact = i;
-    });
-
-    function pickNumbers(cells){
-      const nums = [];
-      for(const c of cells){
-        const txt = c.textContent.replace(/\u00A0|\u202F/g,' ').trim();
-        const matches = txt.match(/-?\d{1,3}(?:[\s\u00A0\u202F]?\d{3})*(?:[.,]\d+)?%?/g);
-        if(matches){
-          for(const m of matches){
-            const isPct = /%/.test(m);
-            const val = Number(m.replace('%','').replace(/\s/g,'').replace(',','.'));
-            if(!isNaN(val)) nums.push({val, isPct});
-          }
-        }
-      }
-      return nums;
-    }
-
-    function rowToPlanFact(row){
-      const cells = Array.from(row.querySelectorAll("td,th"));
-      let plan=null, fact=null, planPct=false, factPct=false;
-      if(colPlan>=0 && colPlan<cells.length) {
-        const m = pickNumbers([cells[colPlan]])[0];
-        if(m){ plan = m.val; planPct = !!m.isPct; }
-      }
-      if(colFact>=0 && colFact<cells.length) {
-        const m = pickNumbers([cells[colFact]])[0];
-        if(m){ fact = m.val; factPct = !!m.isPct; }
-      }
-      if(plan===null || fact===null){
-        const nums = pickNumbers(cells);
-        if(nums.length>=2){
-          if(plan===null){ plan = nums[0].val; planPct = !!nums[0].isPct; }
-          if(fact===null){ fact = nums[1].val; factPct = !!nums[1].isPct; }
-        }
-      }
-      if(plan===null || fact===null) return null;
-      return {plan, fact, planPct, factPct};
-    }
-
-    function findByKeys(keys){
-      const re = new RegExp(keys.join("|"), "i");
-      for(const r of rows){
-        const txt = r.textContent || "";
-        if(re.test(txt)) return rowToPlanFact(r);
-      }
-      return null;
-    }
-
-    const podves = findByKeys(["доля\\s*подвеса","подвес"]);
-    const revenue = findByKeys(["выручк"]);
-
-    if(podves){ res.podves = podves; res.hasData = true; }
-    if(revenue){ res.revenue = revenue; res.hasData = true; }
-
-    return res;
-  }
-
+  /* ==================== Донаты-диаграммы (пригодится позже) ==================== */
   function donutImage(percent, centerText, subText){
     const size = 220, cx=size/2, cy=size/2, r=85, thickness=18;
     const canvas = document.createElement("canvas");
@@ -1113,7 +1085,6 @@
 
     return canvas.toDataURL("image/png");
   }
-
   function donutPlaceholder(label){
     const size=220, canvas=document.createElement("canvas");
     canvas.width=size; canvas.height=size;
@@ -1127,7 +1098,7 @@
     return canvas.toDataURL("image/png");
   }
 
-  /* ==================== Экспорт презентации в HTML (только презентация) ==================== */
+  /* ==================== Экспорт презентации в HTML ==================== */
   function exportPresHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
@@ -1187,7 +1158,7 @@
 </head>
 <body>
 
-  <!-- Слайд 1: Только заголовок и План-Факт -->
+  <!-- Слайд 1 -->
   <div class="slide">
     <h1>Выполнение плановых показателей БП по размещению ВОЛС на ВЛ</h1>
     <div class="panel">
@@ -1254,62 +1225,67 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#0033A0";
   }
 
-  /* ==================== Инициализация ==================== */
+  /* ==================== Инициализация (DOMContentLoaded) ==================== */
   let DATA = null;
 
-  document.getElementById("btnParse").addEventListener("click", async () => {
-    const fPrev = document.getElementById("filePrev").files[0];
-    const fCurr = document.getElementById("fileCurr").files[0];
-    if(!fPrev || !fCurr){ document.getElementById("errorMsg").textContent = "Загрузите оба PDF: предыдущий и текущий."; return; }
+  window.addEventListener('DOMContentLoaded', () => {
+    const errBox = document.getElementById("errorMsg");
 
-    try{
-      document.getElementById("loadingMsg").style.display = "block";
-      document.getElementById("errorMsg").textContent = "";
-
-      const [pPrev, pCurr] = await Promise.all([pdfToPages(fPrev), pdfToPages(fCurr)]);
-      const prev = parseReportByPages(pPrev);
-      const curr = parseReportByPages(pCurr);
-      const dyn = computeDynamics(curr, prev);
-      DATA = {prev, curr, dyn};
-
-      document.getElementById("dates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
-      renderKpis(curr, prev, dyn);
-      renderBranchesTable(dyn.branchRows, "#tblBranches tbody", "sumPrev", "sumCurr", "sumDelta");
-      renderBranchesTable(dyn.branchRowsS3, "#tblBranchesS3 tbody", "sumPrevS3", "sumCurrS3", "sumDeltaS3");
-      renderBranchesTable(dyn.branchRowsS4, "#tblBranchesS4 tbody", "sumPrevS4", "sumCurrS4", "sumDeltaS4");
-      renderCharts(curr, prev, dyn);
-      renderStagesTables(dyn);
-      buildPresentationHTML(curr, prev, dyn);
-      document.getElementById("briefDates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
-      buildSummaryBlocks(curr, prev, dyn);
-      await injectPlanFactHTML();
-
-      document.getElementById("loadingMsg").style.display = "none";
-    }catch(e){
-      console.error(e);
-      document.getElementById("loadingMsg").style.display = "none";
-      document.getElementById("errorMsg").textContent = "Ошибка разбора PDF. Проверьте формат отчётов. Подробности в консоли.";
+    const parseBtn = document.getElementById("btnParse");
+    if(!parseBtn){
+      if(errBox){ errBox.textContent = 'Кнопка "Проанализировать" не найдена в DOM.'; }
+      return;
     }
-  });
 
-  document.getElementById("exportPresPDF").addEventListener("click", async () => {
-    if(!DATA) return alert("Сначала проанализируйте отчёты.");
-    await exportPresPDF();
-  });
-  document.getElementById("exportBriefPDF").addEventListener("click", async () => {
-    if(!DATA) return alert("Сначала проанализируйте отчёты.");
-    await exportBriefPDF();
-  });
-  document.getElementById("exportWordHTML").addEventListener("click", () => {
-    exportWordHTML();
-  });
-  document.getElementById("exportPresHTML").addEventListener("click", () => {
-    exportPresHTML();
-  });
+    parseBtn.addEventListener("click", async () => {
+      const fPrev = document.getElementById("filePrev").files[0];
+      const fCurr = document.getElementById("fileCurr").files[0];
+      if(!fPrev || !fCurr){ errBox.textContent = "Загрузите оба PDF: предыдущий и текущий."; return; }
 
-  /* Компактный режим */
-  document.getElementById("btnCompact").addEventListener("click", ()=>{
-    document.body.classList.toggle("compact");
+      try{
+        document.getElementById("loadingMsg").style.display = "block";
+        errBox.textContent = "";
+
+        await __pdfReady; // убеждаемся, что pdf.js готов
+        const [pPrev, pCurr] = await Promise.all([pdfToPages(fPrev), pdfToPages(fCurr)]);
+        const prev = parseReportByPages(pPrev);
+        const curr = parseReportByPages(pCurr);
+        const dyn  = computeDynamics(curr, prev);
+        DATA = {prev, curr, dyn};
+
+        document.getElementById("dates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
+        renderKpis(curr, prev, dyn);
+        renderBranchesTable(dyn.branchRows, "#tblBranches tbody", "sumPrev", "sumCurr", "sumDelta");
+        renderBranchesTable(dyn.branchRowsS3, "#tblBranchesS3 tbody", "sumPrevS3", "sumCurrS3", "sumDeltaS3");
+        renderBranchesTable(dyn.branchRowsS4, "#tblBranchesS4 tbody", "sumPrevS4", "sumCurrS4", "sumDeltaS4");
+        renderCharts(curr, prev, dyn);
+        renderStagesTables(dyn);
+        buildPresentationHTML(curr, prev, dyn);
+        document.getElementById("briefDates").textContent = `Предыдущий: ${prev.date} · Текущий: ${curr.date}`;
+        buildSummaryBlocks(curr, prev, dyn);
+        await injectPlanFactHTML();
+      }catch(e){
+        console.error(e);
+        if(errBox) errBox.textContent = "Ошибка разбора PDF. Подробности в консоли.";
+      }finally{
+        document.getElementById("loadingMsg").style.display = "none";
+      }
+    });
+
+    // Экспортные кнопки
+    document.getElementById("exportPresPDF").addEventListener("click", async () => {
+      if(!DATA) return alert("Сначала проанализируйте отчёты."); await exportPresPDF();
+    });
+    document.getElementById("exportBriefPDF").addEventListener("click", async () => {
+      if(!DATA) return alert("Сначала проанализируйте отчёты."); await exportBriefPDF();
+    });
+    document.getElementById("exportWordHTML").addEventListener("click", () => { exportWordHTML(); });
+    document.getElementById("exportPresHTML").addEventListener("click", () => { exportPresHTML(); });
+
+    // Компактный режим
+    document.getElementById("btnCompact").addEventListener("click", ()=>{
+      document.body.classList.toggle("compact");
+    });
   });
   </script>
 </body>
