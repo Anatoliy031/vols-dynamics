@@ -15,6 +15,8 @@
       --rs-blue-600:#0A47C6;
       --rs-accent:#00AEEF;
       --bg:#f4f7fb;
+      --bg-2: radial-gradient(1200px 600px at 20% -10%, rgba(0,51,160,.06), transparent 60%),
+              radial-gradient(900px 500px at 110% -20%, rgba(0,174,239,.07), transparent 60%), #f4f7fb;
       --card:#ffffff;
       --border:#e6edf6;
       --ink:#0b1a2b;
@@ -22,26 +24,36 @@
       --ok:#0a7a2d;
       --bad:#b00020;
       --warn:#b36b00;
-      --shadow:0 6px 22px rgba(0,0,0,.06);
+      --shadow:0 10px 30px rgba(16,24,40,.06);
+      --shadow-sm:0 6px 22px rgba(0,0,0,.06);
       --radius:14px;
+      --radius-sm:12px;
+      --focus:#87b1ff55;
     }
 
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    html,body{margin:0;padding:0;background:var(--bg-2);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
     img{max-width:100%;display:block}
+    :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:10px}
 
     /* ====== Шапка ====== */
     header{
-      position:sticky;top:0;z-index:10;
-      background:linear-gradient(90deg,var(--rs-blue),var(--rs-blue-600));
-      color:#fff;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.15);
-      box-shadow:0 6px 16px rgba(0,0,0,.08)
+      position:sticky;top:0;z-index:20;
+      background:
+        linear-gradient(90deg,rgba(255,255,255,.02),rgba(255,255,255,0)) ,
+        linear-gradient(90deg,var(--rs-blue) 0%, var(--rs-blue-600) 100%);
+      color:#fff;
+      padding:16px 18px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+      backdrop-filter:saturate(120%) blur(2px);
     }
     .brand{display:flex;gap:12px;align-items:center;font-weight:800;letter-spacing:.2px}
     .brand .logo-dot{width:14px;height:14px;border-radius:50%;background:#fff;opacity:.95;box-shadow:0 0 0 3px rgba(255,255,255,.2)}
+    .brand-sub{font-size:12px;opacity:.9;font-weight:600;margin-left:8px}
 
     /* ====== Макет ====== */
-    .container{max-width:1280px;margin:20px auto;padding:0 16px}
+    .container{max-width:1280px;margin:22px auto;padding:0 16px}
     .grid{display:grid;gap:14px}
     .cols-2{grid-template-columns:1fr 1fr}
     .cols-3{grid-template-columns:repeat(3,1fr)}
@@ -49,27 +61,38 @@
     @media(max-width:860px){.cols-2{grid-template-columns:1fr}}
 
     .card{
-      background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-      padding:14px 14px;box-shadow:var(--shadow)
+      background:linear-gradient(0deg,#fff, #fff), radial-gradient(1000px 300px at 100% -40%, rgba(0,174,239,.06), transparent 60%);
+      border:1px solid var(--border);border-radius:var(--radius);
+      padding:14px 14px;box-shadow:var(--shadow-sm)
     }
-    h2{margin:2px 0 8px 0;font-size:18px}
+    h2{margin:2px 0 8px 0;font-size:18px;font-weight:800;letter-spacing:.2px}
     .sub{color:var(--muted);font-size:12px}
 
     /* ====== Элементы формы ====== */
     .inputs{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .pill{
       display:inline-flex;align-items:center;gap:10px;
-      border:1px dashed var(--border);background:#fff;border-radius:12px;padding:10px 12px
+      border:1px dashed var(--border);background:#fff;border-radius:12px;padding:10px 12px;
+      transition:background .2s, border-color .2s, transform .08s ease;
     }
+    .pill:hover{background:#f9fbff;border-color:#d9e6ff}
+    .pill:active{transform:scale(.98)}
     input[type=file]{border:none}
     button{cursor:pointer}
-    .btn{border-radius:12px;padding:10px 12px;font-weight:700}
-    .btn.primary{background:var(--rs-blue);color:#fff;border:1px solid var(--rs-blue)}
+    .btn{border-radius:12px;padding:10px 12px;font-weight:800;letter-spacing:.2px;display:inline-flex;gap:8px;align-items:center;
+         transition:transform .08s ease, box-shadow .2s, background .2s, border-color .2s}
+    .btn svg{width:16px;height:16px}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:var(--rs-blue);color:#fff;border:1px solid var(--rs-blue);box-shadow:0 4px 14px rgba(0,51,160,.25)}
+    .btn.primary:hover{background:#0a3eb7}
     .btn.secondary{background:#fff;color:var(--rs-blue);border:1px solid var(--rs-blue)}
+    .btn.secondary:hover{background:#f3f7ff}
     .btn.ghost{background:transparent;border:1px dashed var(--border);color:var(--muted)}
+    .btn.ghost:hover{background:#f9fbff;border-color:#d9e6ff}
 
     .exports{display:flex;flex-wrap:wrap;gap:8px}
     .note{font-size:12px;color:var(--muted)}
+    .hr{height:1px;background:var(--border);margin:10px 0}
 
     /* ====== KPI ====== */
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -77,19 +100,20 @@
     @media(max-width:560px){.kpis{grid-template-columns:1fr}}
     .kpi{
       border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff;
-      display:grid;gap:6px
+      display:grid;gap:6px;position:relative;overflow:hidden
     }
-    .kpi .title{color:var(--muted);font-size:12px;font-weight:600}
-    .kpi .value{font-size:22px;font-weight:800}
-    .kpi .delta{font-size:12px}
+    .kpi::after{content:"";position:absolute;inset:auto -20% -40% -20%;height:70px;background:radial-gradient(200px 60px at 50% 0,rgba(0,174,239,.1),transparent 60%)}
+    .kpi .title{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.2px}
+    .kpi .value{font-size:22px;font-weight:800;letter-spacing:.2px}
+    .kpi .delta{font-size:12px;font-weight:800}
     .up{color:var(--ok)} .down{color:var(--bad)} .muted{color:var(--muted)}
 
     /* ====== Таблицы ====== */
-    .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px}
+    .table-wrap{max-height:440px;overflow:auto;border:1px solid var(--border);border-radius:12px;background:#fff}
     table{width:100%;border-collapse:collapse;font-size:12px}
     thead th{
-      position:sticky;top:0;background:#f7f9fc;border-bottom:1px solid var(--border);
-      padding:8px;text-align:right;font-weight:700;z-index:1
+      position:sticky;top:0;background:linear-gradient(0deg,#f7f9fc,#f7f9fc);
+      border-bottom:1px solid var(--border);padding:8px;text-align:right;font-weight:800;z-index:1
     }
     thead th:first-child{text-align:left}
     tbody td{padding:8px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums}
@@ -100,23 +124,27 @@
 
     /* Узкие версии */
     .compact table{font-size:11px}
-    .hr{height:1px;background:var(--border);margin:10px 0}
 
     /* Холсты графиков */
-    .chart-box{height:360px}
+    .chart-box{height:380px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm);padding:10px}
     canvas{width:100% !important;height:100% !important}
 
     /* Матрица статусов */
     .status-matrix-wrap{overflow-x:auto;overflow-y:hidden;width:100%}
-    .status-matrix{min-width:600px}
+    .status-matrix{min-width:760px}
     .status-matrix th,.status-matrix td{padding:6px}
 
-    /* Печатные области */
-    #presentationPrint,#summaryPrint{background:#fff;padding:14px;border:1px solid var(--border);border-radius:12px}
+    /* Печатные области (для PDF/выжимок) */
+    #presentationPrint,#summaryPrint{
+      background:#fff;padding:16px;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm)
+    }
+    #presentationPrint h3,#summaryPrint h3{color:var(--rs-blue);margin:8px 0 6px}
+    #presentationPrint table th,#summaryPrint table th{background:var(--rs-blue);color:#fff}
+    #presentationPrint table td,#presentationPrint table th,
+    #summaryPrint table td,#summaryPrint table th{border:1px solid #e7edf5}
+    #presentationPrint table tr:nth-child(even),#summaryPrint table tr:nth-child(even){background:#fafcff}
     .logoTitle{font-weight:800;color:var(--rs-blue);font-size:20px;margin-bottom:6px}
-
-    /* Убираем «Топ/Инсайты» на сайте везде */
-    .insights-card{display:none !important}
+    .avoid-break{break-inside:avoid}
 
     /* Принт */
     @media print{
@@ -124,7 +152,8 @@
       .table-wrap{max-height:none;overflow:visible}
       .status-matrix th,.status-matrix td{padding:4px}
       .compact table{font-size:10px}
-      #presentationPrint,#summaryPrint{padding:10mm}
+      #presentationPrint,#summaryPrint{padding:10mm;box-shadow:none;border:none}
+      table, tr, td, th{break-inside:avoid}
     }
   </style>
 </head>
@@ -133,6 +162,7 @@
     <div class="brand">
       <span class="logo-dot"></span>
       <span>АО «Россети Кубань» — ВОЛС: аналитика и отчётность</span>
+      <span class="brand-sub">корпоративный формат • еженедельно</span>
     </div>
   </header>
 
@@ -141,14 +171,21 @@
     <section class="card">
       <h2>Загрузка отчётов (PDF)</h2>
       <div class="inputs">
-        <label class="pill">Предыдущая неделя (PDF)
+        <label class="pill" title="Загрузить PDF предыдущей недели">Предыдущая неделя (PDF)
           <input id="filePrev" type="file" accept="application/pdf">
         </label>
-        <label class="pill">Текущая неделя (PDF)
+        <label class="pill" title="Загрузить PDF текущей недели">Текущая неделя (PDF)
           <input id="fileCurr" type="file" accept="application/pdf">
         </label>
-        <button id="btnParse" class="btn primary">Проанализировать</button>
-        <button id="btnCompact" class="btn ghost" title="Ужать таблицы и графики">Компактный режим</button>
+        <button id="btnParse" class="btn primary" title="Проанализировать PDF">
+          <!-- icon -->
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 4h13v13H3V4zm13 0 5 5v8h-5V4zM8 8h3m-6 3h9" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Проанализировать
+        </button>
+        <button id="btnCompact" class="btn ghost" title="Ужать таблицы и графики">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 8h16M4 12h10M4 16h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Компактный режим
+        </button>
       </div>
       <div class="note" id="dates" style="margin-top:6px">Даты отчётов: —</div>
       <div class="note" style="margin-top:4px">«Выявлено за неделю» = «В работе всего, шт.» (текущая − предыдущая).</div>
@@ -160,10 +197,22 @@
     <section class="card">
       <h2>Выгрузки (формат Россети)</h2>
       <div class="exports">
-        <button class="btn secondary" id="exportPresPDF">Скачать презентацию (PDF)</button>
-        <button class="btn secondary" id="exportBriefPDF">Скачать выжимку (PDF)</button>
-        <button class="btn secondary" id="exportWordHTML">Скачать отчет (Word HTML)</button>
-        <button class="btn secondary" id="exportPresHTML">Скачать презентацию (HTML)</button>
+        <button class="btn secondary" id="exportPresPDF" title="Сохранить презентацию в PDF">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Скачать презентацию (PDF)
+        </button>
+        <button class="btn secondary" id="exportBriefPDF" title="Сохранить выжимку в PDF">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 7h12M6 12h12M6 17h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Скачать выжимку (PDF)
+        </button>
+        <button class="btn secondary" id="exportWordHTML" title="Сохранить отчет в Word-совместимом HTML">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h10l6 6v10H4V4zm10 0v6h6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m7 9 1.8 6L11 9l2.2 6L15 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Скачать отчет (Word HTML)
+        </button>
+        <button class="btn secondary" id="exportPresHTML" title="Сохранить презентацию в виде HTML-слайдов">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h10M4 18h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Скачать презентацию (HTML)
+        </button>
       </div>
       <div class="note" id="exportStatus" style="margin-top:6px"></div>
     </section>
@@ -184,7 +233,7 @@
     <section class="card">
       <h2>Таблица (стр. 2) — Δ «Всего опор, шт.»</h2>
       <div class="table-wrap">
-        <table id="tblBranches">
+        <table id="tblBranches" class="avoid-break">
           <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
           <tbody></tbody>
           <tfoot><tr><td>Итого</td><td id="sumPrev">0</td><td id="sumCurr">0</td><td id="sumDelta">0</td></tr></tfoot>
@@ -202,7 +251,7 @@
     <section class="card">
       <h2>Таблица (стр. 3) — Δ «Всего опор, шт.»</h2>
       <div class="table-wrap">
-        <table id="tblBranchesS3">
+        <table id="tblBranchesS3" class="avoid-break">
           <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
           <tbody></tbody>
           <tfoot><tr><td>Итого</td><td id="sumPrevS3">0</td><td id="sumCurrS3">0</td><td id="sumDeltaS3">0</td></tr></tfoot>
@@ -220,7 +269,7 @@
     <section class="card">
       <h2>Таблица (стр. 4) — Δ «Всего опор, шт.»</h2>
       <div class="table-wrap">
-        <table id="tblBranchesS4">
+        <table id="tblBranchesS4" class="avoid-break">
           <thead><tr><th>Филиал</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
           <tbody></tbody>
           <tfoot><tr><td>Итого</td><td id="sumPrevS4">0</td><td id="sumCurrS4">0</td><td id="sumDeltaS4">0</td></tr></tfoot>
@@ -241,7 +290,7 @@
     <section class="card">
       <h2>Стр. 2 — Стадии (прирост)</h2>
       <div class="table-wrap">
-        <table id="tblStagesS2">
+        <table id="tblStagesS2" class="avoid-break">
           <thead><tr><th>Стадия</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -250,7 +299,7 @@
     <section class="card">
       <h2>Стр. 4 (РТК) — Стадии (прирост)</h2>
       <div class="table-wrap">
-        <table id="tblStagesS4">
+        <table id="tblStagesS4" class="avoid-break">
           <thead><tr><th>Стадия</th><th>Пред., шт.</th><th>Тек., шт.</th><th>Δ, шт.</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -272,13 +321,13 @@
     <div id="presDates" class="note" style="margin:4px 0 8px"></div>
     <div id="presKpis" class="section"></div>
     <div class="hr"></div>
-    <div id="presTable" class="section"></div>
+    <div id="presTable" class="section avoid-break"></div>
     <div class="hr"></div>
-    <div id="presTableS3" class="section"></div>
+    <div id="presTableS3" class="section avoid-break"></div>
     <div class="hr"></div>
-    <div id="presTableS4" class="section"></div>
+    <div id="presTableS4" class="section avoid-break"></div>
     <div class="hr"></div>
-    <div id="presStages" class="section"></div>
+    <div id="presStages" class="section avoid-break"></div>
     <div class="hr"></div>
     <!-- Блок инсайтов скрыт/не используется -->
     <div id="presInsights" class="section" style="display:none"></div>
@@ -652,31 +701,31 @@
 
   /* ==================== Презентация (печатный HTML-блок для PDF/выжимки) ==================== */
   function presTableHTML(title, rows, sumIds){
-    return `<div style="font-weight:700;margin:6px 0">${title}</div>
+    return `<div style="font-weight:800;margin:6px 0">${title}</div>
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead><tr>
-          <th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Филиал</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Пред.</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Тек.</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Δ</th>
+          <th style="text-align:left;border-bottom:1px solid #e7edf5;padding:6px">Филиал</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Пред.</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Тек.</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Δ</th>
         </tr></thead>
         <tbody>
           ${rows.map(r => {
             const p=Number(r.p)||0,c=Number(r.c)||0,d=c-p;
             return `<tr>
-              <td style="padding:4px">${r.b}</td>
-              <td style="padding:4px;text-align:right">${fmt(p)}</td>
-              <td style="padding:4px;text-align:right">${fmt(c)}</td>
-              <td style="padding:4px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>
+              <td style="padding:6px">${r.b}</td>
+              <td style="padding:6px;text-align:right">${fmt(p)}</td>
+              <td style="padding:6px;text-align:right">${fmt(c)}</td>
+              <td style="padding:6px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>
             </tr>`;
           }).join("")}
         </tbody>
         <tfoot>
           <tr>
-            <td style="padding:4px;font-weight:800">Итого</td>
-            <td style="padding:4px;text-align:right;font-weight:800">${document.getElementById(sumIds[0]).textContent}</td>
-            <td style="padding:4px;text-align:right;font-weight:800">${document.getElementById(sumIds[1]).textContent}</td>
-            <td style="padding:4px;text-align:right;font-weight:800">${document.getElementById(sumIds[2]).textContent}</td>
+            <td style="padding:6px;font-weight:800">Итого</td>
+            <td style="padding:6px;text-align:right;font-weight:800">${document.getElementById(sumIds[0]).textContent}</td>
+            <td style="padding:6px;text-align:right;font-weight:800">${document.getElementById(sumIds[1]).textContent}</td>
+            <td style="padding:6px;text-align:right;font-weight:800">${document.getElementById(sumIds[2]).textContent}</td>
           </tr>
         </tfoot>
       </table>`;
@@ -684,26 +733,26 @@
 
   function stageMatrixHTML(title, branchStages){
     const cols = STATUS_KEYS;
-    const head = cols.map(k=>`<th style="text-align:right;border-bottom:1px solid #e7edf5;padding:3px 4px;white-space:nowrap">${SHORT_STAGE_TITLE(k)}</th>`).join("");
+    const head = cols.map(k=>`<th style="text-align:right;border-bottom:1px solid #e7edf5;padding:5px 6px;white-space:nowrap">${SHORT_STAGE_TITLE(k)}</th>`).join("");
     let totals = {}; cols.forEach(k=>totals[k]=0);
 
     const body = branchStages.map(row=>{
       const cells = cols.map(k=>{
         const d = (row.by[k]?.d)||0; totals[k]+=d;
-        return `<td style="padding:3px 4px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>`;
+        return `<td style="padding:5px 6px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>`;
       }).join("");
-      return `<tr><td style="padding:3px 4px">${row.b}</td>${cells}</tr>`;
+      return `<tr><td style="padding:5px 6px">${row.b}</td>${cells}</tr>`;
     }).join("");
 
     const totalRow = `<tr>
-      <td style="padding:3px 4px;font-weight:800">Итого Δ</td>
-      ${cols.map(k=>`<td style="padding:3px 4px;text-align:right;font-weight:800;color:${totals[k]>0?'#0a7a2d':(totals[k]<0?'#b00020':'#5f6b7a')}">${totals[k]>0?'+':''}${fmt(totals[k])}</td>`).join("")}
+      <td style="padding:6px;text-align:left;font-weight:800">Итого Δ</td>
+      ${cols.map(k=>`<td style="padding:6px;text-align:right;font-weight:800;color:${totals[k]>0?'#0a7a2d':(totals[k]<0?'#b00020':'#5f6b7a')}">${totals[k]>0?'+':''}${fmt(totals[k])}</td>`).join("")}
     </tr>`;
 
-    return `<div style="font-weight:700;margin:8px 0">${title}</div>
+    return `<div style="font-weight:800;margin:10px 0">${title}</div>
       <div class="status-matrix-wrap">
-        <table class="status-matrix" style="width:100%;border-collapse:collapse;font-size:10px">
-          <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:3px 4px">Филиал</th>${head}</tr></thead>
+        <table class="status-matrix" style="width:100%;border-collapse:collapse;font-size:10.5px">
+          <thead><tr><th style="text-align:left;border-bottom:1px solid #e7edf5;padding:5px 6px">Филиал</th>${head}</tr></thead>
           <tbody>${body}</tbody>
           <tfoot>${totalRow}</tfoot>
         </table>
@@ -711,22 +760,22 @@
   }
 
   function stageTotalsHTML(title, totalsArray){
-    return `<div style="margin:6px 0 4px;font-weight:700">${title}</div>
+    return `<div style="margin:8px 0 6px;font-weight:800">${title}</div>
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead><tr>
-          <th style="text-align:left;border-bottom:1px solid #e7edf5;padding:4px">Стадия</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Пред.</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Тек.</th>
-          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:4px">Δ</th>
+          <th style="text-align:left;border-bottom:1px solid #e7edf5;padding:6px">Стадия</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Пред.</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Тек.</th>
+          <th style="text-align:right;border-bottom:1px solid #e7edf5;padding:6px">Δ</th>
         </tr></thead>
         <tbody>
           ${totalsArray.map(r=>{
             const p=Number(r.p)||0,c=Number(r.c)||0,d=c-p;
             return `<tr>
-              <td style="padding:4px">${r.stage}</td>
-              <td style="padding:4px;text-align:right">${fmt(p)}</td>
-              <td style="padding:4px;text-align:right">${fmt(c)}</td>
-              <td style="padding:4px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>
+              <td style="padding:6px">${r.stage}</td>
+              <td style="padding:6px;text-align:right">${fmt(p)}</td>
+              <td style="padding:6px;text-align:right">${fmt(c)}</td>
+              <td style="padding:6px;text-align:right;color:${d>0?'#0a7a2d':(d<0?'#b00020':'#5f6b7a')}">${d>0?'+':''}${fmt(d)}</td>
             </tr>`;
           }).join("")}
         </tbody>
@@ -739,10 +788,10 @@
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
 
-    const box = (t, val, delta) => `<div style="border:1px solid #e7edf5;border-radius:8px;padding:8px;margin:4px 0">
-      <div style="color:#5f6b7a;font-size:11px">${t}</div>
-      <div style="font-weight:800;font-size:16px">${typeof val === "number" ? fmt(val) : val}</div>
-      <div style="font-size:11px;color:${delta > 0 ? '#0a7a2d' : (delta < 0 ? '#b00020' : '#5f6b7a')}">
+    const box = (t, val, delta) => `<div style="border:1px solid #e7edf5;border-radius:10px;padding:10px;margin:6px 0;background:#fff">
+      <div style="color:#5f6b7a;font-size:11px;font-weight:700">${t}</div>
+      <div style="font-weight:800;font-size:18px">${typeof val === "number" ? fmt(val) : val}</div>
+      <div style="font-size:11px;font-weight:800;color:${delta > 0 ? '#0a7a2d' : (delta < 0 ? '#b00020' : '#5f6b7a')}">
         ${delta > 0 ? '+' : ''}${fmt(delta)}
       </div>
     </div>`;
@@ -810,13 +859,12 @@
       tmp.innerHTML = html;
       const table = tmp.querySelector("table");
       if(!table) throw new Error("Таблица не найдена в HTML.");
-
-      const caption = `<div style="font-weight:700;margin:6px 0 4px">План-Факт</div>`;
+      const caption = `<div style="font-weight:800;margin:6px 0 4px">План-Факт</div>`;
       document.getElementById("presPlanFactInner").innerHTML = caption + table.outerHTML;
       document.getElementById("briefPlanFactInner").innerHTML = caption + table.outerHTML;
     }catch(e){
       console.warn("Не удалось вставить таблицу Google Sheets:", e);
-      const fallback = `<div class="note">План-Факт: не удалось получить HTML таблицы. <a href="https://docs.google.com/spreadsheets/d/1Y9bM7zLRf_gonMUgfQLl57Iу3NgPa78rBXnpxkKLvO0/edit?usp=drivesdk" target="_blank" rel="noopener">Открыть по ссылке</a></div>`;
+      const fallback = `<div class="note">План-Факт: не удалось получить HTML таблицы. <a href="https://docs.google.com/spreadsheets/d/1Y9bM7zLRf_gonMUgfQLl57Iу3NgPa78rBXnpxkKLvО0/edit?usp=drivesdk" target="_blank" rel="noopener">Открыть по ссылке</a></div>`;
       document.getElementById("presPlanFactInner").innerHTML = fallback;
       document.getElementById("briefPlanFactInner").innerHTML = fallback;
     }
@@ -851,7 +899,7 @@
     document.getElementById("exportStatus").textContent = "PDF выжимки сохранен.";
   }
 
-  /* ==================== Экспорт Word-HTML ==================== */
+  /* ==================== Экспорт Word-HTML (получается красивее в Word) ==================== */
   function exportWordHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
@@ -863,50 +911,55 @@
     const htmlDoc = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Отчет ВОЛС - ${curr.date}</title>
 <style>
-  body{font-family:Arial, sans-serif;max-width:860px;margin:0 auto;padding:20px;line-height:1.6}
-  h1{color:#0033A0;border-bottom:2px solid #0033A0;padding-bottom:10px}
-  h2{color:#0033A0;margin-top:26px} h3{color:#333;margin-top:18px}
+  body{font-family:Arial, sans-serif;max-width:860px;margin:0 auto;padding:28px;line-height:1.6}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#0033A0}
+  h1{color:#0033A0;border-bottom:2px solid #0033A0;padding-bottom:8px;margin:0 0 6px}
+  h2{color:#0033A0;margin-top:24px} h3{color:#333;margin-top:16px}
   table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
-  th,td{border:1px solid #ddd;padding:8px;text-align:center}
-  th:first-child,td:first-child{ text-align:left }
+  th,td{border:1px solid #e5e7eb;padding:8px;text-align:center}
+  th:first-child,td:first-child{text-align:left}
   th{background-color:#0033A0;color:#fff;font-weight:700}
   tr:nth-child(even){background:#f7f9fc}
+  tfoot td{font-weight:800;background:#f3f6fb}
   .positive{color:#0a7a2d;font-weight:700}.negative{color:#b00020;font-weight:700}
-  .info-box{background:#f0f4f8;border-left:4px solid #0033A0;padding:10px;margin:10px 0}
+  .info-box{background:#f0f4f8;border-left:4px solid #0033A0;padding:10px;margin:12px 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:4px 10px;font-weight:700}
 </style></head>
 <body>
-<h1>АО «Россети Кубань» — Отчет по ВОЛС</h1>
-<div class="info-box"><p><b>Отчетный период:</b><br>Предыдущая неделя: ${prev.date}<br>Текущая неделя: ${curr.date}</p></div>
+<header><span class="dot"></span><div><strong>АО «Россети Кубань»</strong><div style="color:#475569;font-size:12px">Отчет по ВОЛС</div></div></header>
+<h1>Период: ${prev.date} → ${curr.date}</h1>
 
 <h2>План-Факт</h2>
 <div>${planfactHTML}</div>
 
 <h2>Основные показатели</h2>
-<ul>
-  <li>В работе всего: <b>${fmt(curr.p1.totals.in_work_total)}</b> <span class="${dyn.in_work_total>=0?'positive':'negative'}">(${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)})</span></li>
-  <li>Выявлено за неделю: <b>${fmt(dyn.found_week)}</b></li>
-  <li>Закрыто за неделю (узаконено + демонтировано): <b>${fmt(eff)}</b></li>
-  <li>ПАО «Ростелеком» в работе: <b>${fmt(curr.p1.totals.rtk_in_work)}</b> <span class="${dyn.rtk_in_work>=0?'positive':'negative'}">(${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)})</span>; доля <b>${rtkShare.toFixed(1)}%</b></li>
-</ul>
+<div class="chips">
+  <div class="chip">В работе всего: <b>${fmt(curr.p1.totals.in_work_total)}</b> <span class="${dyn.in_work_total>=0?'positive':'negative'}">(${dyn.in_work_total>0?'+':''}${fmt(dyn.in_work_total)})</span></div>
+  <div class="chip">Выявлено за неделю: <b>${fmt(dyn.found_week)}</b></div>
+  <div class="chip">Закрыто за неделю (узак.+демонт.): <b>${fmt(eff)}</b></div>
+  <div class="chip">РТК в работе: <b>${fmt(curr.p1.totals.rtk_in_work)}</b> <span class="${dyn.rtk_in_work>=0?'positive':'negative'}">(${dyn.rtk_in_work>0?'+':''}${fmt(dyn.rtk_in_work)})</span> · доля <b>${rtkShare.toFixed(1)}%</b></div>
+</div>
 
 <h2>Динамика по филиалам</h2>
 <h3>Общая динамика (все операторы)</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
 <tbody>${dyn.branchRows.map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrev").textContent}</td><td>${document.getElementById("sumCurr").textContent}</td><td>${document.getElementById("sumDelta").textContent}</td></tr></tfoot>
+<tfoot><tr><td>ИТОГО</td><td>${document.getElementById("sumPrev").textContent}</td><td>${document.getElementById("sumCurr").textContent}</td><td>${document.getElementById("sumDelta").textContent}</td></tr></tfoot>
 </table>
 
 <h3>Приказ №425</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
 <tbody>${(dyn.branchRowsS3||[]).map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrevS3").textContent}</td><td>${document.getElementById("sumCurrS3").textContent}</td><td>${document.getElementById("sumDeltaS3").textContent}</td></tr></tfoot></table>
+<tfoot><tr><td>ИТОГО</td><td>${document.getElementById("sumPrevS3").textContent}</td><td>${document.getElementById("sumCurrS3").textContent}</td><td>${document.getElementById("sumDeltaS3").textContent}</td></tr></tfoot></table>
 
 <h3>ПАО «Ростелеком»</h3>
 <table><thead><tr><th>Филиал</th><th>Предыдущая</th><th>Текущая</th><th>Изменение</th></tr></thead>
 <tbody>${(dyn.branchRowsS4||[]).map(r=>`<tr><td>${r.b}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody>
-<tfoot><tr style="font-weight:700;background:#f0f0f0"><td>ИТОГО</td><td>${document.getElementById("sumPrevS4").textContent}</td><td>${document.getElementById("sumCurrS4").textContent}</td><td>${document.getElementById("sumDeltaS4").textContent}</td></tr></tfoot></table>
+<tfoot><tr><td>ИТОГО</td><td>${document.getElementById("sumPrevS4").textContent}</td><td>${document.getElementById("sumCurrS4").textContent}</td><td>${document.getElementById("sumDeltaS4").textContent}</td></tr></tfoot></table>
 
-<h2>Динамика по статусам</h2>
+<h2>Динамика по статусам (стр. 2)</h2>
 <table><thead><tr><th>Статус</th><th>Пред.</th><th>Тек.</th><th>Δ</th></tr></thead>
 <tbody>${(dyn.stagesS2||[]).map(r=>`<tr><td>${r.stage}</td><td>${fmt(r.p)}</td><td>${fmt(r.c)}</td><td class="${r.d>0?'positive':r.d<0?'negative':''}">${r.d>0?'+':''}${fmt(r.d)}</td></tr>`).join("")}</tbody></table>
 
@@ -918,7 +971,7 @@
     document.getElementById("exportStatus").textContent = "HTML отчет сохранен. Откройте в браузере или Word.";
   }
 
-  /* ==================== ВСПОМОГАТЕЛЬНОЕ ДЛЯ СЛАЙДА 1 (донаты по План-Факт) ==================== */
+  /* ==================== ВСПОМОГАТЕЛЬНОЕ ДЛЯ СЛАЙДА 1 (донаты по План-Факт, не обязательно) ==================== */
   function parsePlanFactMetricsFromHTML(pfHTML){
     const res = { podves:null, revenue:null, hasData:false };
     if(!pfHTML) return res;
@@ -930,7 +983,6 @@
     const rows = Array.from(table.querySelectorAll("tr"));
     if(!rows.length) return res;
 
-    // Определяем индексы колонок План/Факт (если есть в заголовке)
     let colPlan = -1, colFact = -1;
     const headCells = Array.from(rows[0].querySelectorAll("th,td")).map(c=>c.textContent.trim().toLowerCase());
     headCells.forEach((t,i)=>{
@@ -1009,9 +1061,9 @@
     ctx.lineWidth = thickness;
     ctx.stroke();
 
-    const ang = Math.max(0, Math.min(100, percent)) / 100 * Math.PI*2;
+    const ang = Math.max(0, Math.min(100, percent)) / 100 * Math.PI*2; /* <-- фикс опечатки */
     ctx.beginPath();
-    ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + анг, false);
+    ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + ang, false);
     ctx.strokeStyle = varGet("--rs-blue") || "#0033A0";
     ctx.lineCap = "round";
     ctx.lineWidth = thickness;
@@ -1046,7 +1098,7 @@
     return canvas.toDataURL("image/png");
   }
 
-  /* ==================== Экспорт презентации в HTML (только презентация) ==================== */
+  /* ==================== Экспорт презентации в HTML (слайды с улучшенным стилем) ==================== */
   function exportPresHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
@@ -1083,30 +1135,31 @@
   <meta charset="utf-8">
   <title>Презентация ВОЛС</title>
   <style>
-    body{font-family:Inter,Arial,Segoe UI,Roboto,sans-serif;margin:0;padding:20px;background:#eef2f7}
-    .slide{width:1280px;height:720px;margin:18px auto;background:#fff;
-           box-shadow:0 10px 30px rgba(0,0,0,.18);padding:44px;box-sizing:border-box;
-           page-break-after:always;border-radius:14px;border:1px solid #e6edf6;position:relative}
-    h1{color:#0033A0;font-size:40px;margin:0 0 8px 0}
-    h2{color:#0033A0;font-size:30px;margin:0 0 14px 0}
+    body{font-family:Inter,Arial,Segoe UI,Roboto,sans-serif;margin:0;padding:24px;background:linear-gradient(180deg,#eff4fb,#e8f2ff)}
+    .slide{width:1280px;height:720px;margin:18px auto;background:
+           linear-gradient(180deg,#ffffff, #ffffff),
+           radial-gradient(1200px 400px at 110% -20%, rgba(0,174,239,.08), transparent 60%);
+           box-shadow:0 16px 40px rgba(0,0,0,.18);padding:44px;box-sizing:border-box;
+           page-break-after:always;border-radius:18px;border:1px solid #e6edf6;position:relative}
+    h1{color:#0033A0;font-size:40px;margin:0 0 8px 0;font-weight:800;letter-spacing:.2px}
+    h2{color:#0033A0;font-size:30px;margin:0 0 14px 0;font-weight:800}
     h3{color:#334155;font-size:20px;margin:8px 0}
     .muted{color:#5f6b7a}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .panel{border:1px solid #e6edf6;border-radius:12px;padding:12px}
-    .imgbox{border:1px solid #e6edf6;border-radius:12px;padding:8px;background:#fafcff;text-align:center}
+    .panel{border:1px solid #e6edf6;border-radius:14px;padding:12px;background:#fff}
+    .imgbox{border:1px solid #e6edf6;border-radius:14px;padding:8px;background:#fafcff;text-align:center}
     table{width:100%;border-collapse:collapse;font-size:12px}
     th,td{border:1px solid #e6edf6;padding:8px;text-align:center !important}
     th:first-child, td:first-child{ text-align:left !important }
-    th{background:#0033A0;color:#fff;font-weight:700}
+    th{background:#0033A0;color:#fff;font-weight:800}
     tfoot td{font-weight:800;background:#f7f9fc}
-    .legend{font-size:12px;color:#5f6b7a}
-    .subline{font-size:16px;color:#5f6b7a;margin:-6px 0 10px}
-    .slide-no{position:absolute;bottom:22px;right:26px;color:#94a3b8;font-weight:700}
+    .legend{font-size:16px;color:#334155;font-weight:800}
+    .slide-no{position:absolute;bottom:22px;right:26px;color:#94a3b8;font-weight:800}
   </style>
 </head>
 <body>
 
-  <!-- Слайд 1: Только заголовок и План-Факт (без графиков), убран дубликат "План-Факт" -->
+  <!-- Слайд 1: заголовок + План-Факт -->
   <div class="slide">
     <h1>Выполнение плановых показателей БП по размещению ВОЛС на ВЛ</h1>
     <div class="panel">
@@ -1122,14 +1175,13 @@
       <div class="imgbox"><img src="${imgS2}" alt="График по филиалам (всего)" style="width:100%;height:auto"/></div>
       <div class="panel">${tblS2HTML_sorted}</div>
     </div>
-    <div class="legend" style="margin-top:10px;font-size:18px;font-weight:800">${compactKPIs}</div>
+    <div class="legend" style="margin-top:10px">${compactKPIs}</div>
     <div class="slide-no">2</div>
   </div>
 
   <!-- Слайд 3 -->
   <div class="slide">
     <h2>В том числе: динамика по Приказу №425</h2>
-    <div class="subline">В том числе: динамика по Приказу №425</div>
     <div class="grid2">
       <div class="imgbox"><img src="${imgS3}" alt="График по Приказу 425" style="width:100%;height:auto"/></div>
       <div class="panel">${tblS3HTML_sorted}</div>
@@ -1140,7 +1192,6 @@
   <!-- Слайд 4 -->
   <div class="slide">
     <h2>В том числе: динамика по ПАО «Ростелеком»</h2>
-    <div class="subline">В том числе: динамика по ПАО «Ростелеком»</div>
     <div class="grid2">
       <div class="imgbox"><img src="${imgS4}" alt="График по ПАО Ростелеком" style="width:100%;height:auto"/></div>
       <div class="panel">${tblS4HTML_sorted}</div>
