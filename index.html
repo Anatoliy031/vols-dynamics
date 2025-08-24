@@ -1858,7 +1858,7 @@ ${planfactHTML}
     return canvas.toDataURL("image/png");
   }
 
-  /* ==================== Экспорт презентации в HTML (только презентация) — ОБНОВЛЕНО ==================== */
+  /* ==================== Экспорт презентации в HTML (только презентация) ==================== */
   function exportPresHTML(){
     if(!DATA) return alert("Сначала проанализируйте отчёты.");
     const {curr, prev, dyn} = DATA;
@@ -1882,8 +1882,7 @@ ${planfactHTML}
     const tblS4HTML_sorted = presTableHTML("Динамика по ПАО «Ростелеком»", s4Sorted, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
     const s2BranchStagesSorted = [...dyn.s2BranchStages].sort((a,b)=>collator.compare(a.b,b.b));
-    const matrixHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted);
-    const totalsHTML_sorted = stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
+    const stagesHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted) + stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
 
     const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
     const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
@@ -1978,14 +1977,6 @@ ${planfactHTML}
       align-items:start;
     }
     
-    .grid2-compact{
-      display:grid;
-      grid-template-columns:2fr 1fr;
-      gap:20px;
-      height:calc(100% - 160px);
-      align-items:start;
-    }
-    
     .panel{
       background:#f8fafd;
       border:2px solid #e2e8f0;
@@ -1993,10 +1984,6 @@ ${planfactHTML}
       padding:20px;
       height:100%;
       overflow:auto;
-    }
-    
-    .panel.noscroll{
-      overflow:hidden;
     }
     
     .imgbox{
@@ -2149,33 +2136,15 @@ ${planfactHTML}
     .kpi-delta.negative{color:#dc2626}
     .kpi-delta.neutral{color:#64748b}
     
-    /* Матрица статусов — контейнер без прокрутки, дальше будет автоскейл */
-    .status-fit-grid{
-      height:100%;
-      display:grid;
-      grid-template-columns:2fr 1fr;
-      gap:16px;
-    }
-    
-    .scale-box{
-      transform-origin:top left;
-      display:inline-block;
-    }
-    
-    .status-panel{
-      background:#fff;
+    /* Матрица статусов */
+    .status-matrix-container{
+      max-height:500px;
+      overflow:auto;
       border:2px solid #e2e8f0;
       border-radius:12px;
-      padding:12px;
-      height:100%;
-      overflow:hidden;
+      background:#fff;
     }
     
-    /* Чуть компактнее базовых таблиц внутри 5-го слайда */
-    .status-panel table{font-size:12px}
-    .status-panel th,.status-panel td{padding:6px 8px}
-    
-    /* Печать */
     @media print{
       body{background:#fff}
       .slides-container{padding:0;gap:0}
@@ -2277,61 +2246,17 @@ ${planfactHTML}
       <div class="slide-no">4</div>
     </div>
 
-    <!-- Слайд 5 — ОБНОВЛЁН: матрица + итоги на одном слайде -->
-    <div class="slide status-slide">
+    <!-- Слайд 5: Динамика по статусам -->
+    <div class="slide">
       <div class="rosseti-logo"></div>
       <h2>Динамика по статусам работ</h2>
-      <div class="subline">Δ по филиалам (слева) и итоги по статусам (справа)</div>
-
-      <div class="status-fit-grid">
-        <!-- Левая панель: матрица, авто-масштаб -->
-        <div class="status-panel">
-          <div id="matrixScale" class="scale-box">${matrixHTML_sorted}</div>
-        </div>
-        <!-- Правая панель: итоги, авто-масштаб -->
-        <div class="status-panel">
-          <div id="totalsScale" class="scale-box">${totalsHTML_sorted}</div>
-        </div>
+      <div class="subline">Детализация изменений по типам статусов и филиалам</div>
+      <div class="status-matrix-container">
+        ${stagesHTML_sorted}
       </div>
-
       <div class="slide-no">5</div>
     </div>
   </div>
-
-  <!-- Скрипт авто-подгонки содержимого в панели (без прокрутки) -->
-  <script>
-    (function(){
-      function fitInside(el, container){
-        if(!el || !container) return;
-        // Сброс масштаба
-        el.style.transform = 'scale(1)';
-        // Доступные размеры панели
-        const maxW = container.clientWidth - 4;
-        const maxH = container.clientHeight - 4;
-        // Размеры контента при масштабе 1
-        const w = el.scrollWidth;
-        const h = el.scrollHeight;
-        // Масштаб по двум осям
-        const s = Math.min(1, maxW / w, maxH / h);
-        el.style.transform = 'scale(' + s + ')';
-      }
-
-      function fitStatusSlide(){
-        const slide = document.querySelector('.slide.status-slide');
-        if(!slide) return;
-        const leftPanel  = slide.querySelector('.status-fit-grid > .status-panel:nth-child(1)');
-        const rightPanel = slide.querySelector('.status-fit-grid > .status-panel:nth-child(2)');
-        const leftBox  = slide.querySelector('#matrixScale');
-        const rightBox = slide.querySelector('#totalsScale');
-        fitInside(leftBox, leftPanel);
-        fitInside(rightBox, rightPanel);
-      }
-
-      window.addEventListener('load', fitStatusSlide);
-      window.addEventListener('resize', fitStatusSlide);
-      setTimeout(fitStatusSlide, 300); // шрифты
-    })();
-  </script>
 </body>
 </html>`;
 
