@@ -1858,136 +1858,421 @@ ${planfactHTML}
     return canvas.toDataURL("image/png");
   }
 
-  <script>
-/* ==================== Экспорт презентации в HTML (только презентация) — ОБНОВЛЕНО ==================== */
-function exportPresHTML(){
-  if(!DATA) return alert("Сначала проанализируйте отчёты.");
-  const {curr, prev, dyn} = DATA;
+  /* ==================== Экспорт презентации в HTML (только презентация) — ОБНОВЛЕНО ==================== */
+  function exportPresHTML(){
+    if(!DATA) return alert("Сначала проанализируйте отчёты.");
+    const {curr, prev, dyn} = DATA;
 
-  const imgS2 = document.getElementById("chartBranches").toDataURL("image/png", 1.0);
-  const imgS3 = document.getElementById("chartBranchesS3").toDataURL("image/png", 1.0);
-  const imgS4 = document.getElementById("chartBranchesS4").toDataURL("image/png", 1.0);
+    const imgS2 = document.getElementById("chartBranches").toDataURL("image/png", 1.0);
+    const imgS3 = document.getElementById("chartBranchesS3").toDataURL("image/png", 1.0);
+    const imgS4 = document.getElementById("chartBranchesS4").toDataURL("image/png", 1.0);
 
-  const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "";
+    const planfactHTML = document.getElementById("presPlanFactInner").innerHTML || "";
 
-  // Сортировка для презентации (А→Я, ru)
-  const collator = new Intl.Collator("ru", {sensitivity:"base"});
-  const sortByBranch = (a,b)=>collator.compare(a.b, b.b);
+    // Сортировка для презентации (А→Я, ru)
+    const collator = new Intl.Collator("ru", {sensitivity:"base"});
+    const sortByBranch = (a,b)=>collator.compare(a.b, b.b);
 
-  const s2Sorted = [...dyn.branchRows].sort(sortByBranch);
-  const s3Sorted = [...(dyn.branchRowsS3||[])].sort(sortByBranch);
-  const s4Sorted = [...(dyn.branchRowsS4||[])].sort(sortByBranch);
+    const s2Sorted = [...dyn.branchRows].sort(sortByBranch);
+    const s3Sorted = [...(dyn.branchRowsS3||[])].sort(sortByBranch);
+    const s4Sorted = [...(dyn.branchRowsS4||[])].sort(sortByBranch);
 
-  const tblS2HTML_sorted = presTableHTML("Динамика по филиалам (всего)", s2Sorted, ["sumPrev","sumCurr","sumDelta"]);
-  const tblS3HTML_sorted = presTableHTML("Динамика по Приказу №425", s3Sorted, ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
-  const tblS4HTML_sorted = presTableHTML("Динамика по ПАО «Ростелеком»", s4Sorted, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
+    const tblS2HTML_sorted = presTableHTML("Динамика по филиалам (всего)", s2Sorted, ["sumPrev","sumCurr","sumDelta"]);
+    const tblS3HTML_sorted = presTableHTML("Динамика по Приказу №425", s3Sorted, ["sumPrevS3","sumCurrS3","sumDeltaS3"]);
+    const tblS4HTML_sorted = presTableHTML("Динамика по ПАО «Ростелеком»", s4Sorted, ["sumPrevS4","sumCurrS4","sumDeltaS4"]);
 
-  const s2BranchStagesSorted = [...dyn.s2BranchStages].sort((a,b)=>collator.compare(a.b,b.b));
-  // ВАЖНО: генерируем отдельно матрицу и итоги — чтобы масштабировать независимо
-  const matrixHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted);
-  const totalsHTML_sorted = stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
+    const s2BranchStagesSorted = [...dyn.s2BranchStages].sort((a,b)=>collator.compare(a.b,b.b));
+    const matrixHTML_sorted = stageMatrixHTML("Динамика по статусам (Δ)", s2BranchStagesSorted);
+    const totalsHTML_sorted = stageTotalsHTML("Итоги по статусам", dyn.stagesS2);
 
-  const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
-  const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
-  const sign = v=> v>0?"+":"";
-  const compactKPIs = `Ключевые показатели: В работе всего — ${fmt(curr.p1.totals.in_work_total)} (${sign(dyn.in_work_total)}${fmt(dyn.in_work_total)}); Выявлено — ${fmt(dyn.found_week)}; Закрыто — ${fmt(eff)}; РТК — ${fmt(curr.p1.totals.rtk_in_work)} (${sign(dyn.rtk_in_work)}${fmt(dyn.rtk_in_work)}, ${rtkShare.toFixed(1)}%).`;
+    const eff = (curr.p1.totals.legalized + curr.p1.totals.dismantled_ytd) - (prev.p1.totals.legalized + prev.p1.totals.dismantled_ytd);
+    const rtkShare = curr.p1.totals.in_work_total ? (curr.p1.totals.rtk_in_work / curr.p1.totals.in_work_total * 100) : 0;
+    const sign = v=> v>0?"+":"";
+    const compactKPIs = `Ключевые показатели: В работе всего — ${fmt(curr.p1.totals.in_work_total)} (${sign(dyn.in_work_total)}${fmt(dyn.in_work_total)}); Выявлено — ${fmt(dyn.found_week)}; Закрыто — ${fmt(eff)}; РТК — ${fmt(curr.p1.totals.rtk_in_work)} (${sign(dyn.rtk_in_work)}${fmt(dyn.rtk_in_work)}, ${rtkShare.toFixed(1)}%).`;
 
-  const presHTML = `<!DOCTYPE html>
+    const presHTML = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>Презентация ВОЛС - АО «Россети Кубань»</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    body{font-family:'Inter',Arial,sans-serif;margin:0;padding:0;background:#1e293b;color:#333}
-    .slides-container{width:100vw;min-height:100vh;display:flex;flex-direction:column;gap:2px;background:#1e293b;padding:40px 0}
-    .slide{width:1280px;height:720px;margin:0 auto;background:#fff;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);padding:60px;box-sizing:border-box;page-break-after:always;position:relative;overflow:hidden}
-    .slide::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#0033A0 0%,#00B4F0 100%)}
-    h1{color:#0033A0;font-size:48px;font-weight:800;margin:0 0 16px 0;letter-spacing:-0.03em;line-height:1.1}
-    h2{color:#0033A0;font-size:36px;font-weight:700;margin:0 0 24px 0;letter-spacing:-0.02em}
-    h3{color:#1e293b;font-size:24px;font-weight:600;margin:16px 0}
-    .subline{font-size:18px;color:#64748b;margin:-16px 0 20px;font-weight:500}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;height:calc(100% - 140px);align-items:start}
-    .grid2-compact{display:grid;grid-template-columns:2fr 1fr;gap:20px;height:calc(100% - 160px);align-items:start}
-    .panel{background:#f8fafd;border:2px solid #e2e8f0;border-radius:16px;padding:20px;height:100%;overflow:auto}
-    .panel.noscroll{overflow:hidden}
-    .imgbox{background:#fff;border:2px solid #e2e8f0;border-radius:16px;padding:20px;text-align:center;height:100%;display:flex;align-items:center;justify-content:center}
-    .imgbox img{max-width:100%;max-height:100%;object-fit:contain}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{border:1px solid #e2e8f0;padding:10px 12px;text-align:center !important}
-    th:first-child,td:first-child{text-align:left !important}
-    th{background:#0033A0;color:#fff;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.05em}
-    tr:nth-child(even){background:#f8fafd}
-    tfoot td{font-weight:700;background:#e7eef7;color:#0033A0}
-    .legend{position:absolute;bottom:40px;left:60px;right:60px;font-size:18px;font-weight:700;color:#0033A0;background:#f0f9ff;padding:20px 30px;border-radius:12px;border:2px solid #0033A0}
-    .slide-no{position:absolute;bottom:30px;right:40px;width:50px;height:50px;background:#0033A0;color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
-    .rosseti-logo{position:absolute;top:40px;right:60px;width:120px;height:40px;background:linear-gradient(90deg,#0033A0 0%,#00B4F0 100%);border-radius:8px;opacity:0.1}
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:40px}
-    .kpi-card{background:linear-gradient(135deg,#f8fafd 0%,#e7eef7 100%);border:2px solid #e2e8f0;border-radius:16px;padding:24px;text-align:center;position:relative;overflow:hidden}
-    .kpi-card::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:#0033A0;opacity:0.05;border-radius:50%}
-    .kpi-label{font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
-    .kpi-value{font-size:36px;font-weight:800;color:#0033A0;line-height:1;margin-bottom:8px}
-    .kpi-delta{font-size:18px;font-weight:600}
-    .kpi-delta.positive{color:#059669}.kpi-delta.negative{color:#dc2626}.kpi-delta.neutral{color:#64748b}
+    
+    body{
+      font-family:'Inter',Arial,sans-serif;
+      margin:0;
+      padding:0;
+      background:#1e293b;
+      color:#333;
+    }
+    
+    .slides-container{
+      width:100vw;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      background:#1e293b;
+      padding:40px 0;
+    }
+    
+    .slide{
+      width:1280px;
+      height:720px;
+      margin:0 auto;
+      background:#fff;
+      box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);
+      padding:60px;
+      box-sizing:border-box;
+      page-break-after:always;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .slide::before{
+      content:'';
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:6px;
+      background:linear-gradient(90deg, #0033A0 0%, #00B4F0 100%);
+    }
+    
+    h1{
+      color:#0033A0;
+      font-size:48px;
+      font-weight:800;
+      margin:0 0 16px 0;
+      letter-spacing:-0.03em;
+      line-height:1.1;
+    }
+    
+    h2{
+      color:#0033A0;
+      font-size:36px;
+      font-weight:700;
+      margin:0 0 24px 0;
+      letter-spacing:-0.02em;
+    }
+    
+    h3{
+      color:#1e293b;
+      font-size:24px;
+      font-weight:600;
+      margin:16px 0;
+    }
+    
+    .subline{
+      font-size:18px;
+      color:#64748b;
+      margin:-16px 0 20px;
+      font-weight:500;
+    }
+    
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      height:calc(100% - 140px);
+      align-items:start;
+    }
+    
+    .grid2-compact{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:20px;
+      height:calc(100% - 160px);
+      align-items:start;
+    }
+    
+    .panel{
+      background:#f8fafd;
+      border:2px solid #e2e8f0;
+      border-radius:16px;
+      padding:20px;
+      height:100%;
+      overflow:auto;
+    }
+    
+    .panel.noscroll{
+      overflow:hidden;
+    }
+    
+    .imgbox{
+      background:#fff;
+      border:2px solid #e2e8f0;
+      border-radius:16px;
+      padding:20px;
+      text-align:center;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    
+    .imgbox img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+    }
+    
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    
+    th,td{
+      border:1px solid #e2e8f0;
+      padding:10px 12px;
+      text-align:center !important;
+    }
+    
+    th:first-child, td:first-child{
+      text-align:left !important;
+    }
+    
+    th{
+      background:#0033A0;
+      color:#fff;
+      font-weight:600;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+    }
+    
+    tr:nth-child(even){
+      background:#f8fafd;
+    }
+    
+    tfoot td{
+      font-weight:700;
+      background:#e7eef7;
+      color:#0033A0;
+    }
+    
+    .legend{
+      position:absolute;
+      bottom:40px;
+      left:60px;
+      right:60px;
+      font-size:18px;
+      font-weight:700;
+      color:#0033A0;
+      background:#f0f9ff;
+      padding:20px 30px;
+      border-radius:12px;
+      border:2px solid #0033A0;
+    }
+    
+    .slide-no{
+      position:absolute;
+      bottom:30px;
+      right:40px;
+      width:50px;
+      height:50px;
+      background:#0033A0;
+      color:#fff;
+      font-weight:700;
+      font-size:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+    }
+    
+    .rosseti-logo{
+      position:absolute;
+      top:40px;
+      right:60px;
+      width:120px;
+      height:40px;
+      background:linear-gradient(90deg, #0033A0 0%, #00B4F0 100%);
+      border-radius:8px;
+      opacity:0.1;
+    }
+    
+    /* Современные KPI блоки */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:20px;
+      margin-top:40px;
+    }
+    
+    .kpi-card{
+      background:linear-gradient(135deg, #f8fafd 0%, #e7eef7 100%);
+      border:2px solid #e2e8f0;
+      border-radius:16px;
+      padding:24px;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .kpi-card::before{
+      content:'';
+      position:absolute;
+      top:-50%;
+      right:-50%;
+      width:100%;
+      height:100%;
+      background:#0033A0;
+      opacity:0.05;
+      border-radius:50%;
+    }
+    
+    .kpi-label{
+      font-size:12px;
+      font-weight:600;
+      color:#64748b;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+      margin-bottom:8px;
+    }
+    
+    .kpi-value{
+      font-size:36px;
+      font-weight:800;
+      color:#0033A0;
+      line-height:1;
+      margin-bottom:8px;
+    }
+    
+    .kpi-delta{
+      font-size:18px;
+      font-weight:600;
+    }
+    
+    .kpi-delta.positive{color:#059669}
+    .kpi-delta.negative{color:#dc2626}
+    .kpi-delta.neutral{color:#64748b}
+    
     /* Матрица статусов — контейнер без прокрутки, дальше будет автоскейл */
-    .status-fit-grid{height:100%;display:grid;grid-template-columns:2fr 1fr;gap:16px}
-    .scale-box{transform-origin:top left;display:inline-block}
-    .status-panel{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:12px;height:100%;overflow:hidden}
+    .status-fit-grid{
+      height:100%;
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:16px;
+    }
+    
+    .scale-box{
+      transform-origin:top left;
+      display:inline-block;
+    }
+    
+    .status-panel{
+      background:#fff;
+      border:2px solid #e2e8f0;
+      border-radius:12px;
+      padding:12px;
+      height:100%;
+      overflow:hidden;
+    }
+    
     /* Чуть компактнее базовых таблиц внутри 5-го слайда */
     .status-panel table{font-size:12px}
     .status-panel th,.status-panel td{padding:6px 8px}
+    
     /* Печать */
-    @media print{body{background:#fff}.slides-container{padding:0;gap:0}.slide{box-shadow:none;margin-bottom:0}.slide-no{background:#333}}
+    @media print{
+      body{background:#fff}
+      .slides-container{padding:0;gap:0}
+      .slide{box-shadow:none;margin-bottom:0}
+      .slide-no{background:#333}
+    }
   </style>
 </head>
 <body>
   <div class="slides-container">
-    <!-- Слайд 1 -->
+    <!-- Слайд 1: Заголовок и План-Факт -->
     <div class="slide">
       <div class="rosseti-logo"></div>
       <h1>Выполнение плановых показателей БП<br>по размещению ВОЛС на ВЛ</h1>
       <div class="subline">АО «Россети Кубань» • Период: ${prev.date} — ${curr.date}</div>
-      <div style="margin-top:40px">${planfactHTML}</div>
-      <div class="kpi-grid" style="margin-top:60px">
-        <div class="kpi-card"><div class="kpi-label">В работе всего</div><div class="kpi-value">${fmt(curr.p1.totals.in_work_total)}</div><div class="kpi-delta ${dyn.in_work_total>0?'positive':(dyn.in_work_total<0?'negative':'neutral')}">${dyn.in_work_total>0?'↑':dyn.in_work_total<0?'↓':'→'} ${sign(dyn.in_work_total)}${fmt(dyn.in_work_total)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Выявлено за неделю</div><div class="kpi-value">${fmt(dyn.found_week)}</div><div class="kpi-delta ${dyn.found_week>0?'positive':'neutral'}">${dyn.found_week>0?'↑':'→'} ${sign(dyn.found_week)}${fmt(dyn.found_week)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Закрыто за неделю</div><div class="kpi-value">${fmt(eff)}</div><div class="kpi-delta ${eff>0?'positive':'neutral'}">${eff>0?'↑':'→'} ${sign(eff)}${fmt(eff)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">ПАО «Ростелеком»</div><div class="kpi-value">${fmt(curr.p1.totals.rtk_in_work)}</div><div class="kpi-delta ${dyn.rtk_in_work>0?'positive':(dyn.rtk_in_work<0?'negative':'neutral')}">${dyn.rtk_in_work>0?'↑':dyn.rtk_in_work<0?'↓':'→'} ${sign(dyn.rtk_in_work)}${fmt(dyn.rtk_in_work)} • ${rtkShare.toFixed(1)}%</div></div>
+      
+      <div style="margin-top:40px">
+        ${planfactHTML}
       </div>
+      
+      <div class="kpi-grid" style="margin-top:60px">
+        <div class="kpi-card">
+          <div class="kpi-label">В работе всего</div>
+          <div class="kpi-value">${fmt(curr.p1.totals.in_work_total)}</div>
+          <div class="kpi-delta ${dyn.in_work_total>0?'positive':(dyn.in_work_total<0?'negative':'neutral')}">
+            ${dyn.in_work_total>0?'↑':dyn.in_work_total<0?'↓':'→'} ${sign(dyn.in_work_total)}${fmt(dyn.in_work_total)}
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Выявлено за неделю</div>
+          <div class="kpi-value">${fmt(dyn.found_week)}</div>
+          <div class="kpi-delta ${dyn.found_week>0?'positive':'neutral'}">
+            ${dyn.found_week>0?'↑':'→'} ${sign(dyn.found_week)}${fmt(dyn.found_week)}
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Закрыто за неделю</div>
+          <div class="kpi-value">${fmt(eff)}</div>
+          <div class="kpi-delta ${eff>0?'positive':'neutral'}">
+            ${eff>0?'↑':'→'} ${sign(eff)}${fmt(eff)}
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ПАО «Ростелеком»</div>
+          <div class="kpi-value">${fmt(curr.p1.totals.rtk_in_work)}</div>
+          <div class="kpi-delta ${dyn.rtk_in_work>0?'positive':(dyn.rtk_in_work<0?'negative':'neutral')}">
+            ${dyn.rtk_in_work>0?'↑':dyn.rtk_in_work<0?'↓':'→'} ${sign(dyn.rtk_in_work)}${fmt(dyn.rtk_in_work)} • ${rtkShare.toFixed(1)}%
+          </div>
+        </div>
+      </div>
+      
       <div class="slide-no">1</div>
     </div>
 
-    <!-- Слайд 2 -->
+    <!-- Слайд 2: Динамика по филиалам (всего) -->
     <div class="slide">
       <div class="rosseti-logo"></div>
       <h2>Динамика выявления бездоговорного размещения ВОЛС<br>в разрезе филиалов ЭС (итого)</h2>
       <div class="grid2">
-        <div class="imgbox"><img src="${imgS2}" alt="График по филиалам (всего)"/></div>
-        <div class="panel">${tblS2HTML_sorted}</div>
+        <div class="imgbox">
+          <img src="${imgS2}" alt="График по филиалам (всего)"/>
+        </div>
+        <div class="panel">
+          ${tblS2HTML_sorted}
+        </div>
       </div>
       <div class="slide-no">2</div>
     </div>
 
-    <!-- Слайд 3 -->
+    <!-- Слайд 3: Приказ №425 -->
     <div class="slide">
       <div class="rosseti-logo"></div>
       <h2>Динамика по Приказу №425</h2>
       <div class="subline">Выполнение показателей в разрезе филиалов</div>
       <div class="grid2">
-        <div class="imgbox"><img src="${imgS3}" alt="График по Приказу 425"/></div>
-        <div class="panel">${tblS3HTML_sorted}</div>
+        <div class="imgbox">
+          <img src="${imgS3}" alt="График по Приказу 425"/>
+        </div>
+        <div class="panel">
+          ${tblS3HTML_sorted}
+        </div>
       </div>
       <div class="slide-no">3</div>
     </div>
 
-    <!-- Слайд 4 -->
+    <!-- Слайд 4: ПАО «Ростелеком» -->
     <div class="slide">
       <div class="rosseti-logo"></div>
       <h2>Динамика по ПАО «Ростелеком»</h2>
       <div class="subline">Детализация по филиалам электрических сетей</div>
       <div class="grid2">
-        <div class="imgbox"><img src="${imgS4}" alt="График по ПАО Ростелеком"/></div>
-        <div class="panel">${tblS4HTML_sorted}</div>
+        <div class="imgbox">
+          <img src="${imgS4}" alt="График по ПАО Ростелеком"/>
+        </div>
+        <div class="panel">
+          ${tblS4HTML_sorted}
+        </div>
       </div>
       <div class="slide-no">4</div>
     </div>
@@ -2020,8 +2305,8 @@ function exportPresHTML(){
         if(!el || !container) return;
         // Сброс масштаба
         el.style.transform = 'scale(1)';
-        // Вычисляем доступные W/H панели
-        const maxW = container.clientWidth - 4; // минус рамки
+        // Доступные размеры панели
+        const maxW = container.clientWidth - 4;
         const maxH = container.clientHeight - 4;
         // Размеры контента при масштабе 1
         const w = el.scrollWidth;
@@ -2042,24 +2327,20 @@ function exportPresHTML(){
         fitInside(rightBox, rightPanel);
       }
 
-      // Подгоняем после загрузки и при ресайзе
       window.addEventListener('load', fitStatusSlide);
       window.addEventListener('resize', fitStatusSlide);
-      // Небольшая задержка на случай подгрузки шрифтов
-      setTimeout(fitStatusSlide, 300);
+      setTimeout(fitStatusSlide, 300); // шрифты
     })();
   </script>
 </body>
 </html>`;
 
-  const blob = new Blob([presHTML], {type: 'text/html; charset=utf-8'});
-  triggerDownload(blob, `Презентация_ВОЛС_${curr.date.replace(/\./g,'-')}.html`);
-  document.getElementById("exportStatus").textContent = "✅ HTML презентация сохранена";
-  document.getElementById("exportStatus").style.display = "inline-block";
-  setTimeout(()=>document.getElementById("exportStatus").style.display = "none", 3000);
-}
-</script>
-
+    const blob = new Blob([presHTML], {type: 'text/html; charset=utf-8'});
+    triggerDownload(blob, `Презентация_ВОЛС_${curr.date.replace(/\./g,'-')}.html`);
+    document.getElementById("exportStatus").textContent = "✅ HTML презентация сохранена";
+    document.getElementById("exportStatus").style.display = "inline-block";
+    setTimeout(()=>document.getElementById("exportStatus").style.display = "none", 3000);
+  }
 
   /* ==================== Вспомогательные ==================== */
   function triggerDownload(blob, filename){
